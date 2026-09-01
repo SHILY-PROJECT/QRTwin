@@ -11,7 +11,7 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
     private readonly IHistoryService _historyService = historyService;
 
     [ObservableProperty]
-    private bool _isLoading;
+    public partial bool IsLoading { get; set; }
 
     public ObservableCollection<HistoryEntry> Entries { get; } = [];
 

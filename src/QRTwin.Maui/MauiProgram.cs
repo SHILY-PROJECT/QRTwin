@@ -13,6 +13,7 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         Batteries_V2.Init();
+        raw.FreezeProvider();
 
         var builder = MauiApp.CreateBuilder();
         builder

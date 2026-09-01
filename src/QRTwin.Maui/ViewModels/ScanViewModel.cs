@@ -24,31 +24,32 @@ public partial class ScanViewModel : ObservableObject
         _historyService = historyService;
         _qrCodeService = qrCodeService;
         _permissionService = permissionService;
+        IsScanning = true;
     }
 
     [ObservableProperty]
-    private string _scanResult = string.Empty;
+    public partial string ScanResult { get; set; }
 
     [ObservableProperty]
-    private bool _hasResult;
+    public partial bool HasResult { get; set; }
 
     [ObservableProperty]
-    private bool _isScanning = true;
+    public partial bool IsScanning { get; set; }
 
     [ObservableProperty]
-    private bool _isUrl;
+    public partial bool IsUrl { get; set; }
 
     [ObservableProperty]
-    private bool _isActive;
+    public partial bool IsActive { get; set; }
 
     [ObservableProperty]
-    private bool _hasCameraPermission;
+    public partial bool HasCameraPermission { get; set; }
 
     [ObservableProperty]
-    private string _errorMessage = string.Empty;
+    public partial string ErrorMessage { get; set; }
 
     [ObservableProperty]
-    private ImageSource? _sampleQrCodeImage;
+    public partial ImageSource? SampleQrCodeImage { get; set; }
 
     partial void OnIsActiveChanged(bool value)
     {

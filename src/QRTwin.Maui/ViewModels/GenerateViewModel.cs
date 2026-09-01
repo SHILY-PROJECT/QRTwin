@@ -22,22 +22,22 @@ public partial class GenerateViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    private string _inputText = string.Empty;
+    public partial string InputText { get; set; }
 
     [ObservableProperty]
-    private ImageSource? _qrCodeImage;
+    public partial ImageSource? QrCodeImage { get; set; }
 
     [ObservableProperty]
-    private bool _hasQrCode;
+    public partial bool HasQrCode { get; set; }
 
     [ObservableProperty]
-    private bool _isGenerating;
+    public partial bool IsGenerating { get; set; }
 
     [ObservableProperty]
-    private bool _isActive;
+    public partial bool IsActive { get; set; }
 
     [ObservableProperty]
-    private string _errorMessage = string.Empty;
+    public partial string ErrorMessage { get; set; }
 
     [RelayCommand]
     private async Task GenerateAsync()

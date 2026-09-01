@@ -6,10 +6,10 @@ namespace QRTwin.Maui.Services;
 
 public sealed class HistoryService() : IHistoryService
 {
-    private readonly Lazy<SQLiteAsyncConnection> _connection = new(CreateConnection);
+    private readonly Lazy<Task<SQLiteAsyncConnection>> _connection = new(CreateConnectionAsync);
 
     public async Task<IReadOnlyList<HistoryEntry>> GetAllAsync() =>
-        await _connection.Value
+        await (await GetConnectionAsync().ConfigureAwait(false))
             .Table<HistoryEntry>()
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync()
@@ -29,20 +29,28 @@ public sealed class HistoryService() : IHistoryService
             CreatedAt = DateTime.UtcNow
         };
 
-        await _connection.Value.InsertAsync(entry).ConfigureAwait(false);
+        await (await GetConnectionAsync().ConfigureAwait(false))
+            .InsertAsync(entry)
+            .ConfigureAwait(false);
     }
 
-    public Task DeleteAsync(int id) =>
-        _connection.Value.DeleteAsync<HistoryEntry>(id);
+    public async Task DeleteAsync(int id) =>
+        await (await GetConnectionAsync().ConfigureAwait(false))
+            .DeleteAsync<HistoryEntry>(id)
+            .ConfigureAwait(false);
 
-    public Task ClearAllAsync() =>
-        _connection.Value.DeleteAllAsync<HistoryEntry>();
+    public async Task ClearAllAsync() =>
+        await (await GetConnectionAsync().ConfigureAwait(false))
+            .DeleteAllAsync<HistoryEntry>()
+            .ConfigureAwait(false);
 
-    private static SQLiteAsyncConnection CreateConnection()
+    private Task<SQLiteAsyncConnection> GetConnectionAsync() => _connection.Value;
+
+    private static async Task<SQLiteAsyncConnection> CreateConnectionAsync()
     {
         var databasePath = Path.Combine(FileSystem.AppDataDirectory, "qrtwin_history.db3");
         var connection = new SQLiteAsyncConnection(databasePath);
-        connection.CreateTableAsync<HistoryEntry>().GetAwaiter().GetResult();
+        await connection.CreateTableAsync<HistoryEntry>().ConfigureAwait(false);
         return connection;
     }
 }

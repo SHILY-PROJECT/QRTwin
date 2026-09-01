@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFrameworks>net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
 
-        <MauiVersion>10.0.90</MauiVersion>
+        <MauiVersion>10.0.100</MauiVersion>
 
         <OutputType>Exe</OutputType>
         <RootNamespace>QRTwin.Maui</RootNamespace>
@@ -27,23 +27,23 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#FF4D00"/>
-        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#121212" BaseSize="128,128"/>
-        <MauiFont Include="Resources\Fonts\*"/>
-        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)"/>
+        <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" Color="#FF4D00" />
+        <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#121212" BaseSize="128,128" />
+        <MauiFont Include="Resources\Fonts\*" />
+        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.100" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.11" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-        <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1"/>
+        <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
         <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.10.4" />
         <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.151.1" />
-        <PackageReference Include="SkiaSharp.Extended.UI.Maui" Version="3.0.0" />
         <PackageReference Include="Svg.Skia" Version="5.2.3" />
         <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
-        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11" />
     </ItemGroup>
 
 </Project>

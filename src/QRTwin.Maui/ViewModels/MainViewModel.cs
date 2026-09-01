@@ -24,13 +24,14 @@ public partial class MainViewModel : ObservableObject
         Scan.HistorySaved += OnHistorySaved;
         Generate.HistorySaved += OnHistorySaved;
         Scan.IsActive = true;
+        SelectedTab = AppTab.Scan;
     }
 
     [ObservableProperty]
-    private AppTab _selectedTab = AppTab.Scan;
+    public partial AppTab SelectedTab { get; set; }
 
     [ObservableProperty]
-    private bool _isHistoryVisible;
+    public partial bool IsHistoryVisible { get; set; }
 
     partial void OnSelectedTabChanged(AppTab value)
     {
