@@ -95,6 +95,34 @@ dotnet build -t:Run -f net10.0-android src/QRTwin/QRTwin.csproj
 
 > При первом запуске приложение запросит доступ к камере.
 
+### Публикация
+
+Скрипт `build.ps1` в корне репозитория собирает релизные артефакты в папку `build/`:
+
+```powershell
+# Windows: single-file exe (self-contained)
+.\build.ps1 windows
+
+# Android: APK
+.\build.ps1 android
+
+# Обе платформы
+.\build.ps1 all
+```
+
+По умолчанию используется конфигурация `Release`. Для `Debug`:
+
+```powershell
+.\build.ps1 android -Configuration Debug
+```
+
+**Результат:**
+
+| Платформа | Путь |
+|-----------|------|
+| Windows | `build/windows/QRTwin.exe` |
+| Android | `build/android/com.qrtwin.manager-Signed.apk` |
+
 ---
 
 ## Структура проекта
