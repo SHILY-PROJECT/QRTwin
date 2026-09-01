@@ -20,7 +20,31 @@ public partial class ScanView : ContentView
         };
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
+        BarcodeReader.HandlerChanged += OnBarcodeReaderHandlerChanged;
     }
+
+#if WINDOWS
+    private void OnBarcodeReaderHandlerChanged(object? sender, EventArgs e)
+    {
+        if (BarcodeReader.Handler?.PlatformView is not Microsoft.UI.Xaml.FrameworkElement nativeCamera)
+        {
+            return;
+        }
+
+        nativeCamera.Opacity = 0;
+        nativeCamera.Width = 1;
+        nativeCamera.Height = 1;
+
+        if (nativeCamera is Microsoft.UI.Xaml.Controls.Control control)
+        {
+            control.Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        }
+    }
+#else
+    private void OnBarcodeReaderHandlerChanged(object? sender, EventArgs e)
+    {
+    }
+#endif
 
     private void OnLoaded(object? sender, EventArgs e)
     {

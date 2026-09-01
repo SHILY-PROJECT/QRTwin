@@ -58,33 +58,34 @@
                     HorizontalOptions="Center" />
           </VerticalStackLayout>
 
-          <!-- Camera (invisible preview, active detection) -->
-          <Grid IsVisible="{Binding HasCameraPermission}"
-                HorizontalOptions="Center"
-                VerticalOptions="Center"
-                WidthRequest="{OnPlatform WinUI=360, Default=300}"
-                HeightRequest="{OnPlatform WinUI=360, Default=300}"
-                BackgroundColor="{StaticResource SurfaceElevated}">
+          <!-- Scanner frame -->
+          <Border x:Name="ScannerFrame"
+                  IsVisible="{Binding HasCameraPermission}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
+                  WidthRequest="{OnPlatform WinUI=360, Default=300}"
+                  HeightRequest="{OnPlatform WinUI=360, Default=300}"
+                  Background="Transparent"
+                  Stroke="{StaticResource Accent}"
+                  StrokeThickness="2"
+                  StrokeShape="RoundRectangle 24">
+            <Grid>
+              <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
+                                             BarcodesDetected="OnBarcodesDetected"
+                                             IsDetecting="{Binding IsScanning}"
+                                             IsTorchOn="False"
+                                             Opacity="0"
+                                             WidthRequest="1"
+                                             HeightRequest="1"
+                                             HorizontalOptions="Start"
+                                             VerticalOptions="Start"
+                                             InputTransparent="True" />
 
-            <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
-                                           BarcodesDetected="OnBarcodesDetected"
-                                           IsDetecting="{Binding IsScanning}"
-                                           IsTorchOn="False"
-                                           Opacity="0"
-                                           HorizontalOptions="Fill"
-                                           VerticalOptions="Fill" />
-
-            <Border BackgroundColor="{StaticResource SurfaceElevated}"
-                    Stroke="{StaticResource Accent}"
-                    StrokeThickness="2"
-                    StrokeShape="RoundRectangle 24"
-                    HorizontalOptions="Fill"
-                    VerticalOptions="Fill"
-                    IsVisible="{Binding HasResult, Converter={StaticResource InvertedBoolConverter}}">
               <VerticalStackLayout Spacing="12"
                                    VerticalOptions="Center"
                                    HorizontalOptions="Center"
-                                   Padding="20">
+                                   Padding="20"
+                                   IsVisible="{Binding HasResult, Converter={StaticResource InvertedBoolConverter}}">
                 <Label Text="Пример QR-кода"
                        Style="{StaticResource SubtitleLabel}"
                        HorizontalTextAlignment="Center"
@@ -109,7 +110,6 @@
                   <Border StrokeThickness="0"
                           BackgroundColor="#22000000"
                           StrokeShape="RoundRectangle 16"
-                          Margin="0"
                           HorizontalOptions="Fill"
                           VerticalOptions="Fill"
                           InputTransparent="True">
@@ -129,8 +129,8 @@
                        FontSize="12"
                        HorizontalTextAlignment="Center" />
               </VerticalStackLayout>
-            </Border>
-          </Grid>
+            </Grid>
+          </Border>
         </Grid>
       </Grid>
     </Border>
