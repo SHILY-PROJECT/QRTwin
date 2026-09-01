@@ -43,7 +43,8 @@ public partial class ScanView : ContentView
         while (_animationRunning && ScanLine is not null)
         {
             ScanLine.TranslationY = 0;
-            await ScanLine.TranslateToAsync(0, 260, 1800, Easing.SinInOut);
+            var travel = BarcodeReader?.Height > 0 ? BarcodeReader.Height - 40 : 240;
+            await ScanLine.TranslateToAsync(0, travel, 1800, Easing.SinInOut);
             await ScanLine.TranslateToAsync(0, 0, 1800, Easing.SinInOut);
         }
     }

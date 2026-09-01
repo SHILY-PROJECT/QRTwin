@@ -64,7 +64,9 @@ public partial class ScanViewModel : ObservableObject
 
         if (!HasCameraPermission)
         {
-            ErrorMessage = "Нет доступа к камере. Разрешите использование камеры в настройках.";
+            ErrorMessage = string.IsNullOrWhiteSpace(ErrorMessage)
+                ? "Для сканирования необходим доступ к камере."
+                : ErrorMessage;
             return;
         }
 

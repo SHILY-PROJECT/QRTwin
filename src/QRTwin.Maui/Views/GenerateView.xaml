@@ -5,66 +5,131 @@
              xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
              x:Class="QRTwin.Maui.Views.GenerateView"
-             x:DataType="vm:GenerateViewModel">
+             x:DataType="vm:GenerateViewModel"
+             HorizontalOptions="Fill"
+             VerticalOptions="Fill">
 
-    <ScrollView>
-        <VerticalStackLayout Padding="16" Spacing="16">
-            <Label Text="{Binding ErrorMessage}"
-                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
-                   TextColor="{StaticResource Danger}"
-                   HorizontalTextAlignment="Center" />
+  <ScrollView Orientation="Vertical"
+              VerticalScrollBarVisibility="Default"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+    <VerticalStackLayout Padding="0,4,0,16"
+                         Spacing="16"
+                         VerticalOptions="Fill">
 
-            <ActivityIndicator IsRunning="{Binding IsGenerating}"
-                                 IsVisible="{Binding IsGenerating}"
-                                 Color="{StaticResource Accent}"
-                                 HeightRequest="40" />
+      <Label Text="{Binding ErrorMessage}"
+             IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+             TextColor="{StaticResource Danger}"
+             HorizontalTextAlignment="Center"
+             FontSize="14" />
 
-            <Border Style="{StaticResource Card}"
-                    IsVisible="{Binding HasQrCode}"
-                    HorizontalOptions="Center"
-                    x:Name="QrCard">
-                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
-                    <Image Source="{Binding QrCodeImage}"
-                           WidthRequest="280"
-                           HeightRequest="280"
-                           Aspect="AspectFit" />
+      <ActivityIndicator IsRunning="{Binding IsGenerating}"
+                         IsVisible="{Binding IsGenerating}"
+                         Color="{StaticResource Accent}"
+                         HeightRequest="48"
+                         HorizontalOptions="Center" />
 
-                    <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
-                        <Border Style="{StaticResource IconButton}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding ShareCommand}" />
-                            </Border.GestureRecognizers>
-                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Share}"
-                                                      IconColor="{StaticResource Accent}" />
-                                <Label Text="Поделиться"
-                                       Style="{StaticResource SubtitleLabel}"
-                                       FontSize="12"
-                                       HorizontalTextAlignment="Center" />
-                            </VerticalStackLayout>
-                        </Border>
+      <!-- Empty state -->
+      <Border Style="{StaticResource GlassCard}"
+              IsVisible="{Binding HasQrCode, Converter={StaticResource InvertedBoolConverter}}"
+              VerticalOptions="Center"
+              MinimumHeightRequest="280">
+        <VerticalStackLayout Spacing="16"
+                             VerticalOptions="Center"
+                             HorizontalOptions="Center"
+                             Padding="16">
+          <Border WidthRequest="80"
+                  HeightRequest="80"
+                  StrokeShape="RoundRectangle 24"
+                  BackgroundColor="{StaticResource AccentSoft}">
+            <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
+                                  IconColor="{StaticResource Accent}"
+                                  WidthRequest="40"
+                                  HeightRequest="40"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center" />
+          </Border>
+          <Label Text="Создайте QR-код"
+                 Style="{StaticResource HeaderLabel}"
+                 HorizontalTextAlignment="Center" />
+          <Label Text="Введите текст или ссылку в поле ниже и нажмите кнопку генерации"
+                 Style="{StaticResource SubtitleLabel}"
+                 HorizontalTextAlignment="Center"
+                 LineBreakMode="WordWrap"
+                 MaximumWidthRequest="320" />
+        </VerticalStackLayout>
+      </Border>
 
-                        <Border Style="{StaticResource IconButton}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding SaveCommand}" />
-                            </Border.GestureRecognizers>
-                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
-                                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Save}"
-                                                      IconColor="{StaticResource Accent}" />
-                                <Label Text="Сохранить"
-                                       Style="{StaticResource SubtitleLabel}"
-                                       FontSize="12"
-                                       HorizontalTextAlignment="Center" />
-                            </VerticalStackLayout>
-                        </Border>
-                    </HorizontalStackLayout>
-                </VerticalStackLayout>
+      <!-- QR result -->
+      <Border Style="{StaticResource Card}"
+              IsVisible="{Binding HasQrCode}"
+              HorizontalOptions="Center"
+              Stroke="{StaticResource Accent}"
+              StrokeThickness="1.5"
+              x:Name="QrCard"
+              MaximumWidthRequest="400">
+        <VerticalStackLayout Spacing="20" HorizontalOptions="Center">
+          <Label Text="Ваш QR-код"
+                 Style="{StaticResource HeaderLabel}"
+                 HorizontalTextAlignment="Center" />
+
+          <Border BackgroundColor="#FFFFFF"
+                  StrokeShape="RoundRectangle 16"
+                  Padding="12"
+                  HorizontalOptions="Center">
+            <Image Source="{Binding QrCodeImage}"
+                   WidthRequest="{OnPlatform WinUI=280, Default=240}"
+                   HeightRequest="{OnPlatform WinUI=280, Default=240}"
+                   Aspect="AspectFit" />
+          </Border>
+
+          <Grid ColumnDefinitions="*,*"
+                ColumnSpacing="12"
+                HorizontalOptions="Fill">
+            <Border Grid.Column="0"
+                    BackgroundColor="{StaticResource AccentSoft}"
+                    Stroke="{StaticResource Border}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="16,14">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ShareCommand}" />
+              </Border.GestureRecognizers>
+              <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Share}"
+                                      IconColor="{StaticResource Accent}"
+                                      WidthRequest="20"
+                                      HeightRequest="20" />
+                <Label Text="Поделиться"
+                       TextColor="{StaticResource PrimaryText}"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center" />
+              </HorizontalStackLayout>
             </Border>
 
-            <Label Text="Введите текст и нажмите кнопку генерации ниже"
-                   Style="{StaticResource SubtitleLabel}"
-                   HorizontalTextAlignment="Center"
-                   IsVisible="{Binding HasQrCode, Converter={StaticResource InvertedBoolConverter}}" />
+            <Border Grid.Column="1"
+                    Background="{StaticResource AccentGradientBrush}"
+                    StrokeShape="RoundRectangle 16"
+                    Padding="16,14">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding SaveCommand}" />
+              </Border.GestureRecognizers>
+              <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Save}"
+                                      IconColor="#FFFFFF"
+                                      WidthRequest="20"
+                                      HeightRequest="20" />
+                <Label Text="Сохранить"
+                       TextColor="#FFFFFF"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center" />
+              </HorizontalStackLayout>
+            </Border>
+          </Grid>
         </VerticalStackLayout>
-    </ScrollView>
+      </Border>
+    </VerticalStackLayout>
+  </ScrollView>
 </ContentView>

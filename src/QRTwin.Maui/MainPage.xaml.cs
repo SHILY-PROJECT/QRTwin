@@ -11,7 +11,18 @@ public partial class MainPage : ContentPage
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
+        viewModel.PropertyChanged += OnViewModelPropertyChanged;
         UpdateTabVisuals(viewModel.SelectedTab);
+        UpdateTabPanels(viewModel.SelectedTab);
+    }
+
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (sender is MainViewModel vm && e.PropertyName == nameof(MainViewModel.SelectedTab))
+        {
+            UpdateTabVisuals(vm.SelectedTab);
+            UpdateTabPanels(vm.SelectedTab);
+        }
     }
 
     private async void OnScanTabTapped(object? sender, TappedEventArgs e)
@@ -41,45 +52,52 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        var outgoing = (View)(newTab == AppTab.Scan ? GenerateContent : ScanContent);
-        var incoming = (View)(newTab == AppTab.Scan ? ScanContent : GenerateContent);
+        var outgoing = newTab == AppTab.Scan ? GeneratePanel : ScanPanel;
+        var incoming = newTab == AppTab.Scan ? ScanPanel : GeneratePanel;
 
-        outgoing.IsVisible = true;
         incoming.IsVisible = true;
         incoming.Opacity = 0;
-        incoming.TranslationX = newTab == AppTab.Scan ? -30 : 30;
+        incoming.TranslationX = newTab == AppTab.Scan ? -24 : 24;
 
         await Task.WhenAll(
-            outgoing.FadeToAsync(0, 180, Easing.CubicOut),
-            outgoing.TranslateToAsync(newTab == AppTab.Scan ? 30 : -30, 0, 180, Easing.CubicOut));
-
-        outgoing.IsVisible = false;
-        outgoing.Opacity = 1;
-        outgoing.TranslationX = 0;
+            outgoing.FadeToAsync(0, 160, Easing.CubicOut),
+            outgoing.TranslateToAsync(newTab == AppTab.Scan ? 24 : -24, 0, 160, Easing.CubicOut));
 
         _viewModel.SelectedTab = newTab;
-        UpdateTabVisuals(newTab);
 
         await Task.WhenAll(
-            incoming.FadeToAsync(1, 220, Easing.CubicOut),
-            incoming.TranslateToAsync(0, 0, 220, Easing.CubicOut));
+            incoming.FadeToAsync(1, 200, Easing.CubicOut),
+            incoming.TranslateToAsync(0, 0, 200, Easing.CubicOut));
+
+        outgoing.Opacity = 1;
+        outgoing.TranslationX = 0;
+    }
+
+    private void UpdateTabPanels(AppTab selectedTab)
+    {
+        var isScan = selectedTab == AppTab.Scan;
+        ScanPanel.IsVisible = isScan;
+        GeneratePanel.IsVisible = !isScan;
+        ScanPanel.Opacity = 1;
+        GeneratePanel.Opacity = 1;
+        ScanPanel.TranslationX = 0;
+        GeneratePanel.TranslationX = 0;
     }
 
     private void UpdateTabVisuals(AppTab selectedTab)
     {
         var accent = (Color)Application.Current!.Resources["Accent"];
         var secondary = (Color)Application.Current.Resources["SecondaryText"];
-        var surfaceElevated = (Color)Application.Current.Resources["SurfaceElevated"];
 
         var isScan = selectedTab == AppTab.Scan;
 
-        ScanTab.BackgroundColor = isScan ? surfaceElevated : Colors.Transparent;
-        GenerateTab.BackgroundColor = isScan ? Colors.Transparent : surfaceElevated;
+        ScanTab.BackgroundColor = isScan ? accent : Colors.Transparent;
+        GenerateTab.BackgroundColor = isScan ? Colors.Transparent : accent;
 
-        ScanTabIcon.IconColor = isScan ? accent : secondary;
-        GenerateTabIcon.IconColor = isScan ? secondary : accent;
+        ScanTabIcon.IconColor = isScan ? Colors.White : secondary;
+        GenerateTabIcon.IconColor = isScan ? secondary : Colors.White;
 
-        ScanTabLabel.TextColor = isScan ? accent : secondary;
-        GenerateTabLabel.TextColor = isScan ? secondary : accent;
+        ScanTabLabel.TextColor = isScan ? Colors.White : secondary;
+        GenerateTabLabel.TextColor = isScan ? secondary : Colors.White;
     }
 }
