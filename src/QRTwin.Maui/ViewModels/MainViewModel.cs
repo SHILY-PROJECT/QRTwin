@@ -30,7 +30,7 @@ public partial class MainViewModel(
         switch (value)
         {
             case AppTab.Scan:
-                Generate.InputText = string.Empty;
+                generate.ClearCommand.Execute(null);
                 Scan.IsActive = true;
                 Generate.IsActive = false;
                 break;

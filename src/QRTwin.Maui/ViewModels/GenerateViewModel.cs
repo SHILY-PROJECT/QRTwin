@@ -29,6 +29,21 @@ public partial class GenerateViewModel(
     public partial string ErrorMessage { get; set; }
 
     [RelayCommand]
+    private void Clear()
+    {
+        InputText = string.Empty;
+        ClearResult();
+    }
+
+    partial void OnInputTextChanged(string value)
+    {
+        if (!value.IsNotBlank())
+        {
+            ClearResult();
+        }
+    }
+
+    [RelayCommand]
     private async Task GenerateAsync()
     {
         if (!InputText.IsNotBlank())
@@ -117,5 +132,35 @@ public partial class GenerateViewModel(
         }
 
         return _tempFilePath = await qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
+    }
+
+    private void ClearResult()
+    {
+        QrCodeImage = null;
+        HasQrCode = false;
+        ErrorMessage = string.Empty;
+        DeleteTempFile();
+    }
+
+    private void DeleteTempFile()
+    {
+        if (_tempFilePath is not { } path)
+        {
+            return;
+        }
+
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch
+        {
+            // Temp file cleanup is best-effort.
+        }
+
+        _tempFilePath = null;
     }
 }

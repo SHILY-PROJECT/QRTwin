@@ -30,6 +30,10 @@ public partial class GenerateView : ContentView
             QrCard.Scale = 0.85;
             await QrCard.FadeToAsync(1, 300, Easing.CubicOut);
             await QrCard.ScaleToAsync(1, 300, Easing.CubicOut);
+            return;
         }
+
+        QrCard.Opacity = 1;
+        QrCard.Scale = 1;
     }
 }

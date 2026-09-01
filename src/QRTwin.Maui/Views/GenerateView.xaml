@@ -128,6 +128,12 @@
               </HorizontalStackLayout>
             </Border>
           </Grid>
+
+          <Button Text="Очистить"
+                  Style="{StaticResource SecondaryButton}"
+                  TextColor="{StaticResource Danger}"
+                  Margin="0,4,0,0"
+                  Command="{Binding ClearCommand}" />
         </VerticalStackLayout>
       </Border>
     </VerticalStackLayout>
