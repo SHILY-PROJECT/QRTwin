@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
+             xmlns:models="clr-namespace:QRTwin.Maui.Models"
+             xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
+             xmlns:views="clr-namespace:QRTwin.Maui.Views"
+             xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
+             x:Class="QRTwin.Maui.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="16">
+        <Label Grid.Row="0"
+               Text="История"
+               Style="{StaticResource TitleLabel}"
+               Margin="0,0,0,12" />
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding Entries}"
+                        SelectionMode="None">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="8">
+                    <Label Text="История пуста"
+                           Style="{StaticResource SubtitleLabel}"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="Сканируйте или создайте QR-код"
+                           Style="{StaticResource SubtitleLabel}"
+                           HorizontalTextAlignment="Center" />
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:HistoryEntry">
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,12">
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12">
+                            <Label Grid.Row="0"
+                                   Grid.Column="0"
+                                   Text="{Binding EntryType, Converter={StaticResource HistoryEntryTypeToStringConverter}}"
+                                   TextColor="{StaticResource Accent}"
+                                   FontAttributes="Bold"
+                                   FontSize="13" />
+
+                            <Label Grid.Row="0"
+                                   Grid.Column="1"
+                                   Text="{Binding CreatedAt, Converter={StaticResource DateTimeToLocalStringConverter}}"
+                                   Style="{StaticResource SubtitleLabel}"
+                                   FontSize="12" />
+
+                            <Label Grid.Row="1"
+                                   Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   Text="{Binding Content}"
+                                   TextColor="{StaticResource PrimaryText}"
+                                   FontSize="15"
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="3"
+                                   Margin="0,4,0,0" />
+
+                            <Border Grid.Row="2"
+                                    Grid.Column="1"
+                                    Style="{StaticResource IconButton}"
+                                    WidthRequest="40"
+                                    HeightRequest="40"
+                                    Margin="0,8,0,0">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type views:HistoryView}}, Path=BindingContext.DeleteEntryCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Delete}"
+                                                      IconColor="{StaticResource Danger}" />
+                            </Border>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Button Grid.Row="2"
+                Text="Очистить всё"
+                Style="{StaticResource SecondaryButton}"
+                TextColor="{StaticResource Danger}"
+                Margin="0,12,0,0"
+                Command="{Binding ClearAllCommand}" />
+    </Grid>
+</ContentView>

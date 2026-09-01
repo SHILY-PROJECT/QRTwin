@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
+             xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
+             xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
+             x:Class="QRTwin.Maui.Views.GenerateView"
+             x:DataType="vm:GenerateViewModel">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="16">
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+                   TextColor="{StaticResource Danger}"
+                   HorizontalTextAlignment="Center" />
+
+            <ActivityIndicator IsRunning="{Binding IsGenerating}"
+                                 IsVisible="{Binding IsGenerating}"
+                                 Color="{StaticResource Accent}"
+                                 HeightRequest="40" />
+
+            <Border Style="{StaticResource Card}"
+                    IsVisible="{Binding HasQrCode}"
+                    HorizontalOptions="Center"
+                    x:Name="QrCard">
+                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                    <Image Source="{Binding QrCodeImage}"
+                           WidthRequest="280"
+                           HeightRequest="280"
+                           Aspect="AspectFit"
+                           x:Name="QrImage" />
+
+                    <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
+                        <Border Style="{StaticResource IconButton}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ShareCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Share}"
+                                                      IconColor="{StaticResource Accent}" />
+                                <Label Text="Поделиться"
+                                       Style="{StaticResource SubtitleLabel}"
+                                       FontSize="12"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <Border Style="{StaticResource IconButton}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SaveCommand}" />
+                            </Border.GestureRecognizers>
+                            <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Save}"
+                                                      IconColor="{StaticResource Accent}" />
+                                <Label Text="Сохранить"
+                                       Style="{StaticResource SubtitleLabel}"
+                                       FontSize="12"
+                                       HorizontalTextAlignment="Center" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Введите текст и нажмите кнопку генерации ниже"
+                   Style="{StaticResource SubtitleLabel}"
+                   HorizontalTextAlignment="Center"
+                   IsVisible="{Binding HasQrCode, Converter={StaticResource InvertedBoolConverter}}" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentView>

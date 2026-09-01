@@ -1,0 +1,183 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
+             xmlns:models="clr-namespace:QRTwin.Maui.Models"
+             xmlns:views="clr-namespace:QRTwin.Maui.Views"
+             xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
+             xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
+             x:Class="QRTwin.Maui.MainPage"
+             x:DataType="vm:MainViewModel"
+             Shell.NavBarIsVisible="False">
+
+    <ContentPage.Resources>
+        <Style x:Key="TabItem" TargetType="Border">
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+            <Setter Property="BackgroundColor" Value="Transparent" />
+            <Setter Property="HorizontalOptions" Value="Fill" />
+        </Style>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto"
+          Padding="{OnPlatform Android='0,24,0,0', iOS='0,44,0,0', Default='0'}">
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              Padding="20,16"
+              ColumnDefinitions="*,Auto"
+              BackgroundColor="{StaticResource AppBackground}">
+            <Label Text="QR Code Manager"
+                   Style="{StaticResource TitleLabel}"
+                   VerticalOptions="Center" />
+
+            <Border Grid.Column="1"
+                    Style="{StaticResource IconButton}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
+                </Border.GestureRecognizers>
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
+                                      IconColor="{StaticResource Accent}" />
+            </Border>
+        </Grid>
+
+        <!-- Main content -->
+        <Grid Grid.Row="1" x:Name="ContentHost">
+            <views:ScanView x:Name="ScanContent"
+                            BindingContext="{Binding Scan}"
+                            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Scan}"
+                            Opacity="1" />
+
+            <views:GenerateView x:Name="GenerateContent"
+                                BindingContext="{Binding Generate}"
+                                IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}"
+                                Opacity="1" />
+        </Grid>
+
+        <!-- Generate input (only on Generate tab) -->
+        <Border Grid.Row="2"
+                Margin="16,8"
+                Padding="12"
+                BackgroundColor="{StaticResource Surface}"
+                Stroke="{StaticResource Border}"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 12"
+                IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <Entry Grid.Column="0"
+                       Style="{StaticResource InputEntry}"
+                       Placeholder="Введите текст или ссылку..."
+                       Text="{Binding Generate.InputText}"
+                       ReturnCommand="{Binding Generate.GenerateCommand}"
+                       ReturnType="Go" />
+
+                <Border Grid.Column="1"
+                        BackgroundColor="{StaticResource Accent}"
+                        StrokeShape="RoundRectangle 12"
+                        Padding="12"
+                        WidthRequest="48"
+                        HeightRequest="48">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding Generate.GenerateCommand}" />
+                    </Border.GestureRecognizers>
+                    <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Wand}"
+                                          IconColor="{StaticResource PrimaryText}" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Bottom navigation -->
+        <Border Grid.Row="3"
+                BackgroundColor="{StaticResource Surface}"
+                Stroke="{StaticResource Border}"
+                StrokeThickness="1,1,0,0"
+                Padding="16,8,16,20">
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Border x:Name="ScanTab"
+                        Style="{StaticResource TabItem}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnScanTabTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                        <controls:SvgIconView x:Name="ScanTabIcon"
+                                              IconName="{x:Static helpers:IconPaths.Scan}" />
+                        <Label Text="Сканировать"
+                               FontSize="12"
+                               HorizontalTextAlignment="Center"
+                               x:Name="ScanTabLabel" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Border Grid.Column="1"
+                        x:Name="GenerateTab"
+                        Style="{StaticResource TabItem}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnGenerateTabTapped" />
+                    </Border.GestureRecognizers>
+                    <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+                        <controls:SvgIconView x:Name="GenerateTabIcon"
+                                              IconName="{x:Static helpers:IconPaths.Generate}" />
+                        <Label Text="Генерировать"
+                               FontSize="12"
+                               HorizontalTextAlignment="Center"
+                               x:Name="GenerateTabLabel" />
+                    </VerticalStackLayout>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- History overlay -->
+        <Grid Grid.RowSpan="4"
+              IsVisible="{Binding IsHistoryVisible}"
+              BackgroundColor="#CC000000">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+            </Grid.GestureRecognizers>
+
+            <Border Margin="24,60,24,24"
+                    BackgroundColor="{StaticResource Surface}"
+                    Stroke="{StaticResource Border}"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 16"
+                    VerticalOptions="Fill"
+                    HorizontalOptions="Fill"
+                    MaximumWidthRequest="600">
+                <Grid RowDefinitions="Auto,*">
+                    <Grid Grid.Row="0"
+                          ColumnDefinitions="*,Auto"
+                          Padding="16,12">
+                        <Label Text="История"
+                               Style="{StaticResource TitleLabel}" />
+                        <Button Grid.Column="1"
+                                Text="Закрыть"
+                                Style="{StaticResource SecondaryButton}"
+                                Padding="12,8"
+                                Command="{Binding CloseHistoryCommand}" />
+                    </Grid>
+
+                    <views:HistoryView Grid.Row="1"
+                                       BindingContext="{Binding History}" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+
+    <ContentPage.VisualStateManager.VisualStateGroups>
+        <VisualStateGroupList>
+            <VisualStateGroup x:Name="WindowSizeStates">
+                <VisualState x:Name="Narrow">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="0" />
+                    </VisualState.StateTriggers>
+                </VisualState>
+                <VisualState x:Name="Wide">
+                    <VisualState.StateTriggers>
+                        <AdaptiveTrigger MinWindowWidth="800" />
+                    </VisualState.StateTriggers>
+                    <VisualState.Setters>
+                        <Setter TargetName="ContentHost" Property="Padding" Value="40,0" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateGroupList>
+    </ContentPage.VisualStateManager.VisualStateGroups>
+</ContentPage>

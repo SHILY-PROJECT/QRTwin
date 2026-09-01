@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
+             xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
+             xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
+             x:Class="QRTwin.Maui.Views.ScanView"
+             x:DataType="vm:ScanViewModel">
+
+    <Grid RowDefinitions="*,Auto" Padding="16,0,16,8">
+        <Grid Grid.Row="0" VerticalOptions="FillAndExpand">
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
+                   TextColor="{StaticResource Danger}"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+
+            <Grid IsVisible="{Binding HasCameraPermission}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center">
+
+                <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
+                                               BarcodesDetected="OnBarcodesDetected"
+                                               IsDetecting="{Binding IsScanning}"
+                                               IsTorchOn="False"
+                                               HorizontalOptions="Fill"
+                                               VerticalOptions="Fill"
+                                               WidthRequest="320"
+                                               HeightRequest="320" />
+
+                <Border Stroke="{StaticResource Accent}"
+                        StrokeThickness="2"
+                        StrokeShape="RoundRectangle 16"
+                        BackgroundColor="#33000000"
+                        WidthRequest="280"
+                        HeightRequest="280"
+                        HorizontalOptions="Center"
+                        VerticalOptions="Center">
+                    <Grid>
+                        <BoxView x:Name="ScanLine"
+                                 Color="{StaticResource ScannerLine}"
+                                 HeightRequest="3"
+                                 HorizontalOptions="Fill"
+                                 VerticalOptions="Start"
+                                 Opacity="0.9" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Style="{StaticResource Card}"
+                IsVisible="{Binding HasResult}"
+                Margin="0,12,0,0">
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12">
+                <Label Grid.Row="0"
+                       Grid.Column="0"
+                       Grid.ColumnSpan="2"
+                       Text="Результат сканирования"
+                       Style="{StaticResource SubtitleLabel}" />
+
+                <Label Grid.Row="1"
+                       Grid.Column="0"
+                       Text="{Binding ScanResult}"
+                       TextColor="{StaticResource Accent}"
+                       FontSize="16"
+                       LineBreakMode="WordWrap">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenUrlCommand}"
+                                              NumberOfTapsRequired="1" />
+                    </Label.GestureRecognizers>
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsUrl}"
+                                     Value="False">
+                            <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+
+                <Border Grid.Row="1"
+                        Grid.Column="1"
+                        Style="{StaticResource IconButton}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding CopyResultCommand}" />
+                    </Border.GestureRecognizers>
+                    <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Copy}"
+                                          IconColor="{StaticResource Accent}" />
+                </Border>
+
+                <Button Grid.Row="2"
+                        Grid.Column="0"
+                        Grid.ColumnSpan="2"
+                        Text="Сканировать снова"
+                        Style="{StaticResource SecondaryButton}"
+                        Margin="0,12,0,0"
+                        Command="{Binding ResetScanCommand}" />
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>

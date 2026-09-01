@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Color x:Key="AppBackground">#0F1115</Color>
+    <Color x:Key="Surface">#1A1D23</Color>
+    <Color x:Key="SurfaceElevated">#242830</Color>
+    <Color x:Key="PrimaryText">#FFFFFF</Color>
+    <Color x:Key="SecondaryText">#A0A6B1</Color>
+    <Color x:Key="Accent">#4F8CFF</Color>
+    <Color x:Key="AccentMuted">#3A6FD6</Color>
+    <Color x:Key="Danger">#FF5252</Color>
+    <Color x:Key="ScannerLine">#00E676</Color>
+    <Color x:Key="Border">#2E3340</Color>
+
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackground}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource Surface}" />
+    <SolidColorBrush x:Key="SurfaceElevatedBrush" Color="{StaticResource SurfaceElevated}" />
+    <SolidColorBrush x:Key="PrimaryTextBrush" Color="{StaticResource PrimaryText}" />
+    <SolidColorBrush x:Key="SecondaryTextBrush" Color="{StaticResource SecondaryText}" />
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource Accent}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource Border}" />
+</ResourceDictionary>
