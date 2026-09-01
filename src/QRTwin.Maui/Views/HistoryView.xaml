@@ -48,6 +48,10 @@
         <DataTemplate x:DataType="models:HistoryEntry">
           <Border Style="{StaticResource Card}"
                   Padding="16">
+            <Border.GestureRecognizers>
+              <TapGestureRecognizer Command="{Binding Source={x:Reference HistoryViewRoot}, Path=BindingContext.SelectEntryCommand}"
+                                    CommandParameter="{Binding .}" />
+            </Border.GestureRecognizers>
             <Grid ColumnDefinitions="*,Auto"
                   RowDefinitions="Auto,Auto,Auto"
                   ColumnSpacing="12"

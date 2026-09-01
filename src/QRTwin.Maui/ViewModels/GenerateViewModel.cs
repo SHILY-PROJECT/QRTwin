@@ -55,8 +55,22 @@ public partial class GenerateViewModel(
         }
     }
 
+    public async Task RestoreFromHistoryAsync(string content)
+    {
+        if (!content.IsNotBlank())
+        {
+            return;
+        }
+
+        _generateBlockedUntilTicks = 0;
+        InputText = content.TrimmedOrEmpty();
+        await GenerateAsync(saveToHistory: false).ConfigureAwait(false);
+    }
+
     [RelayCommand(CanExecute = nameof(CanGenerate))]
-    private async Task GenerateAsync()
+    private Task GenerateAsync() => GenerateAsync(saveToHistory: true);
+
+    private async Task GenerateAsync(bool saveToHistory)
     {
         if (!CanGenerate())
         {
@@ -85,8 +99,12 @@ public partial class GenerateViewModel(
             });
 
             _tempFilePath = await qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
-            await historyService.AddAsync(HistoryEntryType.Generate, InputText.TrimmedOrEmpty()).ConfigureAwait(false);
-            HistorySaved?.Invoke(this, EventArgs.Empty);
+
+            if (saveToHistory)
+            {
+                await historyService.AddAsync(HistoryEntryType.Generate, InputText.TrimmedOrEmpty()).ConfigureAwait(false);
+                HistorySaved?.Invoke(this, EventArgs.Empty);
+            }
         }
         catch (Exception ex)
         {

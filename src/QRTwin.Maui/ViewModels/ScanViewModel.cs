@@ -140,4 +140,19 @@ public partial class ScanViewModel(
         IsUrl = false;
         IsScanning = HasCameraPermission;
     }
+
+    public void RestoreFromHistory(string content)
+    {
+        if (!content.IsNotBlank())
+        {
+            return;
+        }
+
+        var trimmed = content.TrimmedOrEmpty();
+        ScanResult = trimmed;
+        HasResult = true;
+        IsUrl = qrCodeService.IsUrl(trimmed);
+        IsScanning = false;
+        ErrorMessage = string.Empty;
+    }
 }

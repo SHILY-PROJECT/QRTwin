@@ -21,6 +21,7 @@ public partial class MainViewModel(
     {
         Scan.HistorySaved += OnHistorySaved;
         Generate.HistorySaved += OnHistorySaved;
+        History.EntrySelected += OnHistoryEntrySelected;
         Scan.IsActive = true;
         SelectedTab = AppTab.Scan;
     }
@@ -56,6 +57,23 @@ public partial class MainViewModel(
         if (IsHistoryVisible)
         {
             await History.LoadAsync().ConfigureAwait(false);
+        }
+    }
+
+    private async void OnHistoryEntrySelected(object? sender, HistoryEntry entry)
+    {
+        IsHistoryVisible = false;
+
+        switch (entry.EntryType)
+        {
+            case HistoryEntryType.Scan:
+                SelectedTab = AppTab.Scan;
+                Scan.RestoreFromHistory(entry.Content);
+                break;
+            case HistoryEntryType.Generate:
+                SelectedTab = AppTab.Generate;
+                await Generate.RestoreFromHistoryAsync(entry.Content).ConfigureAwait(false);
+                break;
         }
     }
 }

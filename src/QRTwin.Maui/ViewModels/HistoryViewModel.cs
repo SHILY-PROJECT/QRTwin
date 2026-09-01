@@ -2,6 +2,8 @@ namespace QRTwin.Maui.ViewModels;
 
 public partial class HistoryViewModel(IHistoryService historyService) : ObservableObject
 {
+    public event EventHandler<HistoryEntry>? EntrySelected;
+
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
@@ -33,6 +35,10 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
             IsLoading = false;
         }
     }
+
+    [RelayCommand]
+    private void SelectEntry(HistoryEntry entry) =>
+        EntrySelected?.Invoke(this, entry);
 
     [RelayCommand]
     private async Task DeleteEntryAsync(HistoryEntry entry)
