@@ -1,6 +1,4 @@
-﻿using QRTwin.Maui.Extensions;
-
-namespace QRTwin.Maui;
+﻿namespace QRTwin.Maui;
 
 public partial class App : Application
 {

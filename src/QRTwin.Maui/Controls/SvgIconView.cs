@@ -1,7 +1,6 @@
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
-using QRTwin.Maui.Extensions;
 using Svg.Skia;
 
 namespace QRTwin.Maui.Controls;

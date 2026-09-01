@@ -1,0 +1,11 @@
+global using System.Collections.ObjectModel;
+global using System.Globalization;
+global using System.Runtime.CompilerServices;
+global using System.Runtime.InteropServices;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using CommunityToolkit.Mvvm.Input;
+global using Microsoft.Extensions.DependencyInjection;
+global using QRTwin.Maui.Extensions;
+global using QRTwin.Maui.Models;
+global using QRTwin.Maui.Services;
+global using QRTwin.Maui.ViewModels;

@@ -1,37 +1,29 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using QRTwin.Maui.Models;
-
 namespace QRTwin.Maui.ViewModels;
 
-public partial class MainViewModel : ObservableObject
+public partial class MainViewModel(
+    ScanViewModel scan,
+    GenerateViewModel generate,
+    HistoryViewModel history) : ObservableObject
 {
-    public ScanViewModel Scan { get; }
+    public ScanViewModel Scan { get; } = scan;
 
-    public GenerateViewModel Generate { get; }
+    public GenerateViewModel Generate { get; } = generate;
 
-    public HistoryViewModel History { get; }
-
-    public MainViewModel(
-        ScanViewModel scanViewModel,
-        GenerateViewModel generateViewModel,
-        HistoryViewModel historyViewModel)
-    {
-        Scan = scanViewModel;
-        Generate = generateViewModel;
-        History = historyViewModel;
-
-        Scan.HistorySaved += OnHistorySaved;
-        Generate.HistorySaved += OnHistorySaved;
-        Scan.IsActive = true;
-        SelectedTab = AppTab.Scan;
-    }
+    public HistoryViewModel History { get; } = history;
 
     [ObservableProperty]
     public partial AppTab SelectedTab { get; set; }
 
     [ObservableProperty]
     public partial bool IsHistoryVisible { get; set; }
+
+    public void Initialize()
+    {
+        Scan.HistorySaved += OnHistorySaved;
+        Generate.HistorySaved += OnHistorySaved;
+        Scan.IsActive = true;
+        SelectedTab = AppTab.Scan;
+    }
 
     partial void OnSelectedTabChanged(AppTab value)
     {

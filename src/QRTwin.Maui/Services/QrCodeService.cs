@@ -1,4 +1,4 @@
-using QRTwin.Maui.Extensions;
+using QRTwin.Maui.Diagnostics;
 using SkiaSharp;
 using ZXing;
 using ZXing.QrCode;
@@ -7,26 +7,35 @@ namespace QRTwin.Maui.Services;
 
 public sealed class QrCodeService() : IQrCodeService
 {
-    public async Task<ImageSource?> GenerateQrCodeAsync(string content, int size = 512)
-    {
-        if (!content.IsNotBlank()) return null;
-        
-        var pngBytes = await Task.Run(() => EncodeQrCodeToPng(content.TrimmedOrEmpty(), size)).ConfigureAwait(false);
+    private const int PngQuality = 100;
 
-        return pngBytes is null ? null : await MainThread.InvokeOnMainThreadAsync(() => ImageSource.FromStream(() => new MemoryStream(pngBytes)));
+    public async Task<ImageSource?> GenerateQrCodeAsync(string content, QrEncodeOptions options = default)
+    {
+        if (!content.IsNotBlank())
+        {
+            return null;
+        }
+
+        options = options.Size is 0 ? QrEncodeOptions.Default : options;
+        var pngBytes = await Task.Run(() => EncodeQrCodeToPng(content.TrimmedOrEmpty(), options))
+            .ConfigureAwait(false);
+
+        return pngBytes is null
+            ? null
+            : await MainThread.InvokeOnMainThreadAsync(() => ImageSource.FromStream(() => new MemoryStream(pngBytes)));
     }
 
-    private static byte[]? EncodeQrCodeToPng(string content, int size)
+    private static byte[]? EncodeQrCodeToPng(string content, QrEncodeOptions options)
     {
         var writer = new BarcodeWriterPixelData
         {
             Format = BarcodeFormat.QR_CODE,
             Options = new QrCodeEncodingOptions
             {
-                Height = size,
-                Width = size,
-                Margin = 2,
-                CharacterSet = "UTF-8"
+                Height = options.Size,
+                Width = options.Size,
+                Margin = options.Margin,
+                CharacterSet = options.CharacterSet
             }
         };
 
@@ -35,20 +44,34 @@ public sealed class QrCodeService() : IQrCodeService
             return null;
         }
 
-        using var bitmap = new SKBitmap(pixelData.Width, pixelData.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
-        System.Runtime.InteropServices.Marshal.Copy(
-            pixelData.Pixels,
-            0,
-            bitmap.GetPixels(),
-            pixelData.Pixels.Length);
+        using var bitmap = new SKBitmap(
+            pixelData.Width,
+            pixelData.Height,
+            SKColorType.Bgra8888,
+            SKAlphaType.Premul);
+
+        CopyPixelsToBitmap(pixelData.Pixels.AsSpan(), bitmap);
 
         using var image = SKImage.FromBitmap(bitmap);
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        using var data = image.Encode(SKEncodedImageFormat.Png, PngQuality);
         return data.ToArray();
+    }
+
+    private static void CopyPixelsToBitmap(ReadOnlySpan<byte> source, SKBitmap bitmap)
+    {
+        var destination = bitmap.GetPixelSpan();
+        if (source.Length != destination.Length)
+        {
+            throw new InvalidOperationException(
+                $"Несовпадение размера пикселей: источник {source.Length}, назначение {destination.Length}.");
+        }
+
+        source.CopyTo(destination);
     }
 
     public async Task<string> SaveToTempFileAsync(ImageSource imageSource, string fileName = "qrcode.png")
     {
+        Guard.NotNull(imageSource);
         var tempPath = Path.Combine(FileSystem.CacheDirectory, fileName);
         await imageSource.SaveToFileAsync(tempPath).ConfigureAwait(false);
         return tempPath;

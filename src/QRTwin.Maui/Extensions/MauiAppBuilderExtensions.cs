@@ -17,7 +17,15 @@ public static class MauiAppBuilderExtensions
             builder.Services.AddSingleton<ScanViewModel>();
             builder.Services.AddSingleton<GenerateViewModel>();
             builder.Services.AddSingleton<HistoryViewModel>();
-            builder.Services.AddSingleton<MainViewModel>();
+            builder.Services.AddSingleton<MainViewModel>(sp =>
+            {
+                var mainViewModel = new MainViewModel(
+                    sp.GetRequiredService<ScanViewModel>(),
+                    sp.GetRequiredService<GenerateViewModel>(),
+                    sp.GetRequiredService<HistoryViewModel>());
+                mainViewModel.Initialize();
+                return mainViewModel;
+            });
 
             builder.Services.AddSingleton<MainPage>();
             builder.Services.AddTransient<ScanView>();

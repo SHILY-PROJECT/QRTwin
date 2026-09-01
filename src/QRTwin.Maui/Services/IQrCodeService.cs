@@ -2,7 +2,7 @@ namespace QRTwin.Maui.Services;
 
 public interface IQrCodeService
 {
-    Task<ImageSource?> GenerateQrCodeAsync(string content, int size = 512);
+    Task<ImageSource?> GenerateQrCodeAsync(string content, QrEncodeOptions options = default);
 
     Task<string> SaveToTempFileAsync(ImageSource imageSource, string fileName = "qrcode.png");
 

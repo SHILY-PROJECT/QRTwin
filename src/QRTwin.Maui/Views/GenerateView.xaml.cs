@@ -1,5 +1,3 @@
-using QRTwin.Maui.ViewModels;
-
 namespace QRTwin.Maui.Views;
 
 public partial class GenerateView : ContentView
@@ -21,7 +19,7 @@ public partial class GenerateView : ContentView
 
     private async void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(GenerateViewModel.HasQrCode))
+        if (!e.IsProperty(nameof(GenerateViewModel.HasQrCode)))
         {
             return;
         }

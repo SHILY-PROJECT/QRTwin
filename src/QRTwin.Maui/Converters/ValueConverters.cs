@@ -1,7 +1,3 @@
-using System.Globalization;
-using QRTwin.Maui.Extensions;
-using QRTwin.Maui.Models;
-
 namespace QRTwin.Maui.Converters;
 
 public sealed class AppTabToBoolConverter : IValueConverter

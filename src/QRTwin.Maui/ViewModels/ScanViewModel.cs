@@ -1,31 +1,13 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using QRTwin.Maui.Extensions;
-using QRTwin.Maui.Models;
-using QRTwin.Maui.Services;
-
 namespace QRTwin.Maui.ViewModels;
 
-public partial class ScanViewModel : ObservableObject
+public partial class ScanViewModel(
+    IHistoryService historyService,
+    IQrCodeService qrCodeService,
+    IPermissionService permissionService) : ObservableObject
 {
-    private readonly IHistoryService _historyService;
-    private readonly IQrCodeService _qrCodeService;
-    private readonly IPermissionService _permissionService;
-
     public const string SampleQrContent = "QRTwin — Сканируйте и создавайте QR-коды";
 
     public event EventHandler? HistorySaved;
-
-    public ScanViewModel(
-        IHistoryService historyService,
-        IQrCodeService qrCodeService,
-        IPermissionService permissionService)
-    {
-        _historyService = historyService;
-        _qrCodeService = qrCodeService;
-        _permissionService = permissionService;
-        IsScanning = true;
-    }
 
     [ObservableProperty]
     public partial string ScanResult { get; set; }
@@ -53,14 +35,13 @@ public partial class ScanViewModel : ObservableObject
 
     partial void OnIsActiveChanged(bool value)
     {
-        switch (value)
+        if (value)
         {
-            case true:
-                _ = InitializeAsync();
-                break;
-            case false:
-                IsScanning = false;
-                break;
+            _ = InitializeAsync();
+        }
+        else
+        {
+            IsScanning = false;
         }
     }
 
@@ -71,7 +52,8 @@ public partial class ScanViewModel : ObservableObject
             return;
         }
 
-        SampleQrCodeImage = await _qrCodeService.GenerateQrCodeAsync(SampleQrContent, 280)
+        SampleQrCodeImage = await qrCodeService
+            .GenerateQrCodeAsync(SampleQrContent, QrEncodeOptions.Preview)
             .ConfigureAwait(true);
     }
 
@@ -79,7 +61,7 @@ public partial class ScanViewModel : ObservableObject
     private async Task InitializeAsync()
     {
         ErrorMessage = string.Empty;
-        HasCameraPermission = await _permissionService.EnsureCameraPermissionAsync().ConfigureAwait(false);
+        HasCameraPermission = await permissionService.EnsureCameraPermissionAsync().ConfigureAwait(false);
 
         if (!HasCameraPermission)
         {
@@ -102,9 +84,15 @@ public partial class ScanViewModel : ObservableObject
         }
 
         IsScanning = false;
-        ScanResult = value.TrimmedOrEmpty();
+
+        var result = new ScanResult(
+            value.TrimmedOrEmpty(),
+            qrCodeService.IsUrl(value),
+            DateTime.UtcNow);
+
+        ScanResult = result.Content;
         HasResult = true;
-        IsUrl = _qrCodeService.IsUrl(ScanResult);
+        IsUrl = result.IsUrl;
 
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
@@ -118,7 +106,7 @@ public partial class ScanViewModel : ObservableObject
             }
         });
 
-        await _historyService.AddAsync(HistoryEntryType.Scan, ScanResult).ConfigureAwait(false);
+        await historyService.AddAsync(HistoryEntryType.Scan, result.Content).ConfigureAwait(false);
         HistorySaved?.Invoke(this, EventArgs.Empty);
     }
 

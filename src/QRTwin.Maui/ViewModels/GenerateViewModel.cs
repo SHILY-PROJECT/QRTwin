@@ -1,25 +1,14 @@
 using CommunityToolkit.Maui.Storage;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using QRTwin.Maui.Extensions;
-using QRTwin.Maui.Models;
-using QRTwin.Maui.Services;
 
 namespace QRTwin.Maui.ViewModels;
 
-public partial class GenerateViewModel : ObservableObject
+public partial class GenerateViewModel(
+    IHistoryService historyService,
+    IQrCodeService qrCodeService) : ObservableObject
 {
-    private readonly IHistoryService _historyService;
-    private readonly IQrCodeService _qrCodeService;
     private string? _tempFilePath;
 
     public event EventHandler? HistorySaved;
-
-    public GenerateViewModel(IHistoryService historyService, IQrCodeService qrCodeService)
-    {
-        _historyService = historyService;
-        _qrCodeService = qrCodeService;
-    }
 
     [ObservableProperty]
     public partial string InputText { get; set; }
@@ -53,7 +42,10 @@ public partial class GenerateViewModel : ObservableObject
 
         try
         {
-            var image = await _qrCodeService.GenerateQrCodeAsync(InputText, 640).ConfigureAwait(false);
+            var image = await qrCodeService
+                .GenerateQrCodeAsync(InputText, QrEncodeOptions.Presentation)
+                .ConfigureAwait(false);
+
             if (image is null)
             {
                 ErrorMessage = "Не удалось сгенерировать QR-код.";
@@ -66,13 +58,16 @@ public partial class GenerateViewModel : ObservableObject
                 HasQrCode = true;
             });
 
-            _tempFilePath = await _qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
-            await _historyService.AddAsync(HistoryEntryType.Generate, InputText.TrimmedOrEmpty()).ConfigureAwait(false);
+            _tempFilePath = await qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
+            await historyService.AddAsync(HistoryEntryType.Generate, InputText.TrimmedOrEmpty()).ConfigureAwait(false);
             HistorySaved?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Ошибка генерации: {ex.Message}";
+            ErrorMessage = $"""
+                Ошибка генерации:
+                {ex.Message}
+                """;
         }
         finally
         {
@@ -121,6 +116,6 @@ public partial class GenerateViewModel : ObservableObject
             return null;
         }
 
-        return _tempFilePath = await _qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
+        return _tempFilePath = await qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
     }
 }

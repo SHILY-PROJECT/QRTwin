@@ -1,10 +1,10 @@
-using QRTwin.Maui.Models;
-
 namespace QRTwin.Maui.Services;
 
 public interface IHistoryService
 {
     Task<IReadOnlyList<HistoryEntry>> GetAllAsync();
+
+    IAsyncEnumerable<HistoryEntry> StreamAllAsync(CancellationToken cancellationToken = default);
 
     Task AddAsync(HistoryEntryType entryType, string content);
 

@@ -1,15 +1,7 @@
-using System.Collections.ObjectModel;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using QRTwin.Maui.Models;
-using QRTwin.Maui.Services;
-
 namespace QRTwin.Maui.ViewModels;
 
 public partial class HistoryViewModel(IHistoryService historyService) : ObservableObject
 {
-    private readonly IHistoryService _historyService = historyService;
-
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
@@ -21,11 +13,16 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
 
         try
         {
-            var entries = await _historyService.GetAllAsync().ConfigureAwait(false);
+            var collected = new List<HistoryEntry>();
+            await foreach (var entry in historyService.StreamAllAsync().ConfigureAwait(false))
+            {
+                collected.Add(entry);
+            }
+
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
                 Entries.Clear();
-                foreach (var entry in entries)
+                foreach (var entry in collected)
                 {
                     Entries.Add(entry);
                 }
@@ -40,14 +37,14 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
     [RelayCommand]
     private async Task DeleteEntryAsync(HistoryEntry entry)
     {
-        await _historyService.DeleteAsync(entry.Id).ConfigureAwait(false);
+        await historyService.DeleteAsync(entry.Id).ConfigureAwait(false);
         await MainThread.InvokeOnMainThreadAsync(() => Entries.Remove(entry));
     }
 
     [RelayCommand]
     private async Task ClearAllAsync()
     {
-        await _historyService.ClearAllAsync().ConfigureAwait(false);
-        await MainThread.InvokeOnMainThreadAsync(() => Entries.Clear());
+        await historyService.ClearAllAsync().ConfigureAwait(false);
+        await MainThread.InvokeOnMainThreadAsync(Entries.Clear);
     }
 }

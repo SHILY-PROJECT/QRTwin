@@ -1,7 +1,6 @@
 ﻿using SkiaSharp.Views.Maui.Controls.Hosting;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
-using QRTwin.Maui.Extensions;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using SQLitePCL;

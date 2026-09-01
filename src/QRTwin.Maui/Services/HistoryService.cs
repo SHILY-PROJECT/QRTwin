@@ -1,5 +1,3 @@
-using QRTwin.Maui.Extensions;
-using QRTwin.Maui.Models;
 using SQLite;
 
 namespace QRTwin.Maui.Services;
@@ -15,6 +13,18 @@ public sealed class HistoryService() : IHistoryService
             .ToListAsync()
             .ConfigureAwait(false);
 
+    public async IAsyncEnumerable<HistoryEntry> StreamAllAsync(
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var entries = await GetAllAsync().ConfigureAwait(false);
+
+        foreach (var entry in entries)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            yield return entry;
+        }
+    }
+
     public async Task AddAsync(HistoryEntryType entryType, string content)
     {
         if (!content.IsNotBlank())
@@ -22,12 +32,14 @@ public sealed class HistoryService() : IHistoryService
             return;
         }
 
-        var entry = new HistoryEntry
+        var dto = entryType switch
         {
-            EntryType = entryType,
-            Content = content.TrimmedOrEmpty(),
-            CreatedAt = DateTime.UtcNow
+            HistoryEntryType.Scan => HistoryEntryDto.FromScan(content.TrimmedOrEmpty()),
+            HistoryEntryType.Generate => HistoryEntryDto.FromGenerate(content.TrimmedOrEmpty()),
+            _ => throw new ArgumentOutOfRangeException(nameof(entryType), entryType, null)
         };
+
+        var entry = dto.ToEntity();
 
         await (await GetConnectionAsync().ConfigureAwait(false))
             .InsertAsync(entry)

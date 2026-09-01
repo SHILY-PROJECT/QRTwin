@@ -1,8 +1,4 @@
-﻿using QRTwin.Maui.Extensions;
-using QRTwin.Maui.Models;
-using QRTwin.Maui.ViewModels;
-
-namespace QRTwin.Maui;
+﻿namespace QRTwin.Maui;
 
 public partial class MainPage : ContentPage
 {
