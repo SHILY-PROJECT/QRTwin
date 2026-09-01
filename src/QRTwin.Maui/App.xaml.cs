@@ -13,6 +13,15 @@ public partial class App : Application
                        ?? throw new InvalidOperationException("Сервисы приложения недоступны.");
 
         var mainPage = services.GetRequiredService<MainPage>();
-        return new Window(mainPage);
+        var window = new Window(mainPage)
+        {
+            Title = "QRTwin"
+        };
+
+#if WINDOWS
+        Platforms.Windows.WindowGeometryPersistence.Attach(window);
+#endif
+
+        return window;
     }
 }
