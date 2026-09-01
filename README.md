@@ -30,11 +30,11 @@
 ### История
 
 <p align="center">
-  <img src="docs/screenshots/history.png" alt="История с записями" width="260" />
-  &nbsp;&nbsp;
   <img src="docs/screenshots/history-empty.png" alt="Пустая история" width="260" />
+  &nbsp;&nbsp;
+  <img src="docs/screenshots/history.png" alt="История с записями" width="260" />
 </p>
-
+~~~~
 <p align="center">
   <sub><b>Список записей</b> · <b>Пустое состояние</b></sub>
 </p>
