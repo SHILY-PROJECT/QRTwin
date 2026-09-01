@@ -1,6 +1,7 @@
 using CommunityToolkit.Maui.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QRTwin.Maui.Extensions;
 using QRTwin.Maui.Models;
 using QRTwin.Maui.Services;
 
@@ -10,6 +11,15 @@ public partial class GenerateViewModel : ObservableObject
 {
     private readonly IHistoryService _historyService;
     private readonly IQrCodeService _qrCodeService;
+    private string? _tempFilePath;
+
+    public event EventHandler? HistorySaved;
+
+    public GenerateViewModel(IHistoryService historyService, IQrCodeService qrCodeService)
+    {
+        _historyService = historyService;
+        _qrCodeService = qrCodeService;
+    }
 
     [ObservableProperty]
     private string _inputText = string.Empty;
@@ -29,20 +39,10 @@ public partial class GenerateViewModel : ObservableObject
     [ObservableProperty]
     private string _errorMessage = string.Empty;
 
-    private string? _tempFilePath;
-
-    public event EventHandler? HistorySaved;
-
-    public GenerateViewModel(IHistoryService historyService, IQrCodeService qrCodeService)
-    {
-        _historyService = historyService;
-        _qrCodeService = qrCodeService;
-    }
-
     [RelayCommand]
     private async Task GenerateAsync()
     {
-        if (string.IsNullOrWhiteSpace(InputText))
+        if (!InputText.IsNotBlank())
         {
             ErrorMessage = "Введите текст или ссылку для генерации QR-кода.";
             return;
@@ -67,7 +67,7 @@ public partial class GenerateViewModel : ObservableObject
             });
 
             _tempFilePath = await _qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
-            await _historyService.AddAsync(HistoryEntryType.Generate, InputText.Trim()).ConfigureAwait(false);
+            await _historyService.AddAsync(HistoryEntryType.Generate, InputText.TrimmedOrEmpty()).ConfigureAwait(false);
             HistorySaved?.Invoke(this, EventArgs.Empty);
         }
         catch (Exception ex)
@@ -83,46 +83,44 @@ public partial class GenerateViewModel : ObservableObject
     [RelayCommand]
     private async Task ShareAsync()
     {
-        if (string.IsNullOrWhiteSpace(_tempFilePath) || !File.Exists(_tempFilePath))
+        if (await EnsureTempFilePathAsync() is not { } path)
         {
-            if (QrCodeImage is not null)
-            {
-                _tempFilePath = await _qrCodeService.SaveToTempFileAsync(QrCodeImage).ConfigureAwait(false);
-            }
-            else
-            {
-                return;
-            }
+            return;
         }
 
         await Share.Default.RequestAsync(new ShareFileRequest
         {
             Title = "Поделиться QR-кодом",
-            File = new ShareFile(_tempFilePath)
+            File = new ShareFile(path)
         }).ConfigureAwait(false);
     }
 
     [RelayCommand]
     private async Task SaveAsync()
     {
-        if (string.IsNullOrWhiteSpace(_tempFilePath) || !File.Exists(_tempFilePath))
+        if (await EnsureTempFilePathAsync() is not { } path)
         {
-            if (QrCodeImage is not null)
-            {
-                _tempFilePath = await _qrCodeService.SaveToTempFileAsync(QrCodeImage).ConfigureAwait(false);
-            }
-            else
-            {
-                return;
-            }
+            return;
         }
 
-        await using var stream = File.OpenRead(_tempFilePath);
+        await using var stream = File.OpenRead(path);
         var result = await FileSaver.Default.SaveAsync("qrcode.png", stream).ConfigureAwait(false);
 
-        if (result is null)
+        ErrorMessage = result is null ? "Сохранение отменено." : string.Empty;
+    }
+
+    private async Task<string?> EnsureTempFilePathAsync()
+    {
+        if (_tempFilePath is { } existingPath && File.Exists(existingPath))
         {
-            ErrorMessage = "Сохранение отменено.";
+            return existingPath;
         }
+
+        if (QrCodeImage is not { } image)
+        {
+            return null;
+        }
+
+        return _tempFilePath = await _qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
     }
 }

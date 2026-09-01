@@ -1,11 +1,12 @@
-﻿using QRTwin.Maui.Models;
+﻿using QRTwin.Maui.Extensions;
+using QRTwin.Maui.Models;
 using QRTwin.Maui.ViewModels;
 
 namespace QRTwin.Maui;
 
 public partial class MainPage : ContentPage
 {
-    private MainViewModel? _viewModel;
+    private readonly MainViewModel _viewModel;
 
     public MainPage(MainViewModel viewModel)
     {
@@ -18,7 +19,7 @@ public partial class MainPage : ContentPage
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (sender is MainViewModel vm && e.PropertyName == nameof(MainViewModel.SelectedTab))
+        if (sender is MainViewModel vm && e.IsProperty(nameof(MainViewModel.SelectedTab)))
         {
             UpdateTabVisuals(vm.SelectedTab);
             UpdateTabPanels(vm.SelectedTab);
@@ -27,7 +28,7 @@ public partial class MainPage : ContentPage
 
     private async void OnScanTabTapped(object? sender, TappedEventArgs e)
     {
-        if (_viewModel is null || _viewModel.SelectedTab == AppTab.Scan)
+        if (_viewModel.SelectedTab is AppTab.Scan)
         {
             return;
         }
@@ -37,7 +38,7 @@ public partial class MainPage : ContentPage
 
     private async void OnGenerateTabTapped(object? sender, TappedEventArgs e)
     {
-        if (_viewModel is null || _viewModel.SelectedTab == AppTab.Generate)
+        if (_viewModel.SelectedTab is AppTab.Generate)
         {
             return;
         }
@@ -47,21 +48,20 @@ public partial class MainPage : ContentPage
 
     private async Task AnimateTabChangeAsync(AppTab newTab)
     {
-        if (_viewModel is null)
+        var (outgoing, incoming, incomingOffset, outgoingOffset) = newTab switch
         {
-            return;
-        }
-
-        var outgoing = newTab == AppTab.Scan ? GeneratePanel : ScanPanel;
-        var incoming = newTab == AppTab.Scan ? ScanPanel : GeneratePanel;
+            AppTab.Scan => (GeneratePanel, ScanPanel, -24, 24),
+            AppTab.Generate => (ScanPanel, GeneratePanel, 24, -24),
+            _ => (ScanPanel, GeneratePanel, 0, 0)
+        };
 
         incoming.IsVisible = true;
         incoming.Opacity = 0;
-        incoming.TranslationX = newTab == AppTab.Scan ? -24 : 24;
+        incoming.TranslationX = incomingOffset;
 
         await Task.WhenAll(
             outgoing.FadeToAsync(0, 160, Easing.CubicOut),
-            outgoing.TranslateToAsync(newTab == AppTab.Scan ? 24 : -24, 0, 160, Easing.CubicOut));
+            outgoing.TranslateToAsync(outgoingOffset, 0, 160, Easing.CubicOut));
 
         _viewModel.SelectedTab = newTab;
 
@@ -75,7 +75,7 @@ public partial class MainPage : ContentPage
 
     private void UpdateTabPanels(AppTab selectedTab)
     {
-        var isScan = selectedTab == AppTab.Scan;
+        var isScan = selectedTab is AppTab.Scan;
         ScanPanel.IsVisible = isScan;
         GeneratePanel.IsVisible = !isScan;
         ScanPanel.Opacity = 1;
@@ -89,15 +89,19 @@ public partial class MainPage : ContentPage
         var accent = (Color)Application.Current!.Resources["Accent"];
         var secondary = (Color)Application.Current.Resources["SecondaryText"];
 
-        var isScan = selectedTab == AppTab.Scan;
+        var (scanTabBg, generateTabBg, scanIconColor, generateIconColor, scanLabelColor, generateLabelColor) =
+            selectedTab switch
+            {
+                AppTab.Scan => (accent, Colors.Transparent, Colors.White, secondary, Colors.White, secondary),
+                AppTab.Generate => (Colors.Transparent, accent, secondary, Colors.White, secondary, Colors.White),
+                _ => (Colors.Transparent, Colors.Transparent, secondary, secondary, secondary, secondary)
+            };
 
-        ScanTab.BackgroundColor = isScan ? accent : Colors.Transparent;
-        GenerateTab.BackgroundColor = isScan ? Colors.Transparent : accent;
-
-        ScanTabIcon.IconColor = isScan ? Colors.White : secondary;
-        GenerateTabIcon.IconColor = isScan ? secondary : Colors.White;
-
-        ScanTabLabel.TextColor = isScan ? Colors.White : secondary;
-        GenerateTabLabel.TextColor = isScan ? secondary : Colors.White;
+        ScanTab.BackgroundColor = scanTabBg;
+        GenerateTab.BackgroundColor = generateTabBg;
+        ScanTabIcon.IconColor = scanIconColor;
+        GenerateTabIcon.IconColor = generateIconColor;
+        ScanTabLabel.TextColor = scanLabelColor;
+        GenerateTabLabel.TextColor = generateLabelColor;
     }
 }

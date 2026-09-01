@@ -1,9 +1,7 @@
 ﻿using SkiaSharp.Views.Maui.Controls.Hosting;
 using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
-using QRTwin.Maui.Services;
-using QRTwin.Maui.ViewModels;
-using QRTwin.Maui.Views;
+using QRTwin.Maui.Extensions;
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using SQLitePCL;
@@ -26,21 +24,8 @@ public static class MauiProgram
             {
                 fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-            });
-
-        builder.Services.AddSingleton<IHistoryService, HistoryService>();
-        builder.Services.AddSingleton<IQrCodeService, QrCodeService>();
-        builder.Services.AddSingleton<IPermissionService, PermissionService>();
-
-        builder.Services.AddSingleton<ScanViewModel>();
-        builder.Services.AddSingleton<GenerateViewModel>();
-        builder.Services.AddSingleton<HistoryViewModel>();
-        builder.Services.AddSingleton<MainViewModel>();
-
-        builder.Services.AddSingleton<MainPage>();
-        builder.Services.AddTransient<ScanView>();
-        builder.Services.AddTransient<GenerateView>();
-        builder.Services.AddTransient<HistoryView>();
+            })
+            .AddQRTwinServices();
 
 #if DEBUG
         builder.Logging.AddDebug();

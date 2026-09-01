@@ -1,5 +1,6 @@
 using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
+using QRTwin.Maui.Extensions;
 using QRTwin.Maui.ViewModels;
 
 namespace QRTwin.Maui.Views;
@@ -60,7 +61,7 @@ public partial class ScanView : ContentView
 
     private async void StartSampleQrBlinkAnimation()
     {
-        if (_blinkRunning)
+        if (_blinkRunning || SampleQrImage is null)
         {
             return;
         }
@@ -81,7 +82,7 @@ public partial class ScanView : ContentView
 
     private async void StartScanLineAnimation()
     {
-        if (_scanLineRunning)
+        if (_scanLineRunning || ScanLine is null)
         {
             return;
         }
@@ -91,7 +92,7 @@ public partial class ScanView : ContentView
         while (_scanLineRunning && ScanLine is not null)
         {
             ScanLine.TranslationY = 0;
-            var travel = QrScanArea?.Height > 0 ? QrScanArea.Height - 28 : 192;
+            var travel = QrScanArea?.Height is > 0 and var height ? height - 28 : 192;
             await ScanLine.TranslateToAsync(0, travel, 1800, Easing.SinInOut);
             if (!_scanLineRunning)
             {
@@ -104,8 +105,9 @@ public partial class ScanView : ContentView
 
     private async void OnBarcodesDetected(object? sender, BarcodeDetectionEventArgs e)
     {
-        var result = e.Results?.FirstOrDefault()?.Value;
-        if (BindingContext is not ScanViewModel viewModel || string.IsNullOrWhiteSpace(result))
+        if (e.Results?.FirstOrDefault()?.Value is not { } result
+            || BindingContext is not ScanViewModel viewModel
+            || !result.IsNotBlank())
         {
             return;
         }

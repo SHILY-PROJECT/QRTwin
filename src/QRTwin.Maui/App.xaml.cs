@@ -1,4 +1,6 @@
-﻿namespace QRTwin.Maui;
+﻿using QRTwin.Maui.Extensions;
+
+namespace QRTwin.Maui;
 
 public partial class App : Application
 {
@@ -9,11 +11,12 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        var services = IPlatformApplication.Current?.Services
-                       ?? throw new InvalidOperationException("Сервисы приложения недоступны.");
+        if (IPlatformApplication.Current?.Services is not { } services)
+        {
+            throw new InvalidOperationException("Сервисы приложения недоступны.");
+        }
 
-        var mainPage = services.GetRequiredService<MainPage>();
-        var window = new Window(mainPage)
+        var window = new Window(services.GetRequiredService<MainPage>())
         {
             Title = "QRTwin"
         };

@@ -32,8 +32,7 @@ public static class WindowGeometryPersistence
 
             window.HandlerChanged -= OnHandlerChanged;
 
-            var appWindow = GetAppWindow(nativeWindow);
-            if (appWindow is null)
+            if (GetAppWindow(nativeWindow) is not { } appWindow)
             {
                 return;
             }
@@ -66,8 +65,7 @@ public static class WindowGeometryPersistence
         var x = Preferences.Get(KeyX, 0);
         var y = Preferences.Get(KeyY, 0);
 
-        var rect = ClampToVisibleArea(new RectInt32(x, y, width, height));
-        appWindow.MoveAndResize(rect);
+        appWindow.MoveAndResize(ClampToVisibleArea(new RectInt32(x, y, width, height)));
     }
 
     private static void Save(AppWindow appWindow)
@@ -77,14 +75,12 @@ public static class WindowGeometryPersistence
             return;
         }
 
-        var position = appWindow.Position;
-        var size = appWindow.Size;
-
-        if (size.Width < MinWidth || size.Height < MinHeight)
+        if (appWindow.Size is not { Width: >= MinWidth, Height: >= MinHeight } size)
         {
             return;
         }
 
+        var position = appWindow.Position;
         Preferences.Set(KeyX, position.X);
         Preferences.Set(KeyY, position.Y);
         Preferences.Set(KeyWidth, size.Width);
@@ -94,8 +90,7 @@ public static class WindowGeometryPersistence
 
     private static void CenterOnPrimaryDisplay(AppWindow appWindow, int width, int height)
     {
-        var displayArea = DisplayArea.GetFromPoint(new PointInt32(0, 0), DisplayAreaFallback.Primary);
-        var workArea = displayArea.WorkArea;
+        var workArea = DisplayArea.GetFromPoint(new PointInt32(0, 0), DisplayAreaFallback.Primary).WorkArea;
         var x = workArea.X + (workArea.Width - width) / 2;
         var y = workArea.Y + (workArea.Height - height) / 2;
         appWindow.MoveAndResize(new RectInt32(x, y, width, height));
@@ -103,31 +98,12 @@ public static class WindowGeometryPersistence
 
     private static RectInt32 ClampToVisibleArea(RectInt32 rect)
     {
-        var displayArea = DisplayArea.GetFromRect(rect, DisplayAreaFallback.Nearest);
-        var work = displayArea.WorkArea;
+        var work = DisplayArea.GetFromRect(rect, DisplayAreaFallback.Nearest).WorkArea;
 
         rect.Width = Math.Clamp(rect.Width, MinWidth, work.Width);
         rect.Height = Math.Clamp(rect.Height, MinHeight, work.Height);
-
-        if (rect.X < work.X)
-        {
-            rect.X = work.X;
-        }
-
-        if (rect.Y < work.Y)
-        {
-            rect.Y = work.Y;
-        }
-
-        if (rect.X + rect.Width > work.X + work.Width)
-        {
-            rect.X = Math.Max(work.X, work.X + work.Width - rect.Width);
-        }
-
-        if (rect.Y + rect.Height > work.Y + work.Height)
-        {
-            rect.Y = Math.Max(work.Y, work.Y + work.Height - rect.Height);
-        }
+        rect.X = Math.Clamp(rect.X, work.X, Math.Max(work.X, work.X + work.Width - rect.Width));
+        rect.Y = Math.Clamp(rect.Y, work.Y, Math.Max(work.Y, work.Y + work.Height - rect.Height));
 
         return rect;
     }

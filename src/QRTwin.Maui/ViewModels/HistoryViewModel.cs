@@ -6,19 +6,14 @@ using QRTwin.Maui.Services;
 
 namespace QRTwin.Maui.ViewModels;
 
-public partial class HistoryViewModel : ObservableObject
+public partial class HistoryViewModel(IHistoryService historyService) : ObservableObject
 {
-    private readonly IHistoryService _historyService;
+    private readonly IHistoryService _historyService = historyService;
 
     [ObservableProperty]
     private bool _isLoading;
 
     public ObservableCollection<HistoryEntry> Entries { get; } = [];
-
-    public HistoryViewModel(IHistoryService historyService)
-    {
-        _historyService = historyService;
-    }
 
     public async Task LoadAsync()
     {

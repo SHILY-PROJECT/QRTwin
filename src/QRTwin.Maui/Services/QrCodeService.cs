@@ -1,26 +1,19 @@
+using QRTwin.Maui.Extensions;
 using SkiaSharp;
 using ZXing;
 using ZXing.QrCode;
 
 namespace QRTwin.Maui.Services;
 
-public sealed class QrCodeService : IQrCodeService
+public sealed class QrCodeService() : IQrCodeService
 {
     public async Task<ImageSource?> GenerateQrCodeAsync(string content, int size = 512)
     {
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            return null;
-        }
+        if (!content.IsNotBlank()) return null;
+        
+        var pngBytes = await Task.Run(() => EncodeQrCodeToPng(content.TrimmedOrEmpty(), size)).ConfigureAwait(false);
 
-        var pngBytes = await Task.Run(() => EncodeQrCodeToPng(content.Trim(), size)).ConfigureAwait(false);
-        if (pngBytes is null)
-        {
-            return null;
-        }
-
-        return await MainThread.InvokeOnMainThreadAsync(() =>
-            ImageSource.FromStream(() => new MemoryStream(pngBytes)));
+        return pngBytes is null ? null : await MainThread.InvokeOnMainThreadAsync(() => ImageSource.FromStream(() => new MemoryStream(pngBytes)));
     }
 
     private static byte[]? EncodeQrCodeToPng(string content, int size)
@@ -37,8 +30,7 @@ public sealed class QrCodeService : IQrCodeService
             }
         };
 
-        var pixelData = writer.Write(content);
-        if (pixelData is null)
+        if (writer.Write(content) is not { } pixelData)
         {
             return null;
         }
@@ -58,31 +50,9 @@ public sealed class QrCodeService : IQrCodeService
     public async Task<string> SaveToTempFileAsync(ImageSource imageSource, string fileName = "qrcode.png")
     {
         var tempPath = Path.Combine(FileSystem.CacheDirectory, fileName);
-
-        if (imageSource is StreamImageSource streamImageSource)
-        {
-            await using var stream = await streamImageSource.Stream(CancellationToken.None);
-            if (stream is null)
-            {
-                throw new InvalidOperationException("Не удалось получить поток изображения.");
-            }
-
-            await using var fileStream = File.Create(tempPath);
-            await stream.CopyToAsync(fileStream).ConfigureAwait(false);
-            return tempPath;
-        }
-
-        throw new NotSupportedException("Поддерживается только сохранение из StreamImageSource.");
+        await imageSource.SaveToFileAsync(tempPath).ConfigureAwait(false);
+        return tempPath;
     }
 
-    public bool IsUrl(string? text)
-    {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return false;
-        }
-
-        return Uri.TryCreate(text.Trim(), UriKind.Absolute, out var uri)
-               && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
-    }
+    public bool IsUrl(string? text) => text.IsHttpUrl();
 }

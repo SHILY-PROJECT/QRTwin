@@ -1,6 +1,7 @@
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
+using QRTwin.Maui.Extensions;
 using Svg.Skia;
 
 namespace QRTwin.Maui.Controls;
@@ -48,7 +49,7 @@ public sealed class SvgIconView : SKCanvasView
         _svg?.Dispose();
         _svg = null;
 
-        if (string.IsNullOrWhiteSpace(IconName))
+        if (!IconName.IsNotBlank())
         {
             return;
         }
@@ -70,16 +71,15 @@ public sealed class SvgIconView : SKCanvasView
         var canvas = e.Surface.Canvas;
         canvas.Clear(SKColors.Transparent);
 
-        if (_svg?.Picture is null)
+        if (_svg?.Picture is not { } picture)
         {
             return;
         }
 
         var info = e.Info;
-        var picture = _svg.Picture;
         var bounds = picture.CullRect;
 
-        if (bounds.Width <= 0 || bounds.Height <= 0)
+        if (bounds is not { Width: > 0, Height: > 0 })
         {
             return;
         }

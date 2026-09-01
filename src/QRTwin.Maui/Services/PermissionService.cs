@@ -1,16 +1,16 @@
 namespace QRTwin.Maui.Services;
 
-public sealed class PermissionService : IPermissionService
+public sealed class PermissionService() : IPermissionService
 {
     public async Task<bool> EnsureCameraPermissionAsync()
     {
         var status = await Permissions.CheckStatusAsync<Permissions.Camera>().ConfigureAwait(false);
-        if (status == PermissionStatus.Granted)
+        status = status switch
         {
-            return true;
-        }
+            PermissionStatus.Granted => status,
+            _ => await Permissions.RequestAsync<Permissions.Camera>().ConfigureAwait(false)
+        };
 
-        status = await Permissions.RequestAsync<Permissions.Camera>().ConfigureAwait(false);
-        return status == PermissionStatus.Granted;
+        return status is PermissionStatus.Granted;
     }
 }

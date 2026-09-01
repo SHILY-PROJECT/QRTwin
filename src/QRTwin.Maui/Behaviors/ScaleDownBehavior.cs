@@ -25,10 +25,10 @@ public sealed class ScaleDownBehavior : Behavior<View>
 
     protected override void OnDetachingFrom(View bindable)
     {
-        if (_tapGestureRecognizer is not null)
+        if (_tapGestureRecognizer is { } recognizer)
         {
-            _tapGestureRecognizer.Tapped -= OnTapped;
-            bindable.GestureRecognizers.Remove(_tapGestureRecognizer);
+            recognizer.Tapped -= OnTapped;
+            bindable.GestureRecognizers.Remove(recognizer);
         }
 
         _attachedView = null;
@@ -37,12 +37,12 @@ public sealed class ScaleDownBehavior : Behavior<View>
 
     private async void OnTapped(object? sender, TappedEventArgs e)
     {
-        if (_attachedView is null)
+        if (_attachedView is not { } view)
         {
             return;
         }
 
-        await _attachedView.ScaleToAsync(Scale, 80, Easing.CubicOut);
-        await _attachedView.ScaleToAsync(1, 80, Easing.CubicIn);
+        await view.ScaleToAsync(Scale, 80, Easing.CubicOut);
+        await view.ScaleToAsync(1, 80, Easing.CubicIn);
     }
 }

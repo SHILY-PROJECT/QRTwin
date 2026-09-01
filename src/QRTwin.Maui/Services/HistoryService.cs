@@ -1,31 +1,23 @@
+using QRTwin.Maui.Extensions;
 using QRTwin.Maui.Models;
 using SQLite;
 
 namespace QRTwin.Maui.Services;
 
-public sealed class HistoryService : IHistoryService
+public sealed class HistoryService() : IHistoryService
 {
-    private readonly Lazy<SQLiteAsyncConnection> _connection;
+    private readonly Lazy<SQLiteAsyncConnection> _connection = new(CreateConnection);
 
-    public HistoryService()
-    {
-        _connection = new Lazy<SQLiteAsyncConnection>(CreateConnection);
-    }
-
-    public async Task<IReadOnlyList<HistoryEntry>> GetAllAsync()
-    {
-        var entries = await _connection.Value
+    public async Task<IReadOnlyList<HistoryEntry>> GetAllAsync() =>
+        await _connection.Value
             .Table<HistoryEntry>()
             .OrderByDescending(e => e.CreatedAt)
             .ToListAsync()
             .ConfigureAwait(false);
 
-        return entries;
-    }
-
     public async Task AddAsync(HistoryEntryType entryType, string content)
     {
-        if (string.IsNullOrWhiteSpace(content))
+        if (!content.IsNotBlank())
         {
             return;
         }
@@ -33,7 +25,7 @@ public sealed class HistoryService : IHistoryService
         var entry = new HistoryEntry
         {
             EntryType = entryType,
-            Content = content.Trim(),
+            Content = content.TrimmedOrEmpty(),
             CreatedAt = DateTime.UtcNow
         };
 

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using QRTwin.Maui.Extensions;
 using QRTwin.Maui.Models;
 using QRTwin.Maui.Services;
 
@@ -10,6 +11,20 @@ public partial class ScanViewModel : ObservableObject
     private readonly IHistoryService _historyService;
     private readonly IQrCodeService _qrCodeService;
     private readonly IPermissionService _permissionService;
+
+    public const string SampleQrContent = "QRTwin — Сканируйте и создавайте QR-коды";
+
+    public event EventHandler? HistorySaved;
+
+    public ScanViewModel(
+        IHistoryService historyService,
+        IQrCodeService qrCodeService,
+        IPermissionService permissionService)
+    {
+        _historyService = historyService;
+        _qrCodeService = qrCodeService;
+        _permissionService = permissionService;
+    }
 
     [ObservableProperty]
     private string _scanResult = string.Empty;
@@ -35,29 +50,16 @@ public partial class ScanViewModel : ObservableObject
     [ObservableProperty]
     private ImageSource? _sampleQrCodeImage;
 
-    public const string SampleQrContent = "QRTwin — Сканируйте и создавайте QR-коды";
-
-    public event EventHandler? HistorySaved;
-
-    public ScanViewModel(
-        IHistoryService historyService,
-        IQrCodeService qrCodeService,
-        IPermissionService permissionService)
-    {
-        _historyService = historyService;
-        _qrCodeService = qrCodeService;
-        _permissionService = permissionService;
-    }
-
     partial void OnIsActiveChanged(bool value)
     {
-        if (value)
+        switch (value)
         {
-            _ = InitializeAsync();
-        }
-        else
-        {
-            IsScanning = false;
+            case true:
+                _ = InitializeAsync();
+                break;
+            case false:
+                IsScanning = false;
+                break;
         }
     }
 
@@ -80,9 +82,9 @@ public partial class ScanViewModel : ObservableObject
 
         if (!HasCameraPermission)
         {
-            ErrorMessage = string.IsNullOrWhiteSpace(ErrorMessage)
-                ? "Для сканирования необходим доступ к камере."
-                : ErrorMessage;
+            ErrorMessage = ErrorMessage.IsNotBlank()
+                ? ErrorMessage
+                : "Для сканирования необходим доступ к камере.";
             return;
         }
 
@@ -93,17 +95,17 @@ public partial class ScanViewModel : ObservableObject
     [RelayCommand]
     private async Task ProcessBarcodeAsync(string? value)
     {
-        if (!IsActive || !IsScanning || string.IsNullOrWhiteSpace(value))
+        if (!IsActive || !IsScanning || !value.IsNotBlank())
         {
             return;
         }
 
         IsScanning = false;
-        ScanResult = value.Trim();
+        ScanResult = value.TrimmedOrEmpty();
         HasResult = true;
         IsUrl = _qrCodeService.IsUrl(ScanResult);
 
-        await MainThread.InvokeOnMainThreadAsync(async () =>
+        await MainThread.InvokeOnMainThreadAsync(() =>
         {
             try
             {
@@ -122,7 +124,7 @@ public partial class ScanViewModel : ObservableObject
     [RelayCommand]
     private async Task CopyResultAsync()
     {
-        if (string.IsNullOrWhiteSpace(ScanResult))
+        if (!ScanResult.IsNotBlank())
         {
             return;
         }

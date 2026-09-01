@@ -1,20 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using QRTwin.Maui.Models;
-using QRTwin.Maui.Services;
 
 namespace QRTwin.Maui.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private readonly IHistoryService _historyService;
-
-    [ObservableProperty]
-    private AppTab _selectedTab = AppTab.Scan;
-
-    [ObservableProperty]
-    private bool _isHistoryVisible;
-
     public ScanViewModel Scan { get; }
 
     public GenerateViewModel Generate { get; }
@@ -24,31 +15,36 @@ public partial class MainViewModel : ObservableObject
     public MainViewModel(
         ScanViewModel scanViewModel,
         GenerateViewModel generateViewModel,
-        HistoryViewModel historyViewModel,
-        IHistoryService historyService)
+        HistoryViewModel historyViewModel)
     {
         Scan = scanViewModel;
         Generate = generateViewModel;
         History = historyViewModel;
-        _historyService = historyService;
 
         Scan.HistorySaved += OnHistorySaved;
         Generate.HistorySaved += OnHistorySaved;
         Scan.IsActive = true;
     }
 
+    [ObservableProperty]
+    private AppTab _selectedTab = AppTab.Scan;
+
+    [ObservableProperty]
+    private bool _isHistoryVisible;
+
     partial void OnSelectedTabChanged(AppTab value)
     {
-        if (value == AppTab.Scan)
+        switch (value)
         {
-            Generate.InputText = string.Empty;
-            Scan.IsActive = true;
-            Generate.IsActive = false;
-        }
-        else
-        {
-            Scan.IsActive = false;
-            Generate.IsActive = true;
+            case AppTab.Scan:
+                Generate.InputText = string.Empty;
+                Scan.IsActive = true;
+                Generate.IsActive = false;
+                break;
+            case AppTab.Generate:
+                Scan.IsActive = false;
+                Generate.IsActive = true;
+                break;
         }
     }
 
@@ -60,10 +56,7 @@ public partial class MainViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void CloseHistory()
-    {
-        IsHistoryVisible = false;
-    }
+    private void CloseHistory() => IsHistoryVisible = false;
 
     private async void OnHistorySaved(object? sender, EventArgs e)
     {
