@@ -63,7 +63,8 @@
                 HorizontalOptions="Center"
                 VerticalOptions="Center"
                 WidthRequest="{OnPlatform WinUI=360, Default=300}"
-                HeightRequest="{OnPlatform WinUI=360, Default=300}">
+                HeightRequest="{OnPlatform WinUI=360, Default=300}"
+                BackgroundColor="{StaticResource SurfaceElevated}">
 
             <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
                                            BarcodesDetected="OnBarcodesDetected"
@@ -89,16 +90,39 @@
                        HorizontalTextAlignment="Center"
                        FontSize="13" />
 
-                <Border BackgroundColor="#FFFFFF"
-                        StrokeShape="RoundRectangle 14"
-                        Padding="10"
-                        HorizontalOptions="Center">
-                  <Image x:Name="SampleQrImage"
-                         Source="{Binding SampleQrCodeImage}"
-                         WidthRequest="{OnPlatform WinUI=200, Default=180}"
-                         HeightRequest="{OnPlatform WinUI=200, Default=180}"
-                         Aspect="AspectFit" />
-                </Border>
+                <Grid x:Name="QrScanArea"
+                      WidthRequest="{OnPlatform WinUI=220, Default=200}"
+                      HeightRequest="{OnPlatform WinUI=220, Default=200}"
+                      HorizontalOptions="Center">
+                  <Border BackgroundColor="#FFFFFF"
+                          StrokeShape="RoundRectangle 16"
+                          Padding="10"
+                          HorizontalOptions="Fill"
+                          VerticalOptions="Fill">
+                    <Image x:Name="SampleQrImage"
+                           Source="{Binding SampleQrCodeImage}"
+                           Aspect="AspectFit"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill" />
+                  </Border>
+
+                  <Border StrokeThickness="0"
+                          BackgroundColor="#22000000"
+                          StrokeShape="RoundRectangle 16"
+                          Margin="0"
+                          HorizontalOptions="Fill"
+                          VerticalOptions="Fill"
+                          InputTransparent="True">
+                    <BoxView x:Name="ScanLine"
+                             Color="{StaticResource ScannerLine}"
+                             HeightRequest="2"
+                             HorizontalOptions="Fill"
+                             VerticalOptions="Start"
+                             Margin="12,0"
+                             Opacity="0.9"
+                             InputTransparent="True" />
+                  </Border>
+                </Grid>
 
                 <Label Text="Наведите камеру на любой QR-код"
                        TextColor="{StaticResource MutedText}"
