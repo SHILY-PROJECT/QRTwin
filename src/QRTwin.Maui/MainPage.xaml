@@ -20,7 +20,7 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto,*,Auto,Auto"
-          Padding="{OnPlatform Android='0,24,0,0', iOS='0,44,0,0', Default='0'}">
+          Padding="{OnPlatform Android='0,24,0,0', Default='0'}">
         <!-- Header -->
         <Grid Grid.Row="0"
               Padding="20,16"
