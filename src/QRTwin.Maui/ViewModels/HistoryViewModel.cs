@@ -9,6 +9,10 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
 
     public ObservableCollection<HistoryEntry> Entries { get; } = [];
 
+    public bool HasEntries => Entries.Count > 0;
+
+    public bool ShowEmptyState => !IsLoading && Entries.Count == 0;
+
     public async Task LoadAsync()
     {
         IsLoading = true;
@@ -33,7 +37,16 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
         finally
         {
             IsLoading = false;
+            NotifyEntriesChanged();
         }
+    }
+
+    partial void OnIsLoadingChanged(bool value) => NotifyEntriesChanged();
+
+    private void NotifyEntriesChanged()
+    {
+        OnPropertyChanged(nameof(HasEntries));
+        OnPropertyChanged(nameof(ShowEmptyState));
     }
 
     [RelayCommand]
@@ -44,13 +57,21 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
     private async Task DeleteEntryAsync(HistoryEntry entry)
     {
         await historyService.DeleteAsync(entry.Id).ConfigureAwait(false);
-        await MainThread.InvokeOnMainThreadAsync(() => Entries.Remove(entry));
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            Entries.Remove(entry);
+            NotifyEntriesChanged();
+        });
     }
 
     [RelayCommand]
     private async Task ClearAllAsync()
     {
         await historyService.ClearAllAsync().ConfigureAwait(false);
-        await MainThread.InvokeOnMainThreadAsync(Entries.Clear);
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            Entries.Clear();
+            NotifyEntriesChanged();
+        });
     }
 }
