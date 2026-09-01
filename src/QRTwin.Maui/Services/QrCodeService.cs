@@ -6,45 +6,53 @@ namespace QRTwin.Maui.Services;
 
 public sealed class QrCodeService : IQrCodeService
 {
-    public Task<ImageSource?> GenerateQrCodeAsync(string content, int size = 512)
+    public async Task<ImageSource?> GenerateQrCodeAsync(string content, int size = 512)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
-            return Task.FromResult<ImageSource?>(null);
+            return null;
         }
 
-        return Task.Run<ImageSource?>(() =>
+        var pngBytes = await Task.Run(() => EncodeQrCodeToPng(content.Trim(), size)).ConfigureAwait(false);
+        if (pngBytes is null)
         {
-            var writer = new BarcodeWriterPixelData
-            {
-                Format = BarcodeFormat.QR_CODE,
-                Options = new QrCodeEncodingOptions
-                {
-                    Height = size,
-                    Width = size,
-                    Margin = 2,
-                    CharacterSet = "UTF-8"
-                }
-            };
+            return null;
+        }
 
-            var pixelData = writer.Write(content.Trim());
-            if (pixelData is null)
+        return await MainThread.InvokeOnMainThreadAsync(() =>
+            ImageSource.FromStream(() => new MemoryStream(pngBytes)));
+    }
+
+    private static byte[]? EncodeQrCodeToPng(string content, int size)
+    {
+        var writer = new BarcodeWriterPixelData
+        {
+            Format = BarcodeFormat.QR_CODE,
+            Options = new QrCodeEncodingOptions
             {
-                return null;
+                Height = size,
+                Width = size,
+                Margin = 2,
+                CharacterSet = "UTF-8"
             }
+        };
 
-            using var bitmap = new SKBitmap(pixelData.Width, pixelData.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
-            System.Runtime.InteropServices.Marshal.Copy(
-                pixelData.Pixels,
-                0,
-                bitmap.GetPixels(),
-                pixelData.Pixels.Length);
+        var pixelData = writer.Write(content);
+        if (pixelData is null)
+        {
+            return null;
+        }
 
-            using var image = SKImage.FromBitmap(bitmap);
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-            using var stream = new MemoryStream(data.ToArray());
-            return ImageSource.FromStream(() => new MemoryStream(data.ToArray()));
-        });
+        using var bitmap = new SKBitmap(pixelData.Width, pixelData.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
+        System.Runtime.InteropServices.Marshal.Copy(
+            pixelData.Pixels,
+            0,
+            bitmap.GetPixels(),
+            pixelData.Pixels.Length);
+
+        using var image = SKImage.FromBitmap(bitmap);
+        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+        return data.ToArray();
     }
 
     public async Task<string> SaveToTempFileAsync(ImageSource imageSource, string fileName = "qrcode.png")

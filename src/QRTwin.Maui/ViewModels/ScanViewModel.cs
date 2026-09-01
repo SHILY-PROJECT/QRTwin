@@ -32,6 +32,11 @@ public partial class ScanViewModel : ObservableObject
     [ObservableProperty]
     private string _errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private ImageSource? _sampleQrCodeImage;
+
+    public const string SampleQrContent = "QRTwin — Сканируйте и создавайте QR-коды";
+
     public event EventHandler? HistorySaved;
 
     public ScanViewModel(
@@ -56,6 +61,17 @@ public partial class ScanViewModel : ObservableObject
         }
     }
 
+    private async Task EnsureSampleQrAsync()
+    {
+        if (SampleQrCodeImage is not null)
+        {
+            return;
+        }
+
+        SampleQrCodeImage = await _qrCodeService.GenerateQrCodeAsync(SampleQrContent, 280)
+            .ConfigureAwait(true);
+    }
+
     [RelayCommand]
     private async Task InitializeAsync()
     {
@@ -70,6 +86,7 @@ public partial class ScanViewModel : ObservableObject
             return;
         }
 
+        await EnsureSampleQrAsync().ConfigureAwait(false);
         ResetScan();
     }
 

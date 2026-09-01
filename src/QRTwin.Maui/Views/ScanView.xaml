@@ -58,7 +58,7 @@
                     HorizontalOptions="Center" />
           </VerticalStackLayout>
 
-          <!-- Camera -->
+          <!-- Camera (invisible preview, active detection) -->
           <Grid IsVisible="{Binding HasCameraPermission}"
                 HorizontalOptions="Center"
                 VerticalOptions="Center"
@@ -69,25 +69,42 @@
                                            BarcodesDetected="OnBarcodesDetected"
                                            IsDetecting="{Binding IsScanning}"
                                            IsTorchOn="False"
+                                           Opacity="0"
                                            HorizontalOptions="Fill"
                                            VerticalOptions="Fill" />
 
-            <Border Stroke="{StaticResource Accent}"
+            <Border BackgroundColor="{StaticResource SurfaceElevated}"
+                    Stroke="{StaticResource Accent}"
                     StrokeThickness="2"
-                    StrokeShape="RoundRectangle 20"
-                    BackgroundColor="#22000000"
-                    Margin="16"
+                    StrokeShape="RoundRectangle 24"
                     HorizontalOptions="Fill"
-                    VerticalOptions="Fill">
-              <Grid>
-                <BoxView x:Name="ScanLine"
-                         Color="{StaticResource ScannerLine}"
-                         HeightRequest="2"
-                         HorizontalOptions="Fill"
-                         VerticalOptions="Start"
-                         Margin="8,0"
-                         Opacity="0.85" />
-              </Grid>
+                    VerticalOptions="Fill"
+                    IsVisible="{Binding HasResult, Converter={StaticResource InvertedBoolConverter}}">
+              <VerticalStackLayout Spacing="12"
+                                   VerticalOptions="Center"
+                                   HorizontalOptions="Center"
+                                   Padding="20">
+                <Label Text="Пример QR-кода"
+                       Style="{StaticResource SubtitleLabel}"
+                       HorizontalTextAlignment="Center"
+                       FontSize="13" />
+
+                <Border BackgroundColor="#FFFFFF"
+                        StrokeShape="RoundRectangle 14"
+                        Padding="10"
+                        HorizontalOptions="Center">
+                  <Image x:Name="SampleQrImage"
+                         Source="{Binding SampleQrCodeImage}"
+                         WidthRequest="{OnPlatform WinUI=200, Default=180}"
+                         HeightRequest="{OnPlatform WinUI=200, Default=180}"
+                         Aspect="AspectFit" />
+                </Border>
+
+                <Label Text="Наведите камеру на любой QR-код"
+                       TextColor="{StaticResource MutedText}"
+                       FontSize="12"
+                       HorizontalTextAlignment="Center" />
+              </VerticalStackLayout>
             </Border>
           </Grid>
         </Grid>

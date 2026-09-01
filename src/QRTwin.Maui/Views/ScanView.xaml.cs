@@ -6,7 +6,7 @@ namespace QRTwin.Maui.Views;
 
 public partial class ScanView : ContentView
 {
-    private bool _animationRunning;
+    private bool _blinkRunning;
 
     public ScanView()
     {
@@ -23,29 +23,32 @@ public partial class ScanView : ContentView
 
     private void OnLoaded(object? sender, EventArgs e)
     {
-        StartScanLineAnimation();
+        StartSampleQrBlinkAnimation();
     }
 
     private void OnUnloaded(object? sender, EventArgs e)
     {
-        _animationRunning = false;
+        _blinkRunning = false;
     }
 
-    private async void StartScanLineAnimation()
+    private async void StartSampleQrBlinkAnimation()
     {
-        if (_animationRunning)
+        if (_blinkRunning)
         {
             return;
         }
 
-        _animationRunning = true;
+        _blinkRunning = true;
 
-        while (_animationRunning && ScanLine is not null)
+        while (_blinkRunning && SampleQrImage is not null)
         {
-            ScanLine.TranslationY = 0;
-            var travel = BarcodeReader?.Height > 0 ? BarcodeReader.Height - 40 : 240;
-            await ScanLine.TranslateToAsync(0, travel, 1800, Easing.SinInOut);
-            await ScanLine.TranslateToAsync(0, 0, 1800, Easing.SinInOut);
+            await SampleQrImage.FadeToAsync(0.35, 700, Easing.SinInOut);
+            if (!_blinkRunning)
+            {
+                break;
+            }
+
+            await SampleQrImage.FadeToAsync(1, 700, Easing.SinInOut);
         }
     }
 
