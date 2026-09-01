@@ -4,5 +4,5 @@
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
-  <Project Path="src/QRTwin.Maui/QRTwin.Maui.csproj" />
+  <Project Path="src/QRTwin/QRTwin.csproj" />
 </Solution>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.ViewModels"
+             xmlns:models="clr-namespace:QRTwin.Models"
+             xmlns:controls="clr-namespace:QRTwin.Controls"
+             xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             x:Class="QRTwin.Views.HistoryView"
+             x:Name="HistoryViewRoot"
+             x:DataType="vm:HistoryViewModel"
+             HorizontalOptions="Fill"
+             VerticalOptions="Fill">
+
+  <Grid RowDefinitions="*,Auto" RowSpacing="12">
+
+    <Grid Grid.Row="0">
+      <CollectionView ItemsSource="{Binding Entries}"
+                      IsVisible="{Binding HasEntries}"
+                      SelectionMode="None"
+                      VerticalOptions="Fill">
+        <CollectionView.ItemsLayout>
+          <LinearItemsLayout Orientation="Vertical" ItemSpacing="8" />
+        </CollectionView.ItemsLayout>
+
+        <CollectionView.ItemTemplate>
+        <DataTemplate x:DataType="models:HistoryEntry">
+          <Border Style="{StaticResource Card}"
+                  Padding="16">
+            <Border.GestureRecognizers>
+              <TapGestureRecognizer Command="{Binding Source={x:Reference HistoryViewRoot}, Path=BindingContext.SelectEntryCommand}"
+                                    CommandParameter="{Binding .}" />
+            </Border.GestureRecognizers>
+            <Grid ColumnDefinitions="*,Auto"
+                  RowDefinitions="Auto,Auto,Auto"
+                  ColumnSpacing="12"
+                  RowSpacing="4">
+              <Border Grid.Row="0"
+                      Grid.Column="0"
+                      BackgroundColor="{StaticResource AccentSoft}"
+                      StrokeShape="RoundRectangle 8"
+                      Padding="8,4"
+                      HorizontalOptions="Start">
+                <Label Text="{Binding EntryType, Converter={StaticResource HistoryEntryTypeToStringConverter}}"
+                       TextColor="{StaticResource Accent}"
+                       FontAttributes="Bold"
+                       FontSize="12" />
+              </Border>
+
+              <Label Grid.Row="0"
+                     Grid.Column="1"
+                     Text="{Binding CreatedAt, Converter={StaticResource DateTimeToLocalStringConverter}}"
+                     Style="{StaticResource CaptionLabel}"
+                     VerticalOptions="Center" />
+
+              <Label Grid.Row="1"
+                     Grid.Column="0"
+                     Grid.ColumnSpan="2"
+                     Text="{Binding Content}"
+                     TextColor="{StaticResource PrimaryText}"
+                     FontSize="15"
+                     LineBreakMode="TailTruncation"
+                     MaxLines="3" />
+
+              <Border Grid.Row="2"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      Style="{StaticResource IconButton}"
+                      WidthRequest="40"
+                      HeightRequest="40"
+                      BackgroundColor="#22FF4444"
+                      HorizontalOptions="End"
+                      VerticalOptions="End"
+                      Margin="0,4,2,0">
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding Source={x:Reference HistoryViewRoot}, Path=BindingContext.DeleteEntryCommand}"
+                                        CommandParameter="{Binding .}" />
+                </Border.GestureRecognizers>
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Delete}"
+                                      IconColor="{StaticResource Danger}"
+                                      WidthRequest="15"
+                                      HeightRequest="15" />
+              </Border>
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </CollectionView.ItemTemplate>
+    </CollectionView>
+
+      <VerticalStackLayout IsVisible="{Binding ShowEmptyState}"
+                           VerticalOptions="Center"
+                           HorizontalOptions="Center"
+                           Spacing="12"
+                           Padding="24">
+        <Border WidthRequest="64"
+                HeightRequest="64"
+                StrokeShape="RoundRectangle 18"
+                BackgroundColor="{StaticResource AccentSoft}">
+          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
+                                IconColor="{StaticResource Accent}"
+                                WidthRequest="32"
+                                HeightRequest="32"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center" />
+        </Border>
+        <Label Text="История пуста"
+               Style="{StaticResource HeaderLabel}"
+               HorizontalTextAlignment="Center" />
+        <Label Text="Сканируйте или создайте QR-код"
+               Style="{StaticResource SubtitleLabel}"
+               HorizontalTextAlignment="Center" />
+      </VerticalStackLayout>
+    </Grid>
+
+    <Button Grid.Row="1"
+            Text="Очистить всё"
+            Style="{StaticResource SecondaryButton}"
+            TextColor="{StaticResource Danger}"
+            IsVisible="{Binding HasEntries}"
+            Command="{Binding ClearAllCommand}" />
+  </Grid>
+</ContentView>

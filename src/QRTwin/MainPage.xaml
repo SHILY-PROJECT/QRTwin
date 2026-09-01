@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.ViewModels"
+             xmlns:views="clr-namespace:QRTwin.Views"
+             xmlns:controls="clr-namespace:QRTwin.Controls"
+             xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             x:Class="QRTwin.MainPage"
+             x:Name="MainPageRoot"
+             x:DataType="vm:MainViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{StaticResource AppBackground}">
+
+  <Grid RowDefinitions="Auto,*,Auto,Auto"
+        Padding="{OnPlatform Android='0,28,0,0', Default='0'}">
+
+    <!-- Background glow -->
+    <BoxView Grid.RowSpan="4"
+             InputTransparent="True"
+             Background="{StaticResource BackgroundGlowBrush}" />
+
+    <!-- Header -->
+    <Grid Grid.Row="0"
+          Padding="20,16,20,8"
+          ColumnDefinitions="Auto,*,Auto"
+          ColumnSpacing="12">
+      <Border WidthRequest="44"
+              HeightRequest="44"
+              StrokeShape="RoundRectangle 14"
+              Background="{StaticResource AccentGradientBrush}">
+        <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
+                              IconColor="#FFFFFF"
+                              WidthRequest="22"
+                              HeightRequest="22"
+                              HorizontalOptions="Center"
+                              VerticalOptions="Center" />
+      </Border>
+
+      <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+        <Label Text="QRTwin"
+               FontSize="22"
+               FontAttributes="Bold"
+               TextColor="{StaticResource PrimaryText}" />
+        <Label Text="Сканируйте и создавайте QR-коды"
+               Style="{StaticResource CaptionLabel}" />
+      </VerticalStackLayout>
+
+      <Border Grid.Column="2"
+              Style="{StaticResource IconButton}">
+        <Border.GestureRecognizers>
+          <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
+        </Border.GestureRecognizers>
+        <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
+                              IconColor="{StaticResource Accent}" />
+      </Border>
+    </Grid>
+
+    <!-- Main content area -->
+    <Grid Grid.Row="1"
+          x:Name="ContentHost"
+          Padding="16,8"
+          RowDefinitions="*"
+          MaximumWidthRequest="720"
+          HorizontalOptions="Fill">
+
+      <Grid x:Name="ScanPanel"
+            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Scan}">
+        <views:ScanView x:Name="ScanContent"
+                        BindingContext="{Binding Scan}"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill" />
+      </Grid>
+
+      <Grid x:Name="GeneratePanel"
+            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
+        <views:GenerateView x:Name="GenerateContent"
+                            BindingContext="{Binding Generate}"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill" />
+      </Grid>
+    </Grid>
+
+    <!-- Generate input bar -->
+    <Border Grid.Row="2"
+            Margin="16,4,16,8"
+            Padding="6,6,6,6"
+            BackgroundColor="{StaticResource Surface}"
+            Stroke="{StaticResource Border}"
+            StrokeThickness="1"
+            StrokeShape="RoundRectangle 20"
+            MaximumWidthRequest="720"
+            HorizontalOptions="Fill"
+            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+        <Entry Grid.Column="0"
+               Style="{StaticResource InputEntry}"
+               Margin="12,0,0,0"
+               Placeholder="Введите текст или ссылку..."
+               Text="{Binding Generate.InputText}"
+               ClearButtonVisibility="Never"
+               ReturnType="Go"
+               ReturnCommand="{Binding Generate.GenerateCommand}" />
+
+        <Border Grid.Column="1"
+                Background="{StaticResource AccentGradientBrush}"
+                StrokeShape="RoundRectangle 16"
+                WidthRequest="52"
+                HeightRequest="52">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnWandTapped" />
+          </Border.GestureRecognizers>
+          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Wand}"
+                                IconColor="#FFFFFF"
+                                HorizontalOptions="Center"
+                                VerticalOptions="Center"
+                                InputTransparent="True" />
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- Bottom tab bar -->
+    <Border Grid.Row="3"
+            Margin="16,0,16,20"
+            Padding="4"
+            BackgroundColor="{StaticResource Surface}"
+            Stroke="{StaticResource Border}"
+            StrokeThickness="1"
+            StrokeShape="RoundRectangle 24"
+            MaximumWidthRequest="720"
+            HorizontalOptions="Fill">
+      <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
+        <Border x:Name="ScanTab"
+                Style="{StaticResource TabPill}">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnScanTabTapped" />
+          </Border.GestureRecognizers>
+          <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+            <controls:SvgIconView x:Name="ScanTabIcon"
+                                  IconName="{x:Static helpers:IconPaths.Scan}"
+                                  WidthRequest="20"
+                                  HeightRequest="20" />
+            <Label Text="Сканировать"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   x:Name="ScanTabLabel" />
+          </HorizontalStackLayout>
+        </Border>
+
+        <Border Grid.Column="1"
+                x:Name="GenerateTab"
+                Style="{StaticResource TabPill}">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Tapped="OnGenerateTabTapped" />
+          </Border.GestureRecognizers>
+          <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+            <controls:SvgIconView x:Name="GenerateTabIcon"
+                                  IconName="{x:Static helpers:IconPaths.Generate}"
+                                  WidthRequest="20"
+                                  HeightRequest="20" />
+            <Label Text="Генерировать"
+                   FontSize="14"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"
+                   x:Name="GenerateTabLabel" />
+          </HorizontalStackLayout>
+        </Border>
+      </Grid>
+    </Border>
+
+    <!-- History overlay -->
+    <Grid Grid.RowSpan="4"
+          IsVisible="{Binding IsHistoryVisible}"
+          BackgroundColor="#E6000000"
+          ZIndex="100">
+      <Grid.GestureRecognizers>
+        <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+      </Grid.GestureRecognizers>
+
+      <Border Margin="20,48,20,24"
+              Style="{StaticResource GlassCard}"
+              VerticalOptions="Fill"
+              HorizontalOptions="Fill"
+              MaximumWidthRequest="640"
+              InputTransparent="False">
+        <Grid RowDefinitions="Auto,*">
+          <Grid Grid.Row="0"
+                ColumnDefinitions="*,Auto"
+                Margin="0,0,0,8">
+            <Label Text="История"
+                   Style="{StaticResource TitleLabel}"
+                   FontSize="20" />
+            <Border Grid.Column="1"
+                    BackgroundColor="{StaticResource SurfaceElevated}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="12,8">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+              </Border.GestureRecognizers>
+              <Label Text="Закрыть"
+                     TextColor="{StaticResource Accent}"
+                     FontAttributes="Bold"
+                     FontSize="14" />
+            </Border>
+          </Grid>
+
+          <views:HistoryView Grid.Row="1"
+                             BindingContext="{Binding History}"
+                             HorizontalOptions="Fill"
+                             VerticalOptions="Fill" />
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+
+  <VisualStateManager.VisualStateGroups>
+    <VisualStateGroupList>
+      <VisualStateGroup x:Name="WindowSizeStates">
+        <VisualState x:Name="Narrow">
+          <VisualState.StateTriggers>
+            <AdaptiveTrigger MinWindowWidth="0" />
+          </VisualState.StateTriggers>
+        </VisualState>
+        <VisualState x:Name="Wide">
+          <VisualState.StateTriggers>
+            <AdaptiveTrigger MinWindowWidth="900" />
+          </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter TargetName="ContentHost" Property="Padding" Value="24,12" />
+          </VisualState.Setters>
+        </VisualState>
+      </VisualStateGroup>
+    </VisualStateGroupList>
+  </VisualStateManager.VisualStateGroups>
+</ContentPage>

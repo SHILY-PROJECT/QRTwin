@@ -1,0 +1,11 @@
+global using System.Collections.ObjectModel;
+global using System.Globalization;
+global using System.Runtime.CompilerServices;
+global using System.Runtime.InteropServices;
+global using CommunityToolkit.Mvvm.ComponentModel;
+global using CommunityToolkit.Mvvm.Input;
+global using Microsoft.Extensions.DependencyInjection;
+global using QRTwin.Extensions;
+global using QRTwin.Models;
+global using QRTwin.Services;
+global using QRTwin.ViewModels;
