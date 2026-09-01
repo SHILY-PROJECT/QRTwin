@@ -84,20 +84,23 @@
                      MaxLines="3" />
 
               <Border Grid.Row="2"
-                      Grid.Column="1"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
                       Style="{StaticResource IconButton}"
                       WidthRequest="40"
                       HeightRequest="40"
                       BackgroundColor="#22FF4444"
-                      Margin="0,4,0,0">
+                      HorizontalOptions="End"
+                      VerticalOptions="End"
+                      Margin="0,4,2,0">
                 <Border.GestureRecognizers>
                   <TapGestureRecognizer Command="{Binding Source={x:Reference HistoryViewRoot}, Path=BindingContext.DeleteEntryCommand}"
                                         CommandParameter="{Binding .}" />
                 </Border.GestureRecognizers>
                 <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Delete}"
                                       IconColor="{StaticResource Danger}"
-                                      WidthRequest="18"
-                                      HeightRequest="18" />
+                                      WidthRequest="15"
+                                      HeightRequest="15" />
               </Border>
             </Grid>
           </Border>
