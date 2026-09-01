@@ -129,11 +129,11 @@
             </Border>
           </Grid>
 
-          <Button Text="Очистить"
+          <Button Text="Сбросить"
                   Style="{StaticResource SecondaryButton}"
                   TextColor="{StaticResource Danger}"
                   Margin="0,4,0,0"
-                  Command="{Binding ClearCommand}" />
+                  Clicked="OnResetQrClicked" />
         </VerticalStackLayout>
       </Border>
     </VerticalStackLayout>

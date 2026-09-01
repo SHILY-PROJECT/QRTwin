@@ -6,20 +6,26 @@ public partial class GenerateViewModel(
     IHistoryService historyService,
     IQrCodeService qrCodeService) : ObservableObject
 {
+    private const int GenerateBlockMs = 400;
+
     private string? _tempFilePath;
+    private long _generateBlockedUntilTicks;
 
     public event EventHandler? HistorySaved;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
     public partial string InputText { get; set; }
 
     [ObservableProperty]
     public partial ImageSource? QrCodeImage { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
     public partial bool HasQrCode { get; set; }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
     public partial bool IsGenerating { get; set; }
 
     [ObservableProperty]
@@ -28,11 +34,17 @@ public partial class GenerateViewModel(
     [ObservableProperty]
     public partial string ErrorMessage { get; set; }
 
-    [RelayCommand]
-    private void Clear()
+    private bool CanGenerate() =>
+        InputText.IsNotBlank()
+        && !IsGenerating
+        && Environment.TickCount64 >= _generateBlockedUntilTicks;
+
+    public void ClearFromUi()
     {
+        _generateBlockedUntilTicks = Environment.TickCount64 + GenerateBlockMs;
         InputText = string.Empty;
         ClearResult();
+        GenerateCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnInputTextChanged(string value)
@@ -43,12 +55,11 @@ public partial class GenerateViewModel(
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanGenerate))]
     private async Task GenerateAsync()
     {
-        if (!InputText.IsNotBlank())
+        if (!CanGenerate())
         {
-            ErrorMessage = "Введите текст или ссылку для генерации QR-кода.";
             return;
         }
 

@@ -30,7 +30,7 @@ public partial class MainViewModel(
         switch (value)
         {
             case AppTab.Scan:
-                generate.ClearCommand.Execute(null);
+                generate.ClearFromUi();
                 Scan.IsActive = true;
                 Generate.IsActive = false;
                 break;

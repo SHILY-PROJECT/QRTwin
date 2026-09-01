@@ -27,6 +27,10 @@ public static class MauiProgram
             })
             .AddQRTwinServices();
 
+#if WINDOWS
+        Platforms.Windows.EntryHandlerFixes.DisableNativeClearButton();
+#endif
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif

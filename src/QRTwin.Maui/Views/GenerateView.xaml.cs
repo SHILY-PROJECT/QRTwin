@@ -17,6 +17,14 @@ public partial class GenerateView : ContentView
         }
     }
 
+    private void OnResetQrClicked(object? sender, EventArgs e)
+    {
+        if (BindingContext is GenerateViewModel viewModel)
+        {
+            viewModel.ClearFromUi();
+        }
+    }
+
     private async void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (!e.IsProperty(nameof(GenerateViewModel.HasQrCode)))

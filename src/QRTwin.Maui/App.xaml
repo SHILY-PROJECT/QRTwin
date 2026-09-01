@@ -15,6 +15,7 @@
             <converters:IsStringNotNullOrEmptyConverter x:Key="IsStringNotNullOrEmptyConverter" />
             <converters:HistoryEntryTypeToStringConverter x:Key="HistoryEntryTypeToStringConverter" />
             <converters:DateTimeToLocalStringConverter x:Key="DateTimeToLocalStringConverter" />
+            <converters:BoolToOpacityConverter x:Key="BoolToOpacityConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>
