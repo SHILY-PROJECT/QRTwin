@@ -13,13 +13,8 @@ public partial class MainPage : ContentPage
         UpdateTabPanels(viewModel.SelectedTab);
     }
 
-    private void OnGenerateTapped(object? sender, TappedEventArgs e)
-    {
-        if (_viewModel.Generate.GenerateCommand.CanExecute(null))
-        {
-            _viewModel.Generate.GenerateCommand.Execute(null);
-        }
-    }
+    private void OnWandTapped(object? sender, TappedEventArgs e) =>
+        _viewModel.Generate.ClearFromUi();
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {

@@ -97,7 +97,9 @@
                Margin="12,0,0,0"
                Placeholder="Введите текст или ссылку..."
                Text="{Binding Generate.InputText}"
-               ClearButtonVisibility="Never" />
+               ClearButtonVisibility="Never"
+               ReturnType="Go"
+               ReturnCommand="{Binding Generate.GenerateCommand}" />
 
         <Border Grid.Column="1"
                 Background="{StaticResource AccentGradientBrush}"
@@ -105,7 +107,7 @@
                 WidthRequest="52"
                 HeightRequest="52">
           <Border.GestureRecognizers>
-            <TapGestureRecognizer Tapped="OnGenerateTapped" />
+            <TapGestureRecognizer Tapped="OnWandTapped" />
           </Border.GestureRecognizers>
           <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Wand}"
                                 IconColor="#FFFFFF"

@@ -10,16 +10,4 @@ public static class IconPaths
     public const string Copy = "copy.svg";
     public const string Delete = "delete.svg";
     public const string Wand = "wand.svg";
-
-    public static readonly string[] All =
-    [
-        Scan,
-        Generate,
-        History,
-        Share,
-        Save,
-        Copy,
-        Delete,
-        Wand
-    ];
 }
