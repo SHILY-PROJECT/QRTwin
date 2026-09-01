@@ -4,9 +4,9 @@
              xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
              xmlns:models="clr-namespace:QRTwin.Maui.Models"
              xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
-             xmlns:views="clr-namespace:QRTwin.Maui.Views"
              xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
              x:Class="QRTwin.Maui.Views.HistoryView"
+             x:Name="HistoryViewRoot"
              x:DataType="vm:HistoryViewModel">
 
     <Grid RowDefinitions="Auto,*,Auto" Padding="16">
@@ -63,7 +63,7 @@
                                     HeightRequest="40"
                                     Margin="0,8,0,0">
                                 <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type views:HistoryView}}, Path=BindingContext.DeleteEntryCommand}"
+                                    <TapGestureRecognizer Command="{Binding Source={x:Reference HistoryViewRoot}, Path=BindingContext.DeleteEntryCommand}"
                                                           CommandParameter="{Binding .}" />
                                 </Border.GestureRecognizers>
                                 <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Delete}"

@@ -3,13 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
              xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
-             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.Maui.Controls"
+             xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
              x:Class="QRTwin.Maui.Views.ScanView"
              x:DataType="vm:ScanViewModel">
 
     <Grid RowDefinitions="*,Auto" Padding="16,0,16,8">
-        <Grid Grid.Row="0" VerticalOptions="FillAndExpand">
+        <Grid Grid.Row="0" VerticalOptions="Fill">
             <Label Text="{Binding ErrorMessage}"
                    IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
                    TextColor="{StaticResource Danger}"

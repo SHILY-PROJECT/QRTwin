@@ -27,8 +27,7 @@
                     <Image Source="{Binding QrCodeImage}"
                            WidthRequest="280"
                            HeightRequest="280"
-                           Aspect="AspectFit"
-                           x:Name="QrImage" />
+                           Aspect="AspectFit" />
 
                     <HorizontalStackLayout Spacing="16" HorizontalOptions="Center">
                         <Border Style="{StaticResource IconButton}">

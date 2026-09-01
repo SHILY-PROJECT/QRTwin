@@ -2,11 +2,11 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:QRTwin.Maui.ViewModels"
-             xmlns:models="clr-namespace:QRTwin.Maui.Models"
              xmlns:views="clr-namespace:QRTwin.Maui.Views"
              xmlns:controls="clr-namespace:QRTwin.Maui.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Maui.Helpers"
              x:Class="QRTwin.Maui.MainPage"
+             x:Name="MainPageRoot"
              x:DataType="vm:MainViewModel"
              Shell.NavBarIsVisible="False">
 
@@ -44,12 +44,12 @@
         <Grid Grid.Row="1" x:Name="ContentHost">
             <views:ScanView x:Name="ScanContent"
                             BindingContext="{Binding Scan}"
-                            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Scan}"
+                            IsVisible="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Scan}"
                             Opacity="1" />
 
             <views:GenerateView x:Name="GenerateContent"
                                 BindingContext="{Binding Generate}"
-                                IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}"
+                                IsVisible="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}"
                                 Opacity="1" />
         </Grid>
 
@@ -161,7 +161,7 @@
         </Grid>
     </Grid>
 
-    <ContentPage.VisualStateManager.VisualStateGroups>
+    <VisualStateManager.VisualStateGroups>
         <VisualStateGroupList>
             <VisualStateGroup x:Name="WindowSizeStates">
                 <VisualState x:Name="Narrow">
@@ -179,5 +179,5 @@
                 </VisualState>
             </VisualStateGroup>
         </VisualStateGroupList>
-    </ContentPage.VisualStateManager.VisualStateGroups>
+    </VisualStateManager.VisualStateGroups>
 </ContentPage>
