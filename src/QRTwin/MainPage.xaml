@@ -85,7 +85,7 @@
     <Border x:Name="GenerateInputBar"
             Grid.Row="2"
             Margin="16,4,16,8"
-            Padding="6,6,6,6"
+            Padding="6"
             BackgroundColor="{StaticResource Surface}"
             Stroke="{StaticResource Border}"
             StrokeThickness="1"
@@ -93,31 +93,48 @@
             MaximumWidthRequest="720"
             HorizontalOptions="Fill"
             IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
-      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-        <Entry Grid.Column="0"
-               Style="{StaticResource InputEntry}"
-               Margin="12,0,0,0"
-               Placeholder="Введите текст или ссылку..."
-               Text="{Binding Generate.InputText}"
-               ClearButtonVisibility="Never"
-               ReturnType="Go"
-               ReturnCommand="{Binding Generate.GenerateCommand}" />
+      <VerticalStackLayout Spacing="8">
+        <Editor x:Name="GenerateInputEditor"
+                Style="{StaticResource InputEditor}"
+                Margin="12,4,12,0"
+                HeightRequest="44"
+                Placeholder="Введите текст или ссылку..."
+                Text="{Binding Generate.InputText}"
+                Focused="OnGenerateInputEditorFocused"
+                Unfocused="OnGenerateInputEditorUnfocused"
+                Completed="OnGenerateInputEditorCompleted" />
 
-        <Border Grid.Column="1"
-                Background="{StaticResource AccentGradientBrush}"
-                StrokeShape="RoundRectangle 16"
-                WidthRequest="52"
-                HeightRequest="52">
-          <Border.GestureRecognizers>
-            <TapGestureRecognizer Tapped="OnWandTapped" />
-          </Border.GestureRecognizers>
-          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Wand}"
-                                IconColor="#FFFFFF"
-                                HorizontalOptions="Center"
-                                VerticalOptions="Center"
-                                InputTransparent="True" />
-        </Border>
-      </Grid>
+        <HorizontalStackLayout Spacing="8"
+                               HorizontalOptions="End">
+          <Border x:Name="ImageGenButton"
+                  StrokeShape="RoundRectangle 16"
+                  WidthRequest="44"
+                  HeightRequest="44">
+            <Border.GestureRecognizers>
+              <TapGestureRecognizer Tapped="OnImageGenTapped" />
+            </Border.GestureRecognizers>
+            <controls:SvgIconView x:Name="ImageGenIcon"
+                                  IconName="{x:Static helpers:IconPaths.Image}"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center"
+                                  InputTransparent="True" />
+          </Border>
+
+          <Border x:Name="WandButton"
+                  StrokeShape="RoundRectangle 16"
+                  WidthRequest="44"
+                  HeightRequest="44">
+            <Border.GestureRecognizers>
+              <TapGestureRecognizer Tapped="OnWandTapped" />
+            </Border.GestureRecognizers>
+            <controls:SvgIconView x:Name="WandIcon"
+                                  IconName="{x:Static helpers:IconPaths.Wand}"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center"
+                                  InputTransparent="True" />
+          </Border>
+        </HorizontalStackLayout>
+      </VerticalStackLayout>
     </Border>
 
     <!-- Bottom tab bar -->

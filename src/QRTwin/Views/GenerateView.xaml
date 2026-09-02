@@ -30,7 +30,8 @@
                          HorizontalOptions="Center" />
 
       <!-- Empty state -->
-      <Border Style="{StaticResource GlassCard}"
+      <Border x:Name="EmptyStateCard"
+              Style="{StaticResource GlassCard}"
               IsVisible="{Binding HasQrCode, Converter={StaticResource InvertedBoolConverter}}"
               VerticalOptions="Center"
               MinimumHeightRequest="280">

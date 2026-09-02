@@ -59,6 +59,8 @@ public partial class ScanView : ContentView
     {
         _blinkRunning = false;
         _scanLineRunning = false;
+        SampleQrImage.StopAnimations();
+        ScanLine.StopAnimations();
     }
 
     private async void StartSampleQrBlinkAnimation()
@@ -72,13 +74,20 @@ public partial class ScanView : ContentView
 
         while (_blinkRunning && SampleQrImage is not null)
         {
-            await SampleQrImage.FadeToAsync(0.45, 700, Easing.SinInOut);
-            if (!_blinkRunning)
+            try
+            {
+                await SampleQrImage.FadeToAsync(0.45, 700, Easing.SinInOut);
+                if (!_blinkRunning)
+                {
+                    break;
+                }
+
+                await SampleQrImage.FadeToAsync(1, 700, Easing.SinInOut);
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
             {
                 break;
             }
-
-            await SampleQrImage.FadeToAsync(1, 700, Easing.SinInOut);
         }
     }
 
@@ -113,13 +122,19 @@ public partial class ScanView : ContentView
         }
 
         var half = duration / 2;
-        await ScanLine.FadeToAsync(0.72, half, Easing.SinInOut);
-        if (!_scanLineRunning)
+        try
         {
-            return;
-        }
+            await ScanLine.FadeToAsync(0.72, half, Easing.SinInOut);
+            if (!_scanLineRunning)
+            {
+                return;
+            }
 
-        await ScanLine.FadeToAsync(1, half, Easing.SinInOut);
+            await ScanLine.FadeToAsync(1, half, Easing.SinInOut);
+        }
+        catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+        {
+        }
     }
 
     private async void StartScanLineAnimation()
@@ -133,23 +148,30 @@ public partial class ScanView : ContentView
 
         while (_scanLineRunning && ScanLine is not null)
         {
-            var (top, bottom) = GetScanLinePositions();
-            ScanLine.TranslationY = top;
-            ScanLine.Opacity = 1;
-            const uint duration = 1800;
-            await Task.WhenAll(
-                ScanLine.TranslateToAsync(0, bottom, duration, Easing.SinInOut),
-                PulseScanLineAsync(duration));
-            if (!_scanLineRunning)
+            try
+            {
+                var (top, bottom) = GetScanLinePositions();
+                ScanLine.TranslationY = top;
+                ScanLine.Opacity = 1;
+                const uint duration = 1800;
+                await Task.WhenAll(
+                    ScanLine.TranslateToAsync(0, bottom, duration, Easing.SinInOut),
+                    PulseScanLineAsync(duration));
+                if (!_scanLineRunning)
+                {
+                    break;
+                }
+
+                ScanLine.TranslationY = bottom;
+                ScanLine.Opacity = 1;
+                await Task.WhenAll(
+                    ScanLine.TranslateToAsync(0, top, duration, Easing.SinInOut),
+                    PulseScanLineAsync(duration));
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
             {
                 break;
             }
-
-            ScanLine.TranslationY = bottom;
-            ScanLine.Opacity = 1;
-            await Task.WhenAll(
-                ScanLine.TranslateToAsync(0, top, duration, Easing.SinInOut),
-                PulseScanLineAsync(duration));
         }
     }
 

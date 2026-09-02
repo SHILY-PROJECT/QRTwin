@@ -1,4 +1,5 @@
 using CommunityToolkit.Maui.Storage;
+using QRTwin.Extensions;
 using QRTwin.Models;
 using QRTwin.Services;
 
@@ -17,6 +18,7 @@ public partial class GenerateViewModel(
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
+    [NotifyCanExecuteChangedFor(nameof(GenerateImageCommand))]
     public partial string InputText { get; set; }
 
     [ObservableProperty]
@@ -28,6 +30,7 @@ public partial class GenerateViewModel(
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
+    [NotifyCanExecuteChangedFor(nameof(GenerateImageCommand))]
     public partial bool IsGenerating { get; set; }
 
     [ObservableProperty]
@@ -47,6 +50,7 @@ public partial class GenerateViewModel(
         InputText = string.Empty;
         ClearResult();
         GenerateCommand.NotifyCanExecuteChanged();
+        GenerateImageCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnInputTextChanged(string value)
@@ -72,6 +76,9 @@ public partial class GenerateViewModel(
     [RelayCommand(CanExecute = nameof(CanGenerate))]
     private Task GenerateAsync() => GenerateAsync(saveToHistory: true);
 
+    [RelayCommand(CanExecute = nameof(CanGenerate))]
+    private Task GenerateImageAsync() => GenerateAsync(saveToHistory: true);
+
     private async Task GenerateAsync(bool saveToHistory)
     {
         if (!CanGenerate())
@@ -94,11 +101,18 @@ public partial class GenerateViewModel(
                 return;
             }
 
-            await MainThread.InvokeOnMainThreadAsync(() =>
+            try
             {
-                QrCodeImage = image;
-                HasQrCode = true;
-            });
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                {
+                    QrCodeImage = image;
+                    HasQrCode = true;
+                });
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+            {
+                return;
+            }
 
             _tempFilePath = await qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
 

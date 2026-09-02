@@ -10,4 +10,5 @@ public static class IconPaths
     public const string Copy = "copy.svg";
     public const string Delete = "delete.svg";
     public const string Wand = "wand.svg";
+    public const string Image = "image.svg";
 }

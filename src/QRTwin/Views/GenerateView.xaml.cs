@@ -1,22 +1,38 @@
+using QRTwin.Extensions;
 using QRTwin.ViewModels;
 
 namespace QRTwin.Views;
 
 public partial class GenerateView : ContentView
 {
+    private GenerateViewModel? _viewModel;
+
     public GenerateView()
     {
         InitializeComponent();
+        Unloaded += OnUnloaded;
     }
 
     protected override void OnBindingContextChanged()
     {
         base.OnBindingContextChanged();
 
+        if (_viewModel is not null)
+        {
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _viewModel = null;
+        }
+
         if (BindingContext is GenerateViewModel viewModel)
         {
+            _viewModel = viewModel;
             viewModel.PropertyChanged += OnViewModelPropertyChanged;
         }
+    }
+
+    private void OnUnloaded(object? sender, EventArgs e)
+    {
+        QrCard.StopAnimations();
     }
 
     private void OnResetQrClicked(object? sender, EventArgs e)
@@ -38,8 +54,16 @@ public partial class GenerateView : ContentView
         {
             QrCard.Opacity = 0;
             QrCard.Scale = 0.85;
-            await QrCard.FadeToAsync(1, 300, Easing.CubicOut);
-            await QrCard.ScaleToAsync(1, 300, Easing.CubicOut);
+
+            try
+            {
+                await QrCard.FadeToAsync(1, 300, Easing.CubicOut);
+                await QrCard.ScaleToAsync(1, 300, Easing.CubicOut);
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+            {
+            }
+
             return;
         }
 
