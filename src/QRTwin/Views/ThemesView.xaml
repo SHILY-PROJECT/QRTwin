@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:QRTwin.ViewModels"
+             x:Class="QRTwin.Views.ThemesView"
+             x:Name="ThemesViewRoot"
+             x:DataType="vm:ThemesViewModel"
+             HorizontalOptions="Fill"
+             VerticalOptions="Fill">
+
+  <ScrollView Orientation="Vertical"
+              VerticalScrollBarVisibility="Default"
+              HorizontalOptions="Fill"
+              VerticalOptions="Fill">
+    <VerticalStackLayout Spacing="12"
+                         BindableLayout.ItemsSource="{Binding Themes}">
+      <BindableLayout.ItemTemplate>
+        <DataTemplate x:DataType="vm:ThemeOptionViewModel">
+          <Border Padding="14"
+                  StrokeShape="RoundRectangle 18"
+                  BackgroundColor="{DynamicResource SurfaceElevated}"
+                  Stroke="{DynamicResource BorderLight}"
+                  StrokeThickness="1">
+            <Border.Triggers>
+              <DataTrigger TargetType="Border"
+                           Binding="{Binding IsSelected}"
+                           Value="True">
+                <Setter Property="Stroke" Value="{DynamicResource Accent}" />
+                <Setter Property="StrokeThickness" Value="2" />
+              </DataTrigger>
+            </Border.Triggers>
+
+            <Border.GestureRecognizers>
+              <TapGestureRecognizer Command="{Binding Source={x:Reference ThemesViewRoot}, Path=BindingContext.SelectThemeCommand}"
+                                    CommandParameter="{Binding .}" />
+            </Border.GestureRecognizers>
+
+            <Grid ColumnDefinitions="Auto,*,Auto"
+                  ColumnSpacing="12">
+              <Border Grid.Column="0"
+                      WidthRequest="48"
+                      HeightRequest="48"
+                      StrokeShape="RoundRectangle 14"
+                      Background="{Binding PreviewBrush}"
+                      VerticalOptions="Center" />
+
+              <VerticalStackLayout Grid.Column="1"
+                                   Spacing="4"
+                                   VerticalOptions="Center">
+                <Label Text="{Binding Name}"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="{DynamicResource PrimaryText}"
+                       LineBreakMode="TailTruncation"
+                       MaxLines="1" />
+                <Label Text="{Binding Description}"
+                       FontSize="13"
+                       TextColor="{DynamicResource SecondaryText}"
+                       LineBreakMode="WordWrap"
+                       MaxLines="3" />
+              </VerticalStackLayout>
+
+              <Label Grid.Column="2"
+                     Text="✓"
+                     FontSize="18"
+                     FontAttributes="Bold"
+                     TextColor="{DynamicResource Accent}"
+                     VerticalOptions="Center"
+                     HorizontalOptions="End"
+                     WidthRequest="24"
+                     HorizontalTextAlignment="Center"
+                     IsVisible="{Binding IsSelected}" />
+            </Grid>
+          </Border>
+        </DataTemplate>
+      </BindableLayout.ItemTemplate>
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentView>

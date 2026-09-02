@@ -36,12 +36,12 @@
                   RowSpacing="4">
               <Border Grid.Row="0"
                       Grid.Column="0"
-                      BackgroundColor="{StaticResource AccentSoft}"
+                      BackgroundColor="{DynamicResource AccentSoft}"
                       StrokeShape="RoundRectangle 8"
                       Padding="8,4"
                       HorizontalOptions="Start">
                 <Label Text="{Binding EntryType, Converter={StaticResource HistoryEntryTypeToStringConverter}}"
-                       TextColor="{StaticResource Accent}"
+                       TextColor="{DynamicResource Accent}"
                        FontAttributes="Bold"
                        FontSize="12" />
               </Border>
@@ -56,7 +56,7 @@
                      Grid.Column="0"
                      Grid.ColumnSpan="2"
                      Text="{Binding Content}"
-                     TextColor="{StaticResource PrimaryText}"
+                     TextColor="{DynamicResource PrimaryText}"
                      FontSize="15"
                      LineBreakMode="TailTruncation"
                      MaxLines="3" />
@@ -76,7 +76,7 @@
                                         CommandParameter="{Binding .}" />
                 </Border.GestureRecognizers>
                 <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Delete}"
-                                      IconColor="{StaticResource Danger}"
+                                      IconColor="{DynamicResource Danger}"
                                       WidthRequest="15"
                                       HeightRequest="15" />
               </Border>
@@ -94,9 +94,9 @@
         <Border WidthRequest="64"
                 HeightRequest="64"
                 StrokeShape="RoundRectangle 18"
-                BackgroundColor="{StaticResource AccentSoft}">
+                BackgroundColor="{DynamicResource AccentSoft}">
           <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
-                                IconColor="{StaticResource Accent}"
+                                IconColor="{DynamicResource Accent}"
                                 WidthRequest="32"
                                 HeightRequest="32"
                                 HorizontalOptions="Center"
@@ -114,7 +114,7 @@
     <Button Grid.Row="1"
             Text="Очистить всё"
             Style="{StaticResource SecondaryButton}"
-            TextColor="{StaticResource Danger}"
+            TextColor="{DynamicResource Danger}"
             IsVisible="{Binding HasEntries}"
             Command="{Binding ClearAllCommand}" />
   </Grid>

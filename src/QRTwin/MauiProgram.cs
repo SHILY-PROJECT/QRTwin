@@ -5,6 +5,9 @@ using ZXing.Net.Maui;
 using ZXing.Net.Maui.Controls;
 using SQLitePCL;
 
+using QRTwin.Extensions;
+using QRTwin.Services;
+
 namespace QRTwin;
 
 public static class MauiProgram

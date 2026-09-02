@@ -9,7 +9,7 @@
              x:Name="MainPageRoot"
              x:DataType="vm:MainViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{StaticResource AppBackground}">
+             Background="{DynamicResource PageBackgroundBrush}">
 
   <Grid x:Name="RootLayout"
         RowDefinitions="Auto,*,Auto,Auto"
@@ -18,7 +18,7 @@
     <!-- Background glow -->
     <BoxView Grid.RowSpan="4"
              InputTransparent="True"
-             Background="{StaticResource BackgroundGlowBrush}" />
+             Background="{DynamicResource BackgroundGlowBrush}" />
 
     <!-- Header -->
     <Grid Grid.Row="0"
@@ -28,7 +28,7 @@
       <Border WidthRequest="44"
               HeightRequest="44"
               StrokeShape="RoundRectangle 14"
-              Background="{StaticResource AccentGradientBrush}">
+              Background="{DynamicResource AccentGradientBrush}">
         <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
                               IconColor="#FFFFFF"
                               WidthRequest="22"
@@ -41,19 +41,31 @@
         <Label Text="QRTwin"
                FontSize="22"
                FontAttributes="Bold"
-               TextColor="{StaticResource PrimaryText}" />
+               TextColor="{DynamicResource PrimaryText}" />
         <Label Text="Сканируйте и создавайте QR-коды"
                Style="{StaticResource CaptionLabel}" />
       </VerticalStackLayout>
 
-      <Border Grid.Column="2"
-              Style="{StaticResource IconButton}">
-        <Border.GestureRecognizers>
-          <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
-        </Border.GestureRecognizers>
-        <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
-                              IconColor="{StaticResource Accent}" />
-      </Border>
+      <HorizontalStackLayout Grid.Column="2"
+                             Spacing="8"
+                             HorizontalOptions="End"
+                             VerticalOptions="Center">
+        <Border Style="{StaticResource IconButton}">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding OpenThemesCommand}" />
+          </Border.GestureRecognizers>
+          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Themes}"
+                                IconColor="{DynamicResource Accent}" />
+        </Border>
+
+        <Border Style="{StaticResource AccentIconButton}">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
+          </Border.GestureRecognizers>
+          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
+                                IconColor="#FFFFFF" />
+        </Border>
+      </HorizontalStackLayout>
     </Grid>
 
     <!-- Main content area -->
@@ -86,8 +98,8 @@
             Grid.Row="2"
             Margin="16,4,16,8"
             Padding="6"
-            BackgroundColor="{StaticResource Surface}"
-            Stroke="{StaticResource Border}"
+            BackgroundColor="{DynamicResource Surface}"
+            Stroke="{DynamicResource Border}"
             StrokeThickness="1"
             StrokeShape="RoundRectangle 20"
             MaximumWidthRequest="720"
@@ -109,7 +121,7 @@
                  HeightRequest="1"
                  Margin="12,8,12,8"
                  HorizontalOptions="Fill"
-                 Color="{StaticResource Border}" />
+                 Color="{DynamicResource Border}" />
 
         <Grid ColumnDefinitions="8*,2*"
               ColumnSpacing="8"
@@ -152,8 +164,8 @@
             Grid.Row="3"
             Margin="16,0,16,20"
             Padding="4"
-            BackgroundColor="{StaticResource Surface}"
-            Stroke="{StaticResource Border}"
+            BackgroundColor="{DynamicResource Surface}"
+            Stroke="{DynamicResource Border}"
             StrokeThickness="1"
             StrokeShape="RoundRectangle 24"
             MaximumWidthRequest="720"
@@ -201,45 +213,107 @@
     <!-- History overlay -->
     <Grid Grid.RowSpan="4"
           IsVisible="{Binding IsHistoryVisible}"
-          BackgroundColor="#E6000000"
           ZIndex="100">
-      <Grid.GestureRecognizers>
-        <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
-      </Grid.GestureRecognizers>
+      <BoxView BackgroundColor="#E6000000">
+        <BoxView.GestureRecognizers>
+          <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+        </BoxView.GestureRecognizers>
+      </BoxView>
 
-      <Border Margin="20,48,20,24"
-              Style="{StaticResource GlassCard}"
-              VerticalOptions="Fill"
-              HorizontalOptions="Fill"
-              MaximumWidthRequest="640"
-              InputTransparent="False">
-        <Grid RowDefinitions="Auto,*">
-          <Grid Grid.Row="0"
-                ColumnDefinitions="*,Auto"
-                Margin="0,0,0,8">
-            <Label Text="История"
-                   Style="{StaticResource TitleLabel}"
-                   FontSize="20" />
-            <Border Grid.Column="1"
-                    BackgroundColor="{StaticResource SurfaceElevated}"
-                    StrokeShape="RoundRectangle 12"
-                    Padding="12,8">
-              <Border.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
-              </Border.GestureRecognizers>
-              <Label Text="Закрыть"
-                     TextColor="{StaticResource Accent}"
-                     FontAttributes="Bold"
-                     FontSize="14" />
-            </Border>
+      <Grid Padding="20,48,20,24"
+            MaximumWidthRequest="640"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
+        <Border Style="{StaticResource GlassCard}"
+                VerticalOptions="Fill"
+                HorizontalOptions="Fill">
+          <Grid RowDefinitions="Auto,*"
+                RowSpacing="8">
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  ColumnSpacing="12">
+              <Label Text="История"
+                     Style="{StaticResource TitleLabel}"
+                     FontSize="20"
+                     VerticalOptions="Center"
+                     LineBreakMode="TailTruncation" />
+              <Border Grid.Column="1"
+                      BackgroundColor="{DynamicResource SurfaceElevated}"
+                      StrokeShape="RoundRectangle 12"
+                      Padding="12,8"
+                      HorizontalOptions="End"
+                      VerticalOptions="Center">
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="Закрыть"
+                       TextColor="{DynamicResource Accent}"
+                       FontAttributes="Bold"
+                       FontSize="14"
+                       LineBreakMode="NoWrap" />
+              </Border>
+            </Grid>
+
+            <views:HistoryView Grid.Row="1"
+                               BindingContext="{Binding History}"
+                               HorizontalOptions="Fill"
+                               VerticalOptions="Fill" />
           </Grid>
+        </Border>
+      </Grid>
+    </Grid>
 
-          <views:HistoryView Grid.Row="1"
-                             BindingContext="{Binding History}"
-                             HorizontalOptions="Fill"
-                             VerticalOptions="Fill" />
-        </Grid>
-      </Border>
+    <!-- Themes overlay -->
+    <Grid Grid.RowSpan="4"
+          IsVisible="{Binding IsThemesVisible}"
+          ZIndex="101">
+      <BoxView BackgroundColor="#E6000000">
+        <BoxView.GestureRecognizers>
+          <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
+        </BoxView.GestureRecognizers>
+      </BoxView>
+
+      <Grid Padding="20,48,20,24"
+            MaximumWidthRequest="640"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
+        <Border Style="{StaticResource GlassCard}"
+                VerticalOptions="Fill"
+                HorizontalOptions="Fill">
+          <Grid RowDefinitions="Auto,*"
+                RowSpacing="8">
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  ColumnSpacing="12">
+              <Label Text="Темы"
+                     Style="{StaticResource TitleLabel}"
+                     FontSize="20"
+                     VerticalOptions="Center"
+                     LineBreakMode="TailTruncation" />
+              <Border Grid.Column="1"
+                      BackgroundColor="{DynamicResource SurfaceElevated}"
+                      StrokeShape="RoundRectangle 12"
+                      Padding="12,8"
+                      HorizontalOptions="End"
+                      VerticalOptions="Center">
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
+                </Border.GestureRecognizers>
+                <Label Text="Закрыть"
+                       TextColor="{DynamicResource Accent}"
+                       FontAttributes="Bold"
+                       FontSize="14"
+                       LineBreakMode="NoWrap" />
+              </Border>
+            </Grid>
+
+            <views:ThemesView Grid.Row="1"
+                              BindingContext="{Binding Themes}"
+                              HorizontalOptions="Fill"
+                              VerticalOptions="Fill" />
+          </Grid>
+        </Border>
+      </Grid>
     </Grid>
   </Grid>
 

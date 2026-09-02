@@ -1,6 +1,7 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
 using QRTwin.Extensions;
 using QRTwin.Models;
+using QRTwin.Services;
 using QRTwin.ViewModels;
 
 namespace QRTwin;
@@ -11,24 +12,23 @@ public partial class MainPage : ContentPage
     private const double ExpansionAnchorGap = 12;
 
     private readonly MainViewModel _viewModel;
-    private readonly Color _inactiveButtonBackground;
-    private readonly Color _inactiveIconColor;
-    private readonly Color _activeIconColor;
-    private readonly Color _separatorInactiveColor;
-    private readonly Color _separatorActiveColor;
+    private readonly IThemeService _themeService;
+    private Color _inactiveButtonBackground = null!;
+    private Color _inactiveIconColor = null!;
+    private readonly Color _activeIconColor = Colors.White;
+    private Color _separatorInactiveColor = null!;
+    private Color _separatorActiveColor = null!;
     private bool _isUnloaded;
     private double? _referenceExpandedEditorHeight;
 
-    public MainPage(MainViewModel viewModel)
+    public MainPage(MainViewModel viewModel, IThemeService themeService)
     {
         InitializeComponent();
         BindingContext = _viewModel = viewModel;
+        _themeService = themeService;
 
-        _inactiveButtonBackground = (Color)Application.Current.Resources["SurfaceElevated"];
-        _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
-        _activeIconColor = Colors.White;
-        _separatorInactiveColor = (Color)Application.Current.Resources["Border"];
-        _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
+        RefreshThemeColors();
+        _themeService.ThemeChanged += OnThemeChanged;
 
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.Generate.PropertyChanged += OnGenerateViewModelPropertyChanged;
@@ -45,9 +45,34 @@ public partial class MainPage : ContentPage
 #endif
     }
 
+    private void OnThemeChanged(object? sender, EventArgs e)
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            RefreshThemeColors();
+            UpdateTabVisuals(_viewModel.SelectedTab);
+            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+            UpdateInputEditorSeparatorState(GenerateInputEditor.IsFocused);
+        });
+    }
+
+    private void RefreshThemeColors()
+    {
+        _inactiveButtonBackground = (Color)Application.Current!.Resources["SurfaceElevated"];
+        _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
+        _separatorInactiveColor = (Color)Application.Current.Resources["Border"];
+        _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
+    }
+
     private void OnUnloaded(object? sender, EventArgs e)
     {
         _isUnloaded = true;
+        _themeService.ThemeChanged -= OnThemeChanged;
         ContentHost.SizeChanged -= OnContentHostSizeChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.Generate.PropertyChanged -= OnGenerateViewModelPropertyChanged;

@@ -2,9 +2,10 @@
 
 public partial class App : Application
 {
-    public App()
+    public App(IThemeService themeService)
     {
         InitializeComponent();
+        themeService.Initialize();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
