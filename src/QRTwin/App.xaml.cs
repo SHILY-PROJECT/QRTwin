@@ -1,5 +1,7 @@
 ﻿namespace QRTwin;
 
+using QRTwin.Services;
+
 public partial class App : Application
 {
     public App(IThemeService themeService)
@@ -22,6 +24,7 @@ public partial class App : Application
 
 #if WINDOWS
         Platforms.Windows.WindowGeometryPersistence.Attach(window);
+        Platforms.Windows.GlassWindowBackdrop.Attach(window, services.GetRequiredService<IThemeService>());
 #endif
 
         return window;

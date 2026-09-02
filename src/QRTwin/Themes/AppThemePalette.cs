@@ -40,11 +40,21 @@ public sealed class AppThemePalette
 
     public required Brush BackgroundGlowBrush { get; init; }
 
+    public required Brush BackgroundGlowSecondaryBrush { get; init; }
+
     public required Brush AccentGradientBrush { get; init; }
 
     public required Brush CardGradientBrush { get; init; }
 
+    public required Brush OverlayScrimBrush { get; init; }
+
+    public required Brush OverlayPanelBrush { get; init; }
+
+    public required Brush OverlayItemBrush { get; init; }
+
     public required Brush ScannerBeamBrush { get; init; }
+
+    public GlassVisualEffects VisualEffects { get; init; } = GlassVisualEffects.Disabled;
 
     public Brush PreviewBrush => AccentGradientBrush;
 
@@ -70,9 +80,15 @@ public sealed class AppThemePalette
 
         SetBrush(resources, "PageBackgroundBrush", PageBackgroundBrush);
         SetBrush(resources, "BackgroundGlowBrush", BackgroundGlowBrush);
+        SetBrush(resources, "BackgroundGlowSecondaryBrush", BackgroundGlowSecondaryBrush);
         SetBrush(resources, "AccentGradientBrush", AccentGradientBrush);
         SetBrush(resources, "CardGradientBrush", CardGradientBrush);
+        SetBrush(resources, "OverlayScrimBrush", OverlayScrimBrush);
+        SetBrush(resources, "OverlayPanelBrush", OverlayPanelBrush);
+        SetBrush(resources, "OverlayItemBrush", OverlayItemBrush);
         SetBrush(resources, "ScannerBeamBrush", ScannerBeamBrush);
+
+        resources["GlassVisualEffects"] = VisualEffects;
 
         SetBrush(resources, "AppBackgroundBrush", new SolidColorBrush(AppBackground));
         SetBrush(resources, "SurfaceBrush", new SolidColorBrush(Surface));

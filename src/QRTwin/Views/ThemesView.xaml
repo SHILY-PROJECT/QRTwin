@@ -19,10 +19,7 @@
       <BindableLayout.ItemTemplate>
         <DataTemplate x:DataType="vm:ThemeOptionViewModel">
           <Border Padding="14"
-                  StrokeShape="RoundRectangle 18"
-                  BackgroundColor="{DynamicResource SurfaceElevated}"
-                  Stroke="{DynamicResource BorderLight}"
-                  StrokeThickness="1">
+                  Style="{StaticResource GlassOverlayItem}">
             <Border.Triggers>
               <DataTrigger TargetType="Border"
                            Binding="{Binding IsSelected}"
@@ -43,6 +40,8 @@
                       WidthRequest="48"
                       HeightRequest="48"
                       StrokeShape="RoundRectangle 14"
+                      Stroke="{DynamicResource Border}"
+                      StrokeThickness="1"
                       Background="{Binding PreviewBrush}"
                       VerticalOptions="Center" />
 

@@ -3,5 +3,6 @@ namespace QRTwin.Models;
 public enum AppThemeId
 {
     Neon,
-    Classic
+    Classic,
+    Glass
 }

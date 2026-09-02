@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using QRTwin.Effects;
 using QRTwin.Extensions;
 using QRTwin.Models;
 using QRTwin.Services;
@@ -62,6 +63,7 @@ public partial class MainPage : ContentPage
             UpdateTabVisuals(_viewModel.SelectedTab);
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
             UpdateInputEditorSeparatorState(GenerateInputEditor.IsFocused);
+            RefreshOverlayGlassEffects();
         });
     }
 
@@ -291,6 +293,29 @@ public partial class MainPage : ContentPage
             UpdateTabVisuals(vm.SelectedTab);
             UpdateTabPanels(vm.SelectedTab);
         }
+
+        if (sender is MainViewModel
+            && (e.IsProperty(nameof(MainViewModel.IsHistoryVisible))
+                || e.IsProperty(nameof(MainViewModel.IsThemesVisible))))
+        {
+            RefreshOverlayGlassEffects();
+        }
+    }
+
+    private void RefreshOverlayGlassEffects()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (_viewModel.IsHistoryVisible)
+            {
+                GlassEffect.RefreshVisualTree(HistoryOverlayPanel);
+            }
+
+            if (_viewModel.IsThemesVisible)
+            {
+                GlassEffect.RefreshVisualTree(ThemesOverlayPanel);
+            }
+        });
     }
 
     private async void OnScanTabTapped(object? sender, TappedEventArgs e)

@@ -5,6 +5,7 @@
              xmlns:controls="clr-namespace:QRTwin.Controls"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             xmlns:effects="clr-namespace:QRTwin.Effects"
              x:Class="QRTwin.Views.ScanView"
              x:DataType="vm:ScanViewModel"
              HorizontalOptions="Fill"

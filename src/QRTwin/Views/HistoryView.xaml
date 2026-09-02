@@ -24,7 +24,7 @@
 
         <CollectionView.ItemTemplate>
         <DataTemplate x:DataType="models:HistoryEntry">
-          <Border Style="{StaticResource Card}"
+          <Border Style="{StaticResource GlassOverlayItem}"
                   Padding="16">
             <Border.GestureRecognizers>
               <TapGestureRecognizer Command="{Binding Source={x:Reference HistoryViewRoot}, Path=BindingContext.SelectEntryCommand}"

@@ -5,6 +5,8 @@
              xmlns:views="clr-namespace:QRTwin.Views"
              xmlns:controls="clr-namespace:QRTwin.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             xmlns:effects="clr-namespace:QRTwin.Effects"
+             xmlns:themes="clr-namespace:QRTwin.Themes"
              x:Class="QRTwin.MainPage"
              x:Name="MainPageRoot"
              x:DataType="vm:MainViewModel"
@@ -19,6 +21,10 @@
     <BoxView Grid.RowSpan="4"
              InputTransparent="True"
              Background="{DynamicResource BackgroundGlowBrush}" />
+    <BoxView x:Name="BackgroundGlowSecondary"
+             Grid.RowSpan="4"
+             InputTransparent="True"
+             Background="{DynamicResource BackgroundGlowSecondaryBrush}" />
 
     <!-- Header -->
     <Grid Grid.Row="0"
@@ -28,7 +34,8 @@
       <Border WidthRequest="44"
               HeightRequest="44"
               StrokeShape="RoundRectangle 14"
-              Background="{DynamicResource AccentGradientBrush}">
+              Background="{DynamicResource AccentGradientBrush}"
+              effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}">
         <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
                               IconColor="#FFFFFF"
                               WidthRequest="40"
@@ -106,11 +113,9 @@
     <!-- Generate input bar -->
     <Border x:Name="GenerateInputBar"
             Grid.Row="2"
+            Style="{StaticResource GlassChromeBar}"
             Margin="16,4,16,8"
             Padding="6"
-            BackgroundColor="{DynamicResource Surface}"
-            Stroke="{DynamicResource Border}"
-            StrokeThickness="1"
             StrokeShape="RoundRectangle 20"
             MaximumWidthRequest="720"
             HorizontalOptions="Fill"
@@ -140,6 +145,8 @@
                   Grid.Column="0"
                   StrokeShape="RoundRectangle 16"
                   HeightRequest="44"
+                  BackgroundColor="{DynamicResource SurfaceElevated}"
+                  effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
                   HorizontalOptions="Fill">
             <Border.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnImageGenTapped" />
@@ -155,6 +162,8 @@
                   Grid.Column="1"
                   StrokeShape="RoundRectangle 16"
                   HeightRequest="44"
+                  BackgroundColor="{DynamicResource SurfaceElevated}"
+                  effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
                   HorizontalOptions="Fill">
             <Border.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnWandTapped" />
@@ -172,11 +181,9 @@
     <!-- Bottom tab bar -->
     <Border x:Name="BottomTabBar"
             Grid.Row="3"
+            Style="{StaticResource GlassChromeBar}"
             Margin="16,0,16,20"
             Padding="4"
-            BackgroundColor="{DynamicResource Surface}"
-            Stroke="{DynamicResource Border}"
-            StrokeThickness="1"
             StrokeShape="RoundRectangle 24"
             MaximumWidthRequest="720"
             HorizontalOptions="Fill">
@@ -221,10 +228,11 @@
     </Border>
 
     <!-- History overlay -->
-    <Grid Grid.RowSpan="4"
+    <Grid x:Name="HistoryOverlay"
+          Grid.RowSpan="4"
           IsVisible="{Binding IsHistoryVisible}"
           ZIndex="100">
-      <BoxView BackgroundColor="#E6000000">
+      <BoxView Background="{DynamicResource OverlayScrimBrush}">
         <BoxView.GestureRecognizers>
           <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
         </BoxView.GestureRecognizers>
@@ -234,7 +242,8 @@
             MaximumWidthRequest="640"
             HorizontalOptions="Fill"
             VerticalOptions="Fill">
-        <Border Style="{StaticResource GlassCard}"
+        <Border x:Name="HistoryOverlayPanel"
+                Style="{StaticResource GlassOverlayCard}"
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
@@ -248,7 +257,7 @@
                      VerticalOptions="Center"
                      LineBreakMode="TailTruncation" />
               <Border Grid.Column="1"
-                      BackgroundColor="{DynamicResource SurfaceElevated}"
+                      Style="{StaticResource GlassOverlayItem}"
                       StrokeShape="RoundRectangle 12"
                       Padding="12,8"
                       HorizontalOptions="End"
@@ -274,10 +283,11 @@
     </Grid>
 
     <!-- Themes overlay -->
-    <Grid Grid.RowSpan="4"
+    <Grid x:Name="ThemesOverlay"
+          Grid.RowSpan="4"
           IsVisible="{Binding IsThemesVisible}"
           ZIndex="101">
-      <BoxView BackgroundColor="#E6000000">
+      <BoxView Background="{DynamicResource OverlayScrimBrush}">
         <BoxView.GestureRecognizers>
           <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
         </BoxView.GestureRecognizers>
@@ -287,7 +297,8 @@
             MaximumWidthRequest="640"
             HorizontalOptions="Fill"
             VerticalOptions="Fill">
-        <Border Style="{StaticResource GlassCard}"
+        <Border x:Name="ThemesOverlayPanel"
+                Style="{StaticResource GlassOverlayCard}"
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
@@ -301,7 +312,7 @@
                      VerticalOptions="Center"
                      LineBreakMode="TailTruncation" />
               <Border Grid.Column="1"
-                      BackgroundColor="{DynamicResource SurfaceElevated}"
+                      Style="{StaticResource GlassOverlayItem}"
                       StrokeShape="RoundRectangle 12"
                       Padding="12,8"
                       HorizontalOptions="End"
@@ -334,6 +345,9 @@
           <VisualState.StateTriggers>
             <AdaptiveTrigger MinWindowWidth="0" />
           </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter TargetName="BackgroundGlowSecondary" Property="Opacity" Value="1" />
+          </VisualState.Setters>
         </VisualState>
         <VisualState x:Name="Wide">
           <VisualState.StateTriggers>
@@ -341,6 +355,7 @@
           </VisualState.StateTriggers>
           <VisualState.Setters>
             <Setter TargetName="ContentHost" Property="Padding" Value="24,12" />
+            <Setter TargetName="BackgroundGlowSecondary" Property="Opacity" Value="0.72" />
           </VisualState.Setters>
         </VisualState>
       </VisualStateGroup>

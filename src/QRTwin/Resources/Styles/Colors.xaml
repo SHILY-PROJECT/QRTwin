@@ -34,6 +34,8 @@
         <GradientStop Color="#00121212" Offset="1.0" />
     </RadialGradientBrush>
 
+    <SolidColorBrush x:Key="BackgroundGlowSecondaryBrush" Color="Transparent" />
+
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FF4D00" Offset="0.0" />
         <GradientStop Color="#FF6B2C" Offset="1.0" />
@@ -42,6 +44,18 @@
     <LinearGradientBrush x:Key="CardGradientBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#D9242424" Offset="0.0" />
         <GradientStop Color="#D91A1A1A" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="OverlayScrimBrush" Color="#E6000000" />
+
+    <LinearGradientBrush x:Key="OverlayPanelBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#D9242424" Offset="0.0" />
+        <GradientStop Color="#D91A1A1A" Offset="1.0" />
+    </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="OverlayItemBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#D9282828" Offset="0.0" />
+        <GradientStop Color="#D9222222" Offset="1.0" />
     </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="ScannerBeamBrush" StartPoint="0,0" EndPoint="0,1">

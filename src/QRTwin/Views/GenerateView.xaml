@@ -4,6 +4,8 @@
              xmlns:vm="clr-namespace:QRTwin.ViewModels"
              xmlns:controls="clr-namespace:QRTwin.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             xmlns:effects="clr-namespace:QRTwin.Effects"
+             xmlns:themes="clr-namespace:QRTwin.Themes"
              x:Class="QRTwin.Views.GenerateView"
              x:DataType="vm:GenerateViewModel"
              HorizontalOptions="Fill"
@@ -93,7 +95,8 @@
                     Stroke="{DynamicResource Border}"
                     StrokeThickness="1"
                     StrokeShape="RoundRectangle 16"
-                    Padding="16,14">
+                    Padding="16,14"
+                    effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}">
               <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding ShareCommand}" />
               </Border.GestureRecognizers>
@@ -113,7 +116,8 @@
             <Border Grid.Column="1"
                     Background="{DynamicResource AccentGradientBrush}"
                     StrokeShape="RoundRectangle 16"
-                    Padding="16,14">
+                    Padding="16,14"
+                    effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}">
               <Border.GestureRecognizers>
                 <TapGestureRecognizer Command="{Binding SaveCommand}" />
               </Border.GestureRecognizers>
