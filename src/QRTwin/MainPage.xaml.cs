@@ -3,6 +3,7 @@ using QRTwin.Effects;
 using QRTwin.Extensions;
 using QRTwin.Models;
 using QRTwin.Services;
+using QRTwin.Themes;
 using QRTwin.ViewModels;
 
 namespace QRTwin;
@@ -909,23 +910,74 @@ public partial class MainPage : ContentPage
 
     private void UpdateTabVisuals(AppTab selectedTab)
     {
-        var accent = (Color)Application.Current!.Resources["Accent"];
-        var secondary = (Color)Application.Current.Resources["SecondaryText"];
+        var tabActiveBg = (Color)Application.Current!.Resources["TabActiveBackground"];
+        var tabActiveText = (Color)Application.Current.Resources["TabActiveText"];
+        var tabActiveIcon = (Color)Application.Current.Resources["TabActiveIcon"];
+        var tabInactiveText = (Color)Application.Current.Resources["TabInactiveText"];
+        var tabInactiveIcon = (Color)Application.Current.Resources["TabInactiveIcon"];
+        var tabActiveBorder = Application.Current.Resources.TryGetValue("TabActiveBorder", out var borderValue)
+                              && borderValue is Color borderColor
+            ? borderColor
+            : Colors.Transparent;
 
-        var (scanTabBg, generateTabBg, scanIconColor, generateIconColor, scanLabelColor, generateLabelColor) =
-            selectedTab switch
-            {
-                AppTab.Scan => (accent, Colors.Transparent, Colors.White, secondary, Colors.White, secondary),
-                AppTab.Generate => (Colors.Transparent, accent, secondary, Colors.White, secondary, Colors.White),
-                _ => (Colors.Transparent, Colors.Transparent, secondary, secondary, secondary, secondary)
-            };
+        var scanActive = selectedTab is AppTab.Scan;
+        var generateActive = selectedTab is AppTab.Generate;
+        Brush? tabActiveBrush = Application.Current.Resources.TryGetValue("TabActiveBackgroundBrush", out var brushValue)
+                                  && brushValue is Brush brush
+            ? brush
+            : null;
 
-        ScanTab.BackgroundColor = scanTabBg;
-        GenerateTab.BackgroundColor = generateTabBg;
-        ScanTabIcon.IconColor = scanIconColor;
-        GenerateTabIcon.IconColor = generateIconColor;
-        ScanTabLabel.TextColor = scanLabelColor;
-        GenerateTabLabel.TextColor = generateLabelColor;
+        ApplyTabBackground(ScanTab, scanActive, tabActiveBrush, tabActiveBg);
+        ApplyTabBackground(GenerateTab, generateActive, tabActiveBrush, tabActiveBg);
+
+        ScanTab.Stroke = scanActive ? tabActiveBorder : Colors.Transparent;
+        GenerateTab.Stroke = generateActive ? tabActiveBorder : Colors.Transparent;
+        ScanTab.StrokeThickness = scanActive && tabActiveBorder != Colors.Transparent ? 1 : 0;
+        GenerateTab.StrokeThickness = generateActive && tabActiveBorder != Colors.Transparent ? 1 : 0;
+
+        ScanTabIcon.IconColor = scanActive ? tabActiveIcon : tabInactiveIcon;
+        GenerateTabIcon.IconColor = generateActive ? tabActiveIcon : tabInactiveIcon;
+        ScanTabLabel.TextColor = scanActive ? tabActiveText : tabInactiveText;
+        GenerateTabLabel.TextColor = generateActive ? tabActiveText : tabInactiveText;
+
+        ApplyTabGlassEffect(ScanTab, scanActive);
+        ApplyTabGlassEffect(GenerateTab, generateActive);
+    }
+
+    private static void ApplyTabBackground(Border tab, bool active, Brush? activeBrush, Color activeColor)
+    {
+        if (active && activeBrush is not null)
+        {
+            tab.Background = activeBrush;
+            tab.BackgroundColor = Colors.Transparent;
+            return;
+        }
+
+        tab.Background = null;
+        tab.BackgroundColor = active ? activeColor : Colors.Transparent;
+    }
+
+    private void ApplyTabGlassEffect(Border tab, bool active)
+    {
+        if (Application.Current?.Resources.TryGetValue("GlassVisualEffects", out var effectsValue) != true
+            || effectsValue is not GlassVisualEffects { IsEnabled: true })
+        {
+            return;
+        }
+
+        if (active)
+        {
+            GlassEffect.SetIntensity(tab, GlassEffectIntensity.Subtle);
+            return;
+        }
+
+        if (tab.IsSet(GlassEffect.IntensityProperty))
+        {
+            tab.ClearValue(GlassEffect.IntensityProperty);
+        }
+
+        tab.ClearValue(VisualElement.ShadowProperty);
+        GlassBlur.Clear(tab);
     }
 
     private async void StartAuthorCreditShimmer()

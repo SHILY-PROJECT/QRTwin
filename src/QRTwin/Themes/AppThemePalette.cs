@@ -36,6 +36,18 @@ public sealed class AppThemePalette
 
     public required Color BorderLight { get; init; }
 
+    public required Color TabActiveBackground { get; init; }
+
+    public required Color TabActiveText { get; init; }
+
+    public required Color TabActiveIcon { get; init; }
+
+    public required Color TabInactiveText { get; init; }
+
+    public required Color TabInactiveIcon { get; init; }
+
+    public Color TabActiveBorder { get; init; } = Colors.Transparent;
+
     public required Brush PageBackgroundBrush { get; init; }
 
     public required Brush BackgroundGlowBrush { get; init; }
@@ -77,6 +89,12 @@ public sealed class AppThemePalette
         SetColor(resources, "ScannerLine", ScannerLine);
         SetColor(resources, "Border", Border);
         SetColor(resources, "BorderLight", BorderLight);
+        SetColor(resources, "TabActiveBackground", TabActiveBackground);
+        SetColor(resources, "TabActiveText", TabActiveText);
+        SetColor(resources, "TabActiveIcon", TabActiveIcon);
+        SetColor(resources, "TabInactiveText", TabInactiveText);
+        SetColor(resources, "TabInactiveIcon", TabInactiveIcon);
+        SetColor(resources, "TabActiveBorder", TabActiveBorder);
 
         SetBrush(resources, "PageBackgroundBrush", PageBackgroundBrush);
         SetBrush(resources, "BackgroundGlowBrush", BackgroundGlowBrush);
@@ -87,6 +105,15 @@ public sealed class AppThemePalette
         SetBrush(resources, "OverlayPanelBrush", OverlayPanelBrush);
         SetBrush(resources, "OverlayItemBrush", OverlayItemBrush);
         SetBrush(resources, "ScannerBeamBrush", ScannerBeamBrush);
+
+        if (VisualEffects.IsEnabled)
+        {
+            SetBrush(resources, "TabActiveBackgroundBrush", AccentGradientBrush);
+        }
+        else if (resources.ContainsKey("TabActiveBackgroundBrush"))
+        {
+            resources.Remove("TabActiveBackgroundBrush");
+        }
 
         resources["GlassVisualEffects"] = VisualEffects;
 

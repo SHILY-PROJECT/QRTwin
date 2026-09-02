@@ -58,6 +58,11 @@ public static class AppThemeCatalog
         ScannerLine = Color.FromArgb("#03AFFF"),
         Border = Color.FromArgb("#CC2A3560"),
         BorderLight = Color.FromArgb("#CC3D4A78"),
+        TabActiveBackground = Color.FromArgb("#03AFFF"),
+        TabActiveText = Colors.White,
+        TabActiveIcon = Colors.White,
+        TabInactiveText = Color.FromArgb("#D9C8D8F0"),
+        TabInactiveIcon = Color.FromArgb("#997A8FA8"),
         VisualEffects = GlassVisualEffects.Disabled,
         PageBackgroundBrush = new LinearGradientBrush
         {
@@ -158,6 +163,11 @@ public static class AppThemeCatalog
         ScannerLine = Color.FromArgb("#FF4D00"),
         Border = Color.FromArgb("#D92A2A2A"),
         BorderLight = Color.FromArgb("#D93A3A3A"),
+        TabActiveBackground = Color.FromArgb("#FF4D00"),
+        TabActiveText = Colors.White,
+        TabActiveIcon = Colors.White,
+        TabInactiveText = Color.FromArgb("#D99E9E9E"),
+        TabInactiveIcon = Color.FromArgb("#D9666666"),
         VisualEffects = GlassVisualEffects.Disabled,
         PageBackgroundBrush = new SolidColorBrush(Color.FromArgb("#121212")),
         BackgroundGlowBrush = new RadialGradientBrush
@@ -246,6 +256,12 @@ public static class AppThemeCatalog
         ScannerLine = Color.FromArgb("#00D1FF"),
         Border = Color.FromArgb("#33FFFFFF"),
         BorderLight = Color.FromArgb("#4DFFFFFF"),
+        TabActiveBackground = Color.FromArgb("#B3142040"),
+        TabActiveText = Colors.White,
+        TabActiveIcon = Colors.White,
+        TabInactiveText = Color.FromArgb("#A0B0C0D0"),
+        TabInactiveIcon = Color.FromArgb("#8090A4B4"),
+        TabActiveBorder = Colors.Transparent,
         VisualEffects = new GlassVisualEffects
         {
             IsEnabled = true,
