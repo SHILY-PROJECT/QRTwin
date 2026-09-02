@@ -93,16 +93,14 @@
           MaximumWidthRequest="720"
           HorizontalOptions="Fill">
 
-      <Grid x:Name="ScanPanel"
-            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Scan}">
+      <Grid x:Name="ScanPanel">
         <views:ScanView x:Name="ScanContent"
                         BindingContext="{Binding Scan}"
                         HorizontalOptions="Fill"
                         VerticalOptions="Fill" />
       </Grid>
 
-      <Grid x:Name="GeneratePanel"
-            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
+      <Grid x:Name="GeneratePanel">
         <views:GenerateView x:Name="GenerateContent"
                             BindingContext="{Binding Generate}"
                             HorizontalOptions="Fill"
@@ -119,7 +117,8 @@
             StrokeShape="RoundRectangle 20"
             MaximumWidthRequest="720"
             HorizontalOptions="Fill"
-            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
+            IsVisible="False"
+            Opacity="0">
       <VerticalStackLayout Spacing="0">
         <Editor x:Name="GenerateInputEditor"
                 Style="{StaticResource InputEditor}"
@@ -153,6 +152,9 @@
             </Border.GestureRecognizers>
             <controls:SvgIconView x:Name="ImageGenIcon"
                                   IconName="{x:Static helpers:IconPaths.Image}"
+                                  IconColor="{DynamicResource MutedText}"
+                                  WidthRequest="24"
+                                  HeightRequest="24"
                                   HorizontalOptions="Center"
                                   VerticalOptions="Center"
                                   InputTransparent="True" />
@@ -170,6 +172,9 @@
             </Border.GestureRecognizers>
             <controls:SvgIconView x:Name="WandIcon"
                                   IconName="{x:Static helpers:IconPaths.Wand}"
+                                  IconColor="{DynamicResource MutedText}"
+                                  WidthRequest="24"
+                                  HeightRequest="24"
                                   HorizontalOptions="Center"
                                   VerticalOptions="Center"
                                   InputTransparent="True" />
@@ -230,9 +235,12 @@
     <!-- History overlay -->
     <Grid x:Name="HistoryOverlay"
           Grid.RowSpan="4"
-          IsVisible="{Binding IsHistoryVisible}"
+          IsVisible="False"
+          InputTransparent="True"
           ZIndex="100">
-      <BoxView Background="{DynamicResource OverlayScrimBrush}">
+      <BoxView x:Name="HistoryOverlayScrim"
+               Opacity="0"
+               Background="{DynamicResource OverlayScrimBrush}">
         <BoxView.GestureRecognizers>
           <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
         </BoxView.GestureRecognizers>
@@ -285,9 +293,12 @@
     <!-- Themes overlay -->
     <Grid x:Name="ThemesOverlay"
           Grid.RowSpan="4"
-          IsVisible="{Binding IsThemesVisible}"
+          IsVisible="False"
+          InputTransparent="True"
           ZIndex="101">
-      <BoxView Background="{DynamicResource OverlayScrimBrush}">
+      <BoxView x:Name="ThemesOverlayScrim"
+               Opacity="0"
+               Background="{DynamicResource OverlayScrimBrush}">
         <BoxView.GestureRecognizers>
           <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
         </BoxView.GestureRecognizers>

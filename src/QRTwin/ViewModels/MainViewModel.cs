@@ -57,9 +57,14 @@ public partial class MainViewModel(
     [RelayCommand]
     private async Task OpenHistoryAsync()
     {
-        IsThemesVisible = false;
+        await MainThread.InvokeOnMainThreadAsync(() => IsThemesVisible = false);
         await History.LoadAsync().ConfigureAwait(false);
-        IsHistoryVisible = true;
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            // Toggle guarantees PropertyChanged even if a prior open failed mid-animation.
+            IsHistoryVisible = false;
+            IsHistoryVisible = true;
+        });
     }
 
     [RelayCommand]
