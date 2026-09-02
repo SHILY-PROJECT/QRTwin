@@ -46,8 +46,8 @@
                   BackgroundColor="{DynamicResource AccentSoft}">
             <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
                                   IconColor="{DynamicResource Accent}"
-                                  WidthRequest="40"
-                                  HeightRequest="40"
+                                  WidthRequest="65"
+                                  HeightRequest="65"
                                   HorizontalOptions="Center"
                                   VerticalOptions="Center" />
           </Border>

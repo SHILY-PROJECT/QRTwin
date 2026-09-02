@@ -31,8 +31,8 @@
               Background="{DynamicResource AccentGradientBrush}">
         <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
                               IconColor="#FFFFFF"
-                              WidthRequest="22"
-                              HeightRequest="22"
+                              WidthRequest="40"
+                              HeightRequest="40"
                               HorizontalOptions="Center"
                               VerticalOptions="Center" />
       </Border>
@@ -42,7 +42,7 @@
                FontSize="22"
                FontAttributes="Bold"
                TextColor="{DynamicResource PrimaryText}" />
-        <Label Text="Сканируйте и создавайте QR-коды"
+        <Label Text="Сканируйте и создавайте QR-коды | by MrSHILY"
                Style="{StaticResource CaptionLabel}" />
       </VerticalStackLayout>
 
