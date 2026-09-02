@@ -14,6 +14,10 @@ public partial class MainPage : ContentPage
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         UpdateTabVisuals(viewModel.SelectedTab);
         UpdateTabPanels(viewModel.SelectedTab);
+
+#if ANDROID
+        Platforms.Android.KeyboardInsetsHelper.Attach(RootLayout, GenerateInputBar);
+#endif
     }
 
     private void OnWandTapped(object? sender, TappedEventArgs e) =>

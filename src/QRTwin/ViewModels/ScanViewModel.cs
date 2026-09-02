@@ -30,11 +30,16 @@ public partial class ScanViewModel(
     [ObservableProperty]
     public partial bool HasCameraPermission { get; set; }
 
+    public bool ShowSamplePreview =>
+        DeviceInfo.Platform != DevicePlatform.Android && !HasResult;
+
     [ObservableProperty]
     public partial string ErrorMessage { get; set; }
 
     [ObservableProperty]
     public partial ImageSource? SampleQrCodeImage { get; set; }
+
+    partial void OnHasResultChanged(bool value) => OnPropertyChanged(nameof(ShowSamplePreview));
 
     partial void OnIsActiveChanged(bool value)
     {
@@ -64,18 +69,23 @@ public partial class ScanViewModel(
     private async Task InitializeAsync()
     {
         ErrorMessage = string.Empty;
-        HasCameraPermission = await permissionService.EnsureCameraPermissionAsync().ConfigureAwait(false);
+        var granted = await permissionService.EnsureCameraPermissionAsync().ConfigureAwait(false);
 
-        if (!HasCameraPermission)
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            ErrorMessage = ErrorMessage.IsNotBlank()
-                ? ErrorMessage
-                : "Для сканирования необходим доступ к камере.";
-            return;
-        }
+            HasCameraPermission = granted;
 
-        await EnsureSampleQrAsync().ConfigureAwait(false);
-        ResetScan();
+            if (!HasCameraPermission)
+            {
+                ErrorMessage = ErrorMessage.IsNotBlank()
+                    ? ErrorMessage
+                    : "Для сканирования необходим доступ к камере.";
+                return;
+            }
+
+            await EnsureSampleQrAsync().ConfigureAwait(true);
+            ResetScan();
+        });
     }
 
     [RelayCommand]

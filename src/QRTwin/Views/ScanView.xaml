@@ -61,10 +61,10 @@
           <!-- Scanner frame -->
           <Border x:Name="ScannerFrame"
                   IsVisible="{Binding HasCameraPermission}"
-                  HorizontalOptions="Center"
-                  VerticalOptions="Center"
-                  WidthRequest="{OnPlatform WinUI=360, Default=300}"
-                  HeightRequest="{OnPlatform WinUI=360, Default=300}"
+                  HorizontalOptions="Fill"
+                  VerticalOptions="Fill"
+                  WidthRequest="{OnPlatform WinUI=360, Default=-1}"
+                  HeightRequest="{OnPlatform WinUI=360, Default=-1}"
                   Background="Transparent"
                   Stroke="{StaticResource Accent}"
                   StrokeThickness="2"
@@ -74,18 +74,18 @@
                                              BarcodesDetected="OnBarcodesDetected"
                                              IsDetecting="{Binding IsScanning}"
                                              IsTorchOn="False"
-                                             Opacity="0"
-                                             WidthRequest="1"
-                                             HeightRequest="1"
-                                             HorizontalOptions="Start"
-                                             VerticalOptions="Start"
-                                             InputTransparent="True" />
+                                             Opacity="{OnPlatform Android=1, WinUI=0, Default=0}"
+                                             WidthRequest="{OnPlatform Android=-1, Default=1}"
+                                             HeightRequest="{OnPlatform Android=-1, Default=1}"
+                                             HorizontalOptions="{OnPlatform Android=Fill, Default=Start}"
+                                             VerticalOptions="{OnPlatform Android=Fill, Default=Start}"
+                                             InputTransparent="{OnPlatform Android=False, Default=True}" />
 
               <VerticalStackLayout Spacing="12"
                                    VerticalOptions="Center"
                                    HorizontalOptions="Center"
                                    Padding="20"
-                                   IsVisible="{Binding HasResult, Converter={StaticResource InvertedBoolConverter}}">
+                                   IsVisible="{Binding ShowSamplePreview}">
                 <Label Text="Пример QR-кода"
                        Style="{StaticResource SubtitleLabel}"
                        HorizontalTextAlignment="Center"

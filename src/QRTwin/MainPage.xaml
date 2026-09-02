@@ -11,8 +11,9 @@
              Shell.NavBarIsVisible="False"
              BackgroundColor="{StaticResource AppBackground}">
 
-  <Grid RowDefinitions="Auto,*,Auto,Auto"
-        Padding="{OnPlatform Android='0,28,0,0', Default='0'}">
+  <Grid x:Name="RootLayout"
+        RowDefinitions="Auto,*,Auto,Auto"
+        SafeAreaEdges="All">
 
     <!-- Background glow -->
     <BoxView Grid.RowSpan="4"
@@ -81,7 +82,8 @@
     </Grid>
 
     <!-- Generate input bar -->
-    <Border Grid.Row="2"
+    <Border x:Name="GenerateInputBar"
+            Grid.Row="2"
             Margin="16,4,16,8"
             Padding="6,6,6,6"
             BackgroundColor="{StaticResource Surface}"
@@ -119,7 +121,8 @@
     </Border>
 
     <!-- Bottom tab bar -->
-    <Border Grid.Row="3"
+    <Border x:Name="BottomTabBar"
+            Grid.Row="3"
             Margin="16,0,16,20"
             Padding="4"
             BackgroundColor="{StaticResource Surface}"

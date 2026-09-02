@@ -31,7 +31,13 @@ public sealed class SvgIconView : SKCanvasView
     {
         PaintSurface += OnPaintSurface;
         BackgroundColor = Colors.Transparent;
+        HorizontalOptions = LayoutOptions.Center;
+        VerticalOptions = LayoutOptions.Center;
+#if ANDROID
+        IgnorePixelScaling = false;
+#else
         IgnorePixelScaling = true;
+#endif
     }
 
     private static void OnIconChanged(BindableObject bindable, object oldValue, object newValue)

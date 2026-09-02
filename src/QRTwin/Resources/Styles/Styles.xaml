@@ -95,6 +95,8 @@
     <Style TargetType="controls:SvgIconView">
         <Setter Property="WidthRequest" Value="24" />
         <Setter Property="HeightRequest" Value="24" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="IconColor" Value="{StaticResource PrimaryText}" />
     </Style>
 </ResourceDictionary>
