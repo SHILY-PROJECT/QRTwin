@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <!--
+    MAUI sets ApplicationIcon only inside ResizetizeImages. When that target is skipped
+    (incremental build / stale mauiimage.stamp), the .exe keeps the default apphost icon.
+    Also invalidate the resizetizer stamp when appicon.png changes (dotnet/maui#36594).
+  -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+    <_MauiAppIconSource>$(MSBuildProjectDirectory)\Resources\AppIcon\appicon.png</_MauiAppIconSource>
+    <_MauiGeneratedAppIcon>$(IntermediateOutputPath)resizetizer\r\appicon.ico</_MauiGeneratedAppIcon>
+  </PropertyGroup>
+
+  <Target Name="_InvalidateMauiImageCacheWhenAppIconChanged"
+          BeforeTargets="ResizetizeImages"
+          Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' And Exists('$(_MauiAppIconSource)')">
+    <Delete Condition="Exists('$(_MauiGeneratedAppIcon)') And $([System.IO.File]::GetLastWriteTime('$(_MauiAppIconSource)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('$(_MauiGeneratedAppIcon)').Ticks)"
+            Files="$(IntermediateOutputPath)mauiimage.stamp;$(IntermediateOutputPath)mauiimage.outputs" />
+  </Target>
+
+  <Target Name="_ApplyWindowsApplicationIcon"
+          AfterTargets="ResizetizeImages"
+          BeforeTargets="CoreCompile;CreateAppHost"
+          Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' And Exists('$(_MauiGeneratedAppIcon)')">
+    <PropertyGroup>
+      <ApplicationIcon>$(_MauiGeneratedAppIcon)</ApplicationIcon>
+    </PropertyGroup>
+  </Target>
+
+  <!-- After publish, normalize distributable names to qrtwin-<ApplicationDisplayVersion>.<ext> -->
+  <Target Name="RenamePublishArtifacts" AfterTargets="Publish">
+    <PropertyGroup>
+      <_ArtifactBaseName>qrtwin-$(ApplicationDisplayVersion)</_ArtifactBaseName>
+      <_PublishDirNormalized>$([MSBuild]::EnsureTrailingSlash('$(PublishDir)'))</_PublishDirNormalized>
+    </PropertyGroup>
+
+    <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+      <_AndroidArtifact Include="$(_PublishDirNormalized)*.apk" />
+      <_AndroidArtifact Include="$(_PublishDirNormalized)*.aab" />
+    </ItemGroup>
+
+    <Move Condition="'@(_AndroidArtifact)' != ''"
+          SourceFiles="@(_AndroidArtifact)"
+          DestinationFiles="$(_PublishDirNormalized)$(_ArtifactBaseName)%(Extension)" />
+  </Target>
+</Project>
