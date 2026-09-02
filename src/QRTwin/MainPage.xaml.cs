@@ -13,6 +13,8 @@ public partial class MainPage : ContentPage
     private const double ExpansionAnchorGap = 12;
     private const string AuthorShimmerAnimationName = "AuthorShimmer";
     private const string EditorHeightAnimationName = "GenerateInputEditorHeight";
+    private const string InputBarAnimationName = "GenerateInputBar";
+    private const double DefaultInputBarInset = 128;
     private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
     private readonly MainViewModel _viewModel;
@@ -30,8 +32,9 @@ public partial class MainPage : ContentPage
     private bool _isPanning;
     private bool _historyOverlayUiVisible;
     private bool _themesOverlayUiVisible;
-    private bool _generateInputBarVisible;
+    private int _inputBarAnimationGeneration;
     private bool _swipeIsHorizontal;
+    private double _panTotalX;
 
     public MainPage(MainViewModel viewModel, IThemeService themeService)
     {
@@ -53,14 +56,11 @@ public partial class MainPage : ContentPage
         ContentHost.SizeChanged += OnContentHostSizeChanged;
         UpdateContentHostClip();
 
-        var attachPan = new Action<View>(element =>
-        {
-            var pan = new PanGestureRecognizer();
-            pan.PanUpdated += OnContentPanUpdated;
-            element.GestureRecognizers.Add(pan);
-        });
-        attachPan(ScanPanel);
-        attachPan(GeneratePanel);
+        var contentPan = new PanGestureRecognizer();
+        contentPan.PanUpdated += OnContentPanUpdated;
+        ContentAreaGrid.GestureRecognizers.Add(contentPan);
+
+        GenerateInputBar.SizeChanged += OnGenerateInputBarSizeChanged;
 
         Loaded += OnLoaded;
 
@@ -112,21 +112,30 @@ public partial class MainPage : ContentPage
 
     private void SyncGenerateInputBarState()
     {
-        var shouldShow = _displayedTab is AppTab.Generate;
-        _generateInputBarVisible = !shouldShow;
-
-        if (shouldShow)
+        if (_displayedTab is AppTab.Generate)
         {
-            _ = AnimateGenerateInputBarAsync(true);
-        }
-        else
-        {
-            GenerateInputBar.IsVisible = false;
-            GenerateInputBar.InputTransparent = true;
-            GenerateInputBar.Opacity = 0;
-            GenerateInputBar.TranslationY = 0;
+            _ = SetGenerateInputBarVisibleAsync(true);
+            return;
         }
 
+        if (GenerateInputBar.IsVisible)
+        {
+            _ = SetGenerateInputBarVisibleAsync(false);
+            return;
+        }
+
+        HideGenerateInputBarImmediate();
+    }
+
+    private void HideGenerateInputBarImmediate()
+    {
+        GenerateInputBar.AbortAnimation(InputBarAnimationName);
+        GenerateInputBar.IsVisible = false;
+        GenerateInputBar.InputTransparent = true;
+        GenerateInputBar.Opacity = 0;
+        GenerateInputBar.TranslationY = 0;
+        GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
+        UpdateGenerateContentInset(false);
         UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
     }
 
@@ -143,6 +152,40 @@ public partial class MainPage : ContentPage
         ScanPanel.StopAnimations();
         GeneratePanel.StopAnimations();
         GenerateInputEditor.AbortAnimation(EditorHeightAnimationName);
+        GenerateInputBar.AbortAnimation(InputBarAnimationName);
+    }
+
+    private void OnGenerateInputBarSizeChanged(object? sender, EventArgs e)
+    {
+        if (_displayedTab is AppTab.Generate && GenerateInputBar.IsVisible)
+        {
+            UpdateGenerateContentInset(true);
+            _referenceExpandedEditorHeight = null;
+        }
+    }
+
+    private double GetGenerateInputBarInset()
+    {
+        if (!GenerateInputBar.IsVisible)
+        {
+            return 0;
+        }
+
+        if (GenerateInputBar.Height > 0)
+        {
+            return GenerateInputBar.Height + GenerateInputBar.Margin.VerticalThickness + 4;
+        }
+
+        return DefaultInputBarInset;
+    }
+
+    private void UpdateGenerateContentInset(bool reserveSpace)
+    {
+        var bottomInset = reserveSpace ? GetGenerateInputBarInset() : 0;
+
+        GeneratePanel.Padding = bottomInset > 0
+            ? new Thickness(0, 0, 0, bottomInset)
+            : Thickness.Zero;
     }
 
     private void OnContentHostSizeChanged(object? sender, EventArgs e)
@@ -270,6 +313,8 @@ public partial class MainPage : ContentPage
             ViewAnimationExtensions.EditorExpandDuration,
             ViewAnimationExtensions.StandardEase,
             EditorHeightAnimationName);
+
+        UpdateGenerateContentInset(true);
     }
 
     private async void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
@@ -297,6 +342,8 @@ public partial class MainPage : ContentPage
             ViewAnimationExtensions.EditorExpandDuration,
             ViewAnimationExtensions.StandardEase,
             EditorHeightAnimationName);
+
+        UpdateGenerateContentInset(true);
     }
 
     private void CollapseGenerateInputEditor()
@@ -334,6 +381,8 @@ public partial class MainPage : ContentPage
             : GenerateContent.GetFreeSpaceBelowEmptyState(
                 ContentHost.Height,
                 ContentHost.Padding);
+
+        freeSpace -= GetGenerateInputBarInset();
 
         if (freeSpace < 0)
         {
@@ -429,7 +478,7 @@ public partial class MainPage : ContentPage
         await AnimateTabChangeAsync(AppTab.Generate);
     }
 
-    private async Task AnimateTabChangeAsync(AppTab newTab)
+    private async Task AnimateTabChangeAsync(AppTab newTab, bool fromCurrentPosition = false)
     {
         if (_isUnloaded || _isTabAnimating || newTab == _displayedTab)
         {
@@ -444,19 +493,23 @@ public partial class MainPage : ContentPage
             _viewModel.SelectedTab = newTab;
             _displayedTab = newTab;
             SyncTabPositions();
-            await AnimateGenerateInputBarAsync(newTab is AppTab.Generate);
+            await SetGenerateInputBarVisibleAsync(newTab is AppTab.Generate);
             _isTabAnimating = false;
             return;
         }
 
-        SyncTabPositions();
+        if (!fromCurrentPosition)
+        {
+            SyncTabPositions();
+        }
+
         UpdateTabVisuals(newTab);
 
         var targetScanX = newTab is AppTab.Scan ? 0 : -width;
         var targetGenerateX = newTab is AppTab.Scan ? width : 0;
 
         _viewModel.SelectedTab = newTab;
-        var inputBarTask = AnimateGenerateInputBarAsync(newTab is AppTab.Generate);
+        var inputBarTask = SetGenerateInputBarVisibleAsync(newTab is AppTab.Generate);
 
         try
         {
@@ -478,6 +531,7 @@ public partial class MainPage : ContentPage
         }
 
         _displayedTab = newTab;
+        UpdateGenerateContentInset(_displayedTab is AppTab.Generate);
         _isTabAnimating = false;
     }
 
@@ -531,6 +585,7 @@ public partial class MainPage : ContentPage
             case GestureStatus.Started:
                 _isPanning = true;
                 _swipeIsHorizontal = false;
+                _panTotalX = 0;
                 GenerateInputEditor.Unfocus();
                 break;
 
@@ -547,6 +602,7 @@ public partial class MainPage : ContentPage
                 }
 
                 var delta = e.TotalX;
+                _panTotalX = delta;
 
                 if (_displayedTab is AppTab.Scan && delta > 0)
                 {
@@ -559,6 +615,7 @@ public partial class MainPage : ContentPage
 
                 var maxDrag = width * 0.92;
                 delta = Math.Clamp(delta, -maxDrag, maxDrag);
+                _panTotalX = delta;
                 SyncTabPositions(delta);
                 break;
             }
@@ -566,6 +623,7 @@ public partial class MainPage : ContentPage
             case GestureStatus.Canceled:
                 _isPanning = false;
                 _swipeIsHorizontal = false;
+                _panTotalX = 0;
                 _ = SnapTabPositionAsync();
                 break;
 
@@ -576,25 +634,28 @@ public partial class MainPage : ContentPage
                 if (!_swipeIsHorizontal)
                 {
                     _swipeIsHorizontal = false;
+                    _panTotalX = 0;
                     return;
                 }
 
                 _swipeIsHorizontal = false;
                 var threshold = Math.Max(56, width * 0.18);
+                var totalX = _panTotalX;
+                _panTotalX = 0;
                 var targetTab = _displayedTab;
 
-                if (_displayedTab is AppTab.Scan && e.TotalX <= -threshold)
+                if (_displayedTab is AppTab.Scan && totalX <= -threshold)
                 {
                     targetTab = AppTab.Generate;
                 }
-                else if (_displayedTab is AppTab.Generate && e.TotalX >= threshold)
+                else if (_displayedTab is AppTab.Generate && totalX >= threshold)
                 {
                     targetTab = AppTab.Scan;
                 }
 
                 if (targetTab != _displayedTab)
                 {
-                    _ = AnimateTabChangeAsync(targetTab);
+                    _ = AnimateTabChangeAsync(targetTab, fromCurrentPosition: true);
                 }
                 else
                 {
@@ -634,56 +695,88 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task AnimateGenerateInputBarAsync(bool show)
+    private async Task SetGenerateInputBarVisibleAsync(bool show)
     {
-        if (_isUnloaded || show == _generateInputBarVisible)
+        if (_isUnloaded)
         {
             return;
         }
 
-        _generateInputBarVisible = show;
+        var generation = ++_inputBarAnimationGeneration;
+        GenerateInputBar.AbortAnimation(InputBarAnimationName);
 
         if (show)
         {
+            if (GenerateInputBar.IsVisible && GenerateInputBar.Opacity > 0.95 && GenerateInputBar.TranslationY < 1)
+            {
+                UpdateGenerateContentInset(true);
+                UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+                return;
+            }
+
+            if (GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8)
+            {
+                GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
+            }
+
             GenerateInputBar.IsVisible = true;
             GenerateInputBar.InputTransparent = false;
             GenerateInputBar.Opacity = 0;
-            GenerateInputBar.TranslationY = 18;
+            GenerateInputBar.TranslationY = 32;
+            UpdateGenerateContentInset(true);
 
             try
             {
-                await GenerateInputBar.FadeSlideToAsync(1, 0, ViewAnimationExtensions.TabDuration, ViewAnimationExtensions.EnterEase);
+                await GenerateInputBar.FadeSlideToAsync(
+                    1,
+                    0,
+                    ViewAnimationExtensions.TabDuration,
+                    ViewAnimationExtensions.EnterEase);
             }
             catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
             {
             }
-            finally
+
+            if (_isUnloaded || generation != _inputBarAnimationGeneration)
             {
-                if (!_isUnloaded && _generateInputBarVisible)
-                {
-                    GenerateInputBar.Opacity = 1;
-                    GenerateInputBar.TranslationY = 0;
-                    GenerateInputBar.IsVisible = true;
-                }
+                return;
             }
 
+            GenerateInputBar.Opacity = 1;
+            GenerateInputBar.TranslationY = 0;
+            GenerateInputBar.IsVisible = true;
+            GenerateInputBar.InputTransparent = false;
+            UpdateGenerateContentInset(true);
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
             return;
         }
 
+        if (!GenerateInputBar.IsVisible && GenerateInputBar.Opacity < 0.05)
+        {
+            HideGenerateInputBarImmediate();
+            return;
+        }
+
+        GenerateInputEditor.Unfocus();
+
         try
         {
-            await GenerateInputBar.FadeSlideToAsync(0, 18, ViewAnimationExtensions.TabDuration - 40, ViewAnimationExtensions.ExitEase);
+            await GenerateInputBar.FadeSlideToAsync(
+                0,
+                32,
+                ViewAnimationExtensions.TabDuration,
+                ViewAnimationExtensions.ExitEase);
         }
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
         }
 
-        if (!_isUnloaded && !_generateInputBarVisible)
+        if (_isUnloaded || generation != _inputBarAnimationGeneration)
         {
-            GenerateInputBar.IsVisible = false;
-            GenerateInputBar.InputTransparent = true;
+            return;
         }
+
+        HideGenerateInputBarImmediate();
     }
 
     private async Task SetHistoryOverlayVisibleAsync(bool visible)

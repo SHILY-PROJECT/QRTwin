@@ -14,15 +14,15 @@
              Background="{DynamicResource PageBackgroundBrush}">
 
   <Grid x:Name="RootLayout"
-        RowDefinitions="Auto,*,Auto,Auto"
+        RowDefinitions="Auto,*,Auto"
         SafeAreaEdges="All">
 
     <!-- Background glow -->
-    <BoxView Grid.RowSpan="4"
+    <BoxView Grid.RowSpan="3"
              InputTransparent="True"
              Background="{DynamicResource BackgroundGlowBrush}" />
     <BoxView x:Name="BackgroundGlowSecondary"
-             Grid.RowSpan="4"
+             Grid.RowSpan="3"
              InputTransparent="True"
              Background="{DynamicResource BackgroundGlowSecondaryBrush}" />
 
@@ -85,107 +85,110 @@
       </HorizontalStackLayout>
     </Grid>
 
-    <!-- Main content area -->
-    <Grid Grid.Row="1"
-          x:Name="ContentHost"
-          Padding="16,8"
-          RowDefinitions="*"
+    <!-- Main content area + floating generate input -->
+    <Grid x:Name="ContentAreaGrid"
+          Grid.Row="1"
           MaximumWidthRequest="720"
           HorizontalOptions="Fill">
 
-      <Grid x:Name="ScanPanel">
-        <views:ScanView x:Name="ScanContent"
-                        BindingContext="{Binding Scan}"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-      </Grid>
+      <Grid x:Name="ContentHost"
+            Padding="16,8"
+            RowDefinitions="*">
 
-      <Grid x:Name="GeneratePanel">
-        <views:GenerateView x:Name="GenerateContent"
-                            BindingContext="{Binding Generate}"
-                            HorizontalOptions="Fill"
-                            VerticalOptions="Fill" />
-      </Grid>
-    </Grid>
-
-    <!-- Generate input bar -->
-    <Border x:Name="GenerateInputBar"
-            Grid.Row="2"
-            Style="{StaticResource GlassChromeBar}"
-            Margin="16,4,16,8"
-            Padding="6"
-            StrokeShape="RoundRectangle 20"
-            MaximumWidthRequest="720"
-            HorizontalOptions="Fill"
-            IsVisible="False"
-            Opacity="0">
-      <VerticalStackLayout Spacing="0">
-        <Editor x:Name="GenerateInputEditor"
-                Style="{StaticResource InputEditor}"
-                Margin="12,4,12,0"
-                HeightRequest="44"
-                BackgroundColor="Transparent"
-                Placeholder="Введите текст или ссылку..."
-                Text="{Binding Generate.InputText}"
-                Focused="OnGenerateInputEditorFocused"
-                Unfocused="OnGenerateInputEditorUnfocused"
-                Completed="OnGenerateInputEditorCompleted" />
-
-        <BoxView x:Name="InputEditorSeparator"
-                 HeightRequest="1"
-                 Margin="12,8,12,8"
-                 HorizontalOptions="Fill"
-                 Color="{DynamicResource Border}" />
-
-        <Grid ColumnDefinitions="8*,2*"
-              ColumnSpacing="8"
-              HorizontalOptions="Fill">
-          <Border x:Name="ImageGenButton"
-                  Grid.Column="0"
-                  StrokeShape="RoundRectangle 16"
-                  HeightRequest="44"
-                  BackgroundColor="{DynamicResource SurfaceElevated}"
-                  effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
-                  HorizontalOptions="Fill">
-            <Border.GestureRecognizers>
-              <TapGestureRecognizer Tapped="OnImageGenTapped" />
-            </Border.GestureRecognizers>
-            <controls:SvgIconView x:Name="ImageGenIcon"
-                                  IconName="{x:Static helpers:IconPaths.Image}"
-                                  IconColor="{DynamicResource MutedText}"
-                                  WidthRequest="24"
-                                  HeightRequest="24"
-                                  HorizontalOptions="Center"
-                                  VerticalOptions="Center"
-                                  InputTransparent="True" />
-          </Border>
-
-          <Border x:Name="WandButton"
-                  Grid.Column="1"
-                  StrokeShape="RoundRectangle 16"
-                  HeightRequest="44"
-                  BackgroundColor="{DynamicResource SurfaceElevated}"
-                  effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
-                  HorizontalOptions="Fill">
-            <Border.GestureRecognizers>
-              <TapGestureRecognizer Tapped="OnWandTapped" />
-            </Border.GestureRecognizers>
-            <controls:SvgIconView x:Name="WandIcon"
-                                  IconName="{x:Static helpers:IconPaths.Wand}"
-                                  IconColor="{DynamicResource MutedText}"
-                                  WidthRequest="24"
-                                  HeightRequest="24"
-                                  HorizontalOptions="Center"
-                                  VerticalOptions="Center"
-                                  InputTransparent="True" />
-          </Border>
+        <Grid x:Name="ScanPanel">
+          <views:ScanView x:Name="ScanContent"
+                          BindingContext="{Binding Scan}"
+                          HorizontalOptions="Fill"
+                          VerticalOptions="Fill" />
         </Grid>
-      </VerticalStackLayout>
-    </Border>
+
+        <Grid x:Name="GeneratePanel">
+          <views:GenerateView x:Name="GenerateContent"
+                              BindingContext="{Binding Generate}"
+                              HorizontalOptions="Fill"
+                              VerticalOptions="Fill" />
+        </Grid>
+      </Grid>
+
+      <Border x:Name="GenerateInputBar"
+              Style="{StaticResource GlassChromeBar}"
+              Margin="16,0,16,8"
+              Padding="6"
+              StrokeShape="RoundRectangle 20"
+              HorizontalOptions="Fill"
+              VerticalOptions="End"
+              ZIndex="10"
+              IsVisible="False"
+              Opacity="0"
+              InputTransparent="True">
+        <VerticalStackLayout Spacing="0">
+          <Editor x:Name="GenerateInputEditor"
+                  Style="{StaticResource InputEditor}"
+                  Margin="12,4,12,0"
+                  HeightRequest="44"
+                  BackgroundColor="Transparent"
+                  Placeholder="Введите текст или ссылку..."
+                  Text="{Binding Generate.InputText}"
+                  Focused="OnGenerateInputEditorFocused"
+                  Unfocused="OnGenerateInputEditorUnfocused"
+                  Completed="OnGenerateInputEditorCompleted" />
+
+          <BoxView x:Name="InputEditorSeparator"
+                   HeightRequest="1"
+                   Margin="12,8,12,8"
+                   HorizontalOptions="Fill"
+                   Color="{DynamicResource Border}" />
+
+          <Grid ColumnDefinitions="8*,2*"
+                ColumnSpacing="8"
+                HorizontalOptions="Fill">
+            <Border x:Name="ImageGenButton"
+                    Grid.Column="0"
+                    StrokeShape="RoundRectangle 16"
+                    HeightRequest="44"
+                    BackgroundColor="{DynamicResource SurfaceElevated}"
+                    effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
+                    HorizontalOptions="Fill">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnImageGenTapped" />
+              </Border.GestureRecognizers>
+              <controls:SvgIconView x:Name="ImageGenIcon"
+                                    IconName="{x:Static helpers:IconPaths.Image}"
+                                    IconColor="{DynamicResource MutedText}"
+                                    WidthRequest="24"
+                                    HeightRequest="24"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    InputTransparent="True" />
+            </Border>
+
+            <Border x:Name="WandButton"
+                    Grid.Column="1"
+                    StrokeShape="RoundRectangle 16"
+                    HeightRequest="44"
+                    BackgroundColor="{DynamicResource SurfaceElevated}"
+                    effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
+                    HorizontalOptions="Fill">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnWandTapped" />
+              </Border.GestureRecognizers>
+              <controls:SvgIconView x:Name="WandIcon"
+                                    IconName="{x:Static helpers:IconPaths.Wand}"
+                                    IconColor="{DynamicResource MutedText}"
+                                    WidthRequest="24"
+                                    HeightRequest="24"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center"
+                                    InputTransparent="True" />
+            </Border>
+          </Grid>
+        </VerticalStackLayout>
+      </Border>
+    </Grid>
 
     <!-- Bottom tab bar -->
     <Border x:Name="BottomTabBar"
-            Grid.Row="3"
+            Grid.Row="2"
             Style="{StaticResource GlassChromeBar}"
             Margin="16,0,16,20"
             Padding="4"
@@ -234,7 +237,7 @@
 
     <!-- History overlay -->
     <Grid x:Name="HistoryOverlay"
-          Grid.RowSpan="4"
+          Grid.RowSpan="3"
           IsVisible="False"
           InputTransparent="True"
           ZIndex="100">
@@ -292,7 +295,7 @@
 
     <!-- Themes overlay -->
     <Grid x:Name="ThemesOverlay"
-          Grid.RowSpan="4"
+          Grid.RowSpan="3"
           IsVisible="False"
           InputTransparent="True"
           ZIndex="101">
