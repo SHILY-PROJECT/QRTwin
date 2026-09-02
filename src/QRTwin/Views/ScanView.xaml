@@ -10,10 +10,10 @@
              HorizontalOptions="Fill"
              VerticalOptions="Fill">
 
-  <Grid RowDefinitions="*,Auto" RowSpacing="12">
+  <Grid>
 
     <!-- Scanner area -->
-    <Border Grid.Row="0"
+    <Border
             Style="{StaticResource GlassCard}"
             Padding="0"
             Stroke="{StaticResource Accent}"
@@ -69,7 +69,7 @@
                   Stroke="{StaticResource Accent}"
                   StrokeThickness="2"
                   StrokeShape="RoundRectangle 24">
-            <Grid>
+            <Grid x:Name="ScannerContent">
               <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
                                              BarcodesDetected="OnBarcodesDetected"
                                              IsDetecting="{Binding IsScanning}"
@@ -106,22 +106,6 @@
                            HorizontalOptions="Fill"
                            VerticalOptions="Fill" />
                   </Border>
-
-                  <Border StrokeThickness="0"
-                          BackgroundColor="#22000000"
-                          StrokeShape="RoundRectangle 16"
-                          HorizontalOptions="Fill"
-                          VerticalOptions="Fill"
-                          InputTransparent="True">
-                    <BoxView x:Name="ScanLine"
-                             Color="{StaticResource ScannerLine}"
-                             HeightRequest="2"
-                             HorizontalOptions="Fill"
-                             VerticalOptions="Start"
-                             Margin="12,0"
-                             Opacity="0.9"
-                             InputTransparent="True" />
-                  </Border>
                 </Grid>
 
                 <Label Text="Наведите камеру на любой QR-код"
@@ -129,65 +113,73 @@
                        FontSize="12"
                        HorizontalTextAlignment="Center" />
               </VerticalStackLayout>
+
+              <Grid x:Name="CameraScanOverlay"
+                    IsVisible="{Binding ShowScanAnimation}"
+                    InputTransparent="True">
+                <BoxView x:Name="ScanLine"
+                         Color="{StaticResource ScannerLine}"
+                         HeightRequest="2"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Start"
+                         Margin="24,0"
+                         Opacity="0.9"
+                         InputTransparent="True" />
+              </Grid>
+
+              <Grid IsVisible="{Binding HasResult}"
+                    BackgroundColor="#CC000000"
+                    Padding="24">
+                <VerticalStackLayout VerticalOptions="Center"
+                                     HorizontalOptions="Center"
+                                     Spacing="16"
+                                     MaximumWidthRequest="320">
+                  <Label Text="Результат"
+                         Style="{StaticResource HeaderLabel}"
+                         FontSize="18"
+                         HorizontalTextAlignment="Center" />
+
+                  <Grid ColumnDefinitions="*,Auto"
+                        ColumnSpacing="12">
+                    <Label Grid.Column="0"
+                           Text="{Binding ScanResult}"
+                           TextColor="{StaticResource Accent}"
+                           FontSize="15"
+                           LineBreakMode="WordWrap"
+                           HorizontalTextAlignment="Center">
+                      <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenUrlCommand}" />
+                      </Label.GestureRecognizers>
+                      <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsUrl}"
+                                     Value="False">
+                          <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
+                        </DataTrigger>
+                      </Label.Triggers>
+                    </Label>
+
+                    <Border Grid.Column="1"
+                            Style="{StaticResource IconButton}"
+                            BackgroundColor="{StaticResource AccentSoft}"
+                            VerticalOptions="Start">
+                      <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding CopyResultCommand}" />
+                      </Border.GestureRecognizers>
+                      <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Copy}"
+                                            IconColor="{StaticResource Accent}" />
+                    </Border>
+                  </Grid>
+
+                  <Button Text="Сканировать снова"
+                          Style="{StaticResource SecondaryButton}"
+                          HorizontalOptions="Fill"
+                          Command="{Binding ResetScanCommand}" />
+                </VerticalStackLayout>
+              </Grid>
             </Grid>
           </Border>
         </Grid>
-      </Grid>
-    </Border>
-
-    <!-- Result card -->
-    <Border Grid.Row="1"
-            Style="{StaticResource Card}"
-            IsVisible="{Binding HasResult}"
-            Stroke="{StaticResource Accent}"
-            StrokeThickness="1">
-      <Grid ColumnDefinitions="*,Auto"
-            RowDefinitions="Auto,Auto,Auto"
-            ColumnSpacing="12"
-            RowSpacing="4">
-        <Label Grid.Row="0"
-               Grid.Column="0"
-               Grid.ColumnSpan="2"
-               Text="Результат"
-               Style="{StaticResource HeaderLabel}"
-               FontSize="16" />
-
-        <Label Grid.Row="1"
-               Grid.Column="0"
-               Text="{Binding ScanResult}"
-               TextColor="{StaticResource Accent}"
-               FontSize="15"
-               LineBreakMode="WordWrap">
-          <Label.GestureRecognizers>
-            <TapGestureRecognizer Command="{Binding OpenUrlCommand}" />
-          </Label.GestureRecognizers>
-          <Label.Triggers>
-            <DataTrigger TargetType="Label"
-                         Binding="{Binding IsUrl}"
-                         Value="False">
-              <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
-            </DataTrigger>
-          </Label.Triggers>
-        </Label>
-
-        <Border Grid.Row="1"
-                Grid.Column="1"
-                Style="{StaticResource IconButton}"
-                BackgroundColor="{StaticResource AccentSoft}">
-          <Border.GestureRecognizers>
-            <TapGestureRecognizer Command="{Binding CopyResultCommand}" />
-          </Border.GestureRecognizers>
-          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Copy}"
-                                IconColor="{StaticResource Accent}" />
-        </Border>
-
-        <Button Grid.Row="2"
-                Grid.Column="0"
-                Grid.ColumnSpan="2"
-                Text="Сканировать снова"
-                Style="{StaticResource SecondaryButton}"
-                Margin="0,8,0,0"
-                Command="{Binding ResetScanCommand}" />
       </Grid>
     </Border>
   </Grid>

@@ -33,13 +33,24 @@ public partial class ScanViewModel(
     public bool ShowSamplePreview =>
         DeviceInfo.Platform != DevicePlatform.Android && !HasResult;
 
+    public bool ShowScanAnimation =>
+        IsScanning && !HasResult && HasCameraPermission;
+
     [ObservableProperty]
     public partial string ErrorMessage { get; set; }
 
     [ObservableProperty]
     public partial ImageSource? SampleQrCodeImage { get; set; }
 
-    partial void OnHasResultChanged(bool value) => OnPropertyChanged(nameof(ShowSamplePreview));
+    partial void OnHasResultChanged(bool value)
+    {
+        OnPropertyChanged(nameof(ShowSamplePreview));
+        OnPropertyChanged(nameof(ShowScanAnimation));
+    }
+
+    partial void OnIsScanningChanged(bool value) => OnPropertyChanged(nameof(ShowScanAnimation));
+
+    partial void OnHasCameraPermissionChanged(bool value) => OnPropertyChanged(nameof(ShowScanAnimation));
 
     partial void OnIsActiveChanged(bool value)
     {

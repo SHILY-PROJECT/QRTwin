@@ -80,6 +80,21 @@ public partial class ScanView : ContentView
         }
     }
 
+    private double GetScanLineTravel()
+    {
+        if (CameraScanOverlay?.Height is > 0 and var height)
+        {
+            return Math.Max(0, height - 4);
+        }
+
+        if (ScannerContent?.Height is > 0 and var contentHeight)
+        {
+            return Math.Max(0, contentHeight - 4);
+        }
+
+        return 280;
+    }
+
     private async void StartScanLineAnimation()
     {
         if (_scanLineRunning || ScanLine is null)
@@ -92,7 +107,7 @@ public partial class ScanView : ContentView
         while (_scanLineRunning && ScanLine is not null)
         {
             ScanLine.TranslationY = 0;
-            var travel = QrScanArea?.Height is > 0 and var height ? height - 28 : 192;
+            var travel = GetScanLineTravel();
             await ScanLine.TranslateToAsync(0, travel, 1800, Easing.SinInOut);
             if (!_scanLineRunning)
             {
