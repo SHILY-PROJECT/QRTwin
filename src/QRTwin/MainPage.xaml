@@ -42,8 +42,17 @@
                FontSize="22"
                FontAttributes="Bold"
                TextColor="{DynamicResource PrimaryText}" />
-        <Label Text="Сканируйте и создавайте QR-коды | by MrSHILY"
-               Style="{StaticResource CaptionLabel}" />
+        <HorizontalStackLayout Spacing="0" VerticalOptions="Center">
+          <Label Text="Сканируйте и создавайте QR-коды | "
+                 Style="{StaticResource CaptionLabel}" />
+          <Label x:Name="AuthorCreditLabel"
+                 Text=" by MrSHILY"
+                 Style="{StaticResource CaptionLabel}">
+            <Label.GestureRecognizers>
+              <TapGestureRecognizer Tapped="OnAuthorCreditTapped" />
+            </Label.GestureRecognizers>
+          </Label>
+        </HorizontalStackLayout>
       </VerticalStackLayout>
 
       <HorizontalStackLayout Grid.Column="2"

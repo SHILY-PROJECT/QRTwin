@@ -10,6 +10,9 @@ public partial class MainPage : ContentPage
 {
     private const double CollapsedEditorHeight = 44;
     private const double ExpansionAnchorGap = 12;
+    private const string AuthorShimmerAnimationName = "AuthorShimmer";
+    private static readonly Color AuthorAccentColor = Color.FromArgb("#03AFFF");
+    private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
     private readonly MainViewModel _viewModel;
     private readonly IThemeService _themeService;
@@ -19,6 +22,7 @@ public partial class MainPage : ContentPage
     private Color _separatorInactiveColor = null!;
     private Color _separatorActiveColor = null!;
     private bool _isUnloaded;
+    private bool _authorShimmerRunning;
     private double? _referenceExpandedEditorHeight;
 
     public MainPage(MainViewModel viewModel, IThemeService themeService)
@@ -39,6 +43,7 @@ public partial class MainPage : ContentPage
         UpdateInputEditorSeparatorState(isFocused: false);
         ContentHost.SizeChanged += OnContentHostSizeChanged;
         UpdateContentHostClip();
+        Loaded += OnLoaded;
 
 #if ANDROID
         Platforms.Android.KeyboardInsetsHelper.Attach(RootLayout, GenerateInputBar);
@@ -69,9 +74,14 @@ public partial class MainPage : ContentPage
         _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
     }
 
+    private void OnLoaded(object? sender, EventArgs e) =>
+        StartAuthorCreditShimmer();
+
     private void OnUnloaded(object? sender, EventArgs e)
     {
         _isUnloaded = true;
+        _authorShimmerRunning = false;
+        AuthorCreditLabel.StopAnimations();
         _themeService.ThemeChanged -= OnThemeChanged;
         ContentHost.SizeChanged -= OnContentHostSizeChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
@@ -382,5 +392,82 @@ public partial class MainPage : ContentPage
         GenerateTabIcon.IconColor = generateIconColor;
         ScanTabLabel.TextColor = scanLabelColor;
         GenerateTabLabel.TextColor = generateLabelColor;
+    }
+
+    private async void StartAuthorCreditShimmer()
+    {
+        if (_authorShimmerRunning || AuthorCreditLabel is null)
+        {
+            return;
+        }
+
+        _authorShimmerRunning = true;
+
+        while (_authorShimmerRunning && AuthorCreditLabel is not null)
+        {
+            var baseColor = (Color)Application.Current!.Resources["SecondaryText"];
+
+            try
+            {
+                await AnimateAuthorCreditColorAsync(baseColor, AuthorAccentColor, 1200);
+                if (!_authorShimmerRunning)
+                {
+                    break;
+                }
+
+                await AnimateAuthorCreditColorAsync(AuthorAccentColor, baseColor, 1200);
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+            {
+                break;
+            }
+        }
+    }
+
+    private Task AnimateAuthorCreditColorAsync(Color from, Color to, uint duration)
+    {
+        if (AuthorCreditLabel is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        var completion = new TaskCompletionSource();
+
+        var animation = new Animation(
+            progress => AuthorCreditLabel.TextColor = InterpolateColor(from, to, progress),
+            0,
+            1);
+
+        animation.Commit(
+            AuthorCreditLabel,
+            AuthorShimmerAnimationName,
+            16,
+            duration,
+            Easing.SinInOut,
+            (_, _) => completion.TrySetResult());
+
+        return completion.Task;
+    }
+
+    private static Color InterpolateColor(Color from, Color to, double progress) =>
+        Color.FromRgba(
+            from.Red + ((to.Red - from.Red) * progress),
+            from.Green + ((to.Green - from.Green) * progress),
+            from.Blue + ((to.Blue - from.Blue) * progress),
+            from.Alpha + ((to.Alpha - from.Alpha) * progress));
+
+    private async void OnAuthorCreditTapped(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Launcher.Default.OpenAsync(AuthorCreditUrl).ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+        {
+        }
+        catch
+        {
+            // Ignore browser launch failures on unsupported platforms.
+        }
     }
 }
