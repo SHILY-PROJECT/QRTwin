@@ -42,7 +42,13 @@ public sealed class ScaleDownBehavior : Behavior<View>
             return;
         }
 
-        await view.ScaleToAsync(Scale, 80, Easing.CubicOut);
-        await view.ScaleToAsync(1, 80, Easing.CubicIn);
+        try
+        {
+            await view.ScaleToAsync(Scale, 80, Easing.CubicOut);
+            await view.ScaleToAsync(1, 80, Easing.CubicIn);
+        }
+        catch (Exception ex) when (Extensions.ViewLifecycleExtensions.IsShutdownException(ex))
+        {
+        }
     }
 }

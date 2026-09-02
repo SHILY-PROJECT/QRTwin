@@ -9,7 +9,8 @@
              HorizontalOptions="Fill"
              VerticalOptions="Fill">
 
-  <ScrollView Orientation="Vertical"
+  <ScrollView x:Name="GenerateScrollView"
+              Orientation="Vertical"
               VerticalScrollBarVisibility="Default"
               HorizontalOptions="Fill"
               VerticalOptions="Fill">
@@ -30,7 +31,8 @@
                          HorizontalOptions="Center" />
 
       <!-- Empty state -->
-      <Border Style="{StaticResource GlassCard}"
+      <Border x:Name="EmptyStateCard"
+              Style="{StaticResource GlassCard}"
               IsVisible="{Binding HasQrCode, Converter={StaticResource InvertedBoolConverter}}"
               VerticalOptions="Center"
               MinimumHeightRequest="280">

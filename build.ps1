@@ -17,9 +17,44 @@ if (-not (Test-Path $Project)) {
     throw "Project not found: $Project"
 }
 
+function Clear-BuildCache {
+    param(
+        [string]$Framework
+    )
+
+    Write-Host "Cleaning previous build outputs ..."
+    if ($Framework) {
+        dotnet clean $Project -c $Configuration -f $Framework --nologo -v q
+    }
+    else {
+        dotnet clean $Project -c $Configuration --nologo -v q
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "dotnet clean failed with exit code $LASTEXITCODE"
+    }
+
+    # dotnet clean can leave a stale MAUI resizetizer cache (wrong .NET template appicon.ico).
+    $objRoot = Join-Path $Root "src\QRTwin\obj"
+    if (Test-Path $objRoot) {
+        Get-ChildItem -Path $objRoot -Recurse -Directory -Filter "resizetizer" -ErrorAction SilentlyContinue |
+            Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+        Get-ChildItem -Path $objRoot -Recurse -File -Include "mauiimage.stamp","mauiimage.outputs","mauiimage.inputs" -ErrorAction SilentlyContinue |
+            Remove-Item -Force -ErrorAction SilentlyContinue
+    }
+}
+
+function Get-VersionName {
+    [xml]$projectXml = Get-Content $Project
+    return $projectXml.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
+}
+
 function Publish-Windows {
     $output = Join-Path $BuildRoot "windows"
+    $version = Get-VersionName
     Write-Host "Publishing Windows (single-file) to $output ..."
+
+    Clear-BuildCache -Framework "net10.0-windows10.0.19041.0"
 
     dotnet publish $Project `
         -f net10.0-windows10.0.19041.0 `
@@ -52,8 +87,12 @@ function Publish-Windows {
 function Build-Android {
     $output = Join-Path $BuildRoot "android"
     $binDir = Join-Path $Root "src\QRTwin\bin\$Configuration\net10.0-android"
+    $version = Get-VersionName
+    $artifactName = "qrtwin-$version.apk"
 
     Write-Host "Building Android APK ..."
+
+    Clear-BuildCache -Framework "net10.0-android"
 
     dotnet build $Project `
         -f net10.0-android `
@@ -70,15 +109,17 @@ function Build-Android {
 
     New-Item -ItemType Directory -Force -Path $output | Out-Null
 
-    $apkFiles = Get-ChildItem -Path $binDir -Filter "*.apk"
-    if (-not $apkFiles) {
+    $apk = Get-ChildItem -Path $binDir -Filter "*.apk" |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if (-not $apk) {
         throw "No APK files found in $binDir"
     }
 
-    foreach ($apk in $apkFiles) {
-        Copy-Item -Path $apk.FullName -Destination (Join-Path $output $apk.Name) -Force
-        Write-Host "Android APK: $(Join-Path $output $apk.Name)"
-    }
+    $destination = Join-Path $output $artifactName
+    Copy-Item -Path $apk.FullName -Destination $destination -Force
+    Write-Host "Android APK: $destination"
 
     Write-Host "Android build complete: $output"
 }

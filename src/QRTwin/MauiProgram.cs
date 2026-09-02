@@ -29,6 +29,11 @@ public static class MauiProgram
 
 #if WINDOWS
         Platforms.Windows.EntryHandlerFixes.DisableNativeClearButton();
+        Platforms.Windows.EditorHandlerFixes.HideNativeBorder();
+#endif
+
+#if ANDROID
+        Platforms.Android.EditorHandlerFixes.HideNativeUnderline();
 #endif
 
 #if DEBUG
