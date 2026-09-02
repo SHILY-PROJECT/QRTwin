@@ -41,5 +41,9 @@
     <Move Condition="'@(_AndroidArtifact)' != ''"
           SourceFiles="@(_AndroidArtifact)"
           DestinationFiles="$(_PublishDirNormalized)$(_ArtifactBaseName)%(Extension)" />
+
+    <Move Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' And Exists('$(_PublishDirNormalized)$(AssemblyName).exe')"
+          SourceFiles="$(_PublishDirNormalized)$(AssemblyName).exe"
+          DestinationFiles="$(_PublishDirNormalized)$(_ArtifactBaseName).exe" />
   </Target>
 </Project>

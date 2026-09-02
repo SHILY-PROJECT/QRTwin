@@ -28,7 +28,8 @@
         <AssemblyVersion>$(Version).0</AssemblyVersion>
         <FileVersion>$(Version).0</FileVersion>
         <InformationalVersion>$(Version)</InformationalVersion>
-        <AssemblyName>qrtwin-$(ApplicationDisplayVersion)</AssemblyName>
+        <!-- Stable name for Debug/IDE; versioned rename on publish (PublishArtifacts.targets) -->
+        <AssemblyName>qrtwin</AssemblyName>
 
         <WindowsPackageType>None</WindowsPackageType>
 

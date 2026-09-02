@@ -17,7 +17,7 @@ public partial class App : Application
 
         var window = new Window(services.GetRequiredService<MainPage>())
         {
-            Title = "QRTwin"
+            Title = "QRTwin - Сканируйте и создавайте QR-коды"
         };
 
 #if WINDOWS
