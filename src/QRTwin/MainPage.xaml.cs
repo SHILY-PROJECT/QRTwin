@@ -10,11 +10,14 @@ public partial class MainPage : ContentPage
     private const double ActionButtonSize = 44;
     private const double InputBarPadding = 12;
     private const double ButtonsBlockSpacing = 8;
+    private const double SeparatorBlockHeight = 17;
 
     private readonly MainViewModel _viewModel;
     private readonly Color _inactiveButtonBackground;
     private readonly Color _inactiveIconColor;
     private readonly Color _activeIconColor;
+    private readonly Color _separatorInactiveColor;
+    private readonly Color _separatorActiveColor;
     private bool _isUnloaded;
 
     public MainPage(MainViewModel viewModel)
@@ -25,6 +28,8 @@ public partial class MainPage : ContentPage
         _inactiveButtonBackground = (Color)Application.Current.Resources["SurfaceElevated"];
         _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
         _activeIconColor = Colors.White;
+        _separatorInactiveColor = (Color)Application.Current.Resources["Border"];
+        _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
 
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.Generate.PropertyChanged += OnGenerateViewModelPropertyChanged;
@@ -32,6 +37,7 @@ public partial class MainPage : ContentPage
         UpdateTabVisuals(viewModel.SelectedTab);
         UpdateTabPanels(viewModel.SelectedTab);
         UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+        UpdateInputEditorSeparatorState(isFocused: false);
 
 #if ANDROID
         Platforms.Android.KeyboardInsetsHelper.Attach(RootLayout, GenerateInputBar);
@@ -65,6 +71,11 @@ public partial class MainPage : ContentPage
         WandIcon.IconColor = hasText ? _activeIconColor : _inactiveIconColor;
     }
 
+    private void UpdateInputEditorSeparatorState(bool isFocused)
+    {
+        InputEditorSeparator.Color = isFocused ? _separatorActiveColor : _separatorInactiveColor;
+    }
+
     private void OnGenerateInputEditorFocused(object? sender, FocusEventArgs e)
     {
         if (_isUnloaded)
@@ -72,11 +83,13 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        UpdateInputEditorSeparatorState(isFocused: true);
         Dispatcher.Dispatch(ExpandGenerateInputEditor);
     }
 
     private void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
     {
+        UpdateInputEditorSeparatorState(isFocused: false);
         GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
     }
 
@@ -103,7 +116,7 @@ public partial class MainPage : ContentPage
 
     private double CalculateExpandedEditorMaxHeight()
     {
-        var buttonsBlock = ActionButtonSize + ButtonsBlockSpacing;
+        var buttonsBlock = ActionButtonSize + ButtonsBlockSpacing + SeparatorBlockHeight;
         var chrome = InputBarPadding + GenerateInputBar.Padding.Top + GenerateInputBar.Padding.Bottom;
 
         if (ContentHost.Height <= 0)

@@ -5,4 +5,17 @@
     xmlns:maui="using:Microsoft.Maui"
     xmlns:local="using:QRTwin.WinUI">
 
+  <maui:MauiWinUIApplication.Resources>
+    <ResourceDictionary>
+      <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="Transparent" />
+      <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="Transparent" />
+      <SolidColorBrush x:Key="TextControlBorderBrush" Color="Transparent" />
+      <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="Transparent" />
+      <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="Transparent" />
+      <Thickness x:Key="TextControlBorderThemeThickness">0</Thickness>
+      <Thickness x:Key="TextControlBorderThemeThicknessFocused">0</Thickness>
+      <Thickness x:Key="TextControlBorderThemeThicknessPointerOver">0</Thickness>
+    </ResourceDictionary>
+  </maui:MauiWinUIApplication.Resources>
+
 </maui:MauiWinUIApplication>

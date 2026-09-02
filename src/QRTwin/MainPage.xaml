@@ -93,7 +93,7 @@
             MaximumWidthRequest="720"
             HorizontalOptions="Fill"
             IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
-      <VerticalStackLayout Spacing="8">
+      <VerticalStackLayout Spacing="0">
         <Editor x:Name="GenerateInputEditor"
                 Style="{StaticResource InputEditor}"
                 Margin="12,4,12,0"
@@ -103,6 +103,12 @@
                 Focused="OnGenerateInputEditorFocused"
                 Unfocused="OnGenerateInputEditorUnfocused"
                 Completed="OnGenerateInputEditorCompleted" />
+
+        <BoxView x:Name="InputEditorSeparator"
+                 HeightRequest="1"
+                 Margin="12,8,12,8"
+                 HorizontalOptions="Fill"
+                 Color="{StaticResource Border}" />
 
         <Grid ColumnDefinitions="8*,2*"
               ColumnSpacing="8"
