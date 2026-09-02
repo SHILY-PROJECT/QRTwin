@@ -19,7 +19,7 @@ public static class AppThemeCatalog
         new(
             AppThemeId.Neon,
             "Неон",
-            "Градиент иконки QRTwin: циан, синий и фиолетовый",
+            "Градиент иконки QRTwin: голубой, синий и фиолетовый",
             CreateNeonPalette),
         new(
             AppThemeId.Classic,
@@ -44,13 +44,13 @@ public static class AppThemeCatalog
         PrimaryText = Color.FromArgb("#FFFFFF"),
         SecondaryText = Color.FromArgb("#D9C8D8F0"),
         MutedText = Color.FromArgb("#997A8FA8"),
-        Accent = Color.FromArgb("#00D4FF"),
-        AccentLight = Color.FromArgb("#5CE1FF"),
-        AccentGlow = Color.FromArgb("#4000D4FF"),
-        AccentSoft = Color.FromArgb("#2600D4FF"),
+        Accent = Color.FromArgb("#03AFFF"),
+        AccentLight = Color.FromArgb("#4FC8FF"),
+        AccentGlow = Color.FromArgb("#4003AFFF"),
+        AccentSoft = Color.FromArgb("#2603AFFF"),
         Danger = Color.FromArgb("#FF5C7A"),
         Success = Color.FromArgb("#00E676"),
-        ScannerLine = Color.FromArgb("#00FFFF"),
+        ScannerLine = Color.FromArgb("#03AFFF"),
         Border = Color.FromArgb("#CC2A3560"),
         BorderLight = Color.FromArgb("#CC3D4A78"),
         PageBackgroundBrush = new LinearGradientBrush
@@ -70,7 +70,7 @@ public static class AppThemeCatalog
             Radius = 1.4,
             GradientStops =
             [
-                new(Color.FromArgb("#5500E5FF"), 0f),
+                new(Color.FromArgb("#4503AFFF"), 0f),
                 new(Color.FromArgb("#352962FF"), 0.35f),
                 new(Color.FromArgb("#186200EA"), 0.65f),
                 new(Color.FromArgb("#000B1028"), 1f)
@@ -82,9 +82,9 @@ public static class AppThemeCatalog
             EndPoint = new Point(1, 1),
             GradientStops =
             [
-                new(Color.FromArgb("#00E5FF"), 0f),
-                new(Color.FromArgb("#2962FF"), 0.55f),
-                new(Color.FromArgb("#7B1FA2"), 1f)
+                new(Color.FromArgb("#03AFFF"), 0f),
+                new(Color.FromArgb("#2979FF"), 0.55f),
+                new(Color.FromArgb("#6A1B9A"), 1f)
             ]
         },
         CardGradientBrush = new LinearGradientBrush
@@ -103,10 +103,10 @@ public static class AppThemeCatalog
             EndPoint = new Point(0, 1),
             GradientStops =
             [
-                new(Color.FromArgb("#0000FFFF"), 0f),
-                new(Color.FromArgb("#3300FFFF"), 0.55f),
-                new(Color.FromArgb("#8000FFFF"), 0.85f),
-                new(Color.FromArgb("#00FFFF"), 1f)
+                new(Color.FromArgb("#0003AFFF"), 0f),
+                new(Color.FromArgb("#3303AFFF"), 0.55f),
+                new(Color.FromArgb("#8003AFFF"), 0.85f),
+                new(Color.FromArgb("#03AFFF"), 1f)
             ]
         }
     };

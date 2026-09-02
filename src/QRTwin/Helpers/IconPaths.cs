@@ -12,4 +12,5 @@ public static class IconPaths
     public const string Wand = "wand.svg";
     public const string Image = "image.svg";
     public const string Themes = "themes.svg";
+    public const string CheckmarkCircle = "checkmark-circle.svg";
 }
