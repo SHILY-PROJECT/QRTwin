@@ -1,20 +1,23 @@
 using QRTwin.Models;
 using QRTwin.Services;
+using QRTwin.Views;
 
 namespace QRTwin.ViewModels;
 
 public partial class HistoryViewModel(IHistoryService historyService) : ObservableObject
 {
+    private const int ClearAllStaggerMs = 45;
+
     public event EventHandler<HistoryEntry>? EntrySelected;
 
     [ObservableProperty]
     public partial bool IsLoading { get; set; }
 
-    public ObservableCollection<HistoryEntry> Entries { get; } = [];
+    public ObservableCollection<HistoryEntryItem> EntryItems { get; } = [];
 
-    public bool HasEntries => Entries.Count > 0;
+    public bool HasEntries => EntryItems.Count > 0;
 
-    public bool ShowEmptyState => !IsLoading && Entries.Count == 0;
+    public bool ShowEmptyState => !IsLoading && EntryItems.Count == 0;
 
     public async Task LoadAsync()
     {
@@ -30,10 +33,10 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
 
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                Entries.Clear();
-                foreach (var entry in collected)
+                EntryItems.Clear();
+                for (var index = 0; index < collected.Count; index++)
                 {
-                    Entries.Add(entry);
+                    EntryItems.Add(CreateItem(collected[index], index));
                 }
             });
         }
@@ -53,16 +56,17 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
     }
 
     [RelayCommand]
-    private void SelectEntry(HistoryEntry entry) =>
-        EntrySelected?.Invoke(this, entry);
+    private void SelectEntry(HistoryEntryItem item) =>
+        EntrySelected?.Invoke(this, item.Entry);
 
     [RelayCommand]
-    private async Task DeleteEntryAsync(HistoryEntry entry)
+    private async Task DeleteEntryAsync(HistoryEntryItem item)
     {
-        await historyService.DeleteAsync(entry.Id).ConfigureAwait(false);
+        await MainThread.InvokeOnMainThreadAsync(() => HistoryEntryCard.AnimateOutIfPresentAsync(item));
+        await historyService.DeleteAsync(item.Entry.Id).ConfigureAwait(false);
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            Entries.Remove(entry);
+            EntryItems.Remove(item);
             NotifyEntriesChanged();
         });
     }
@@ -70,11 +74,27 @@ public partial class HistoryViewModel(IHistoryService historyService) : Observab
     [RelayCommand]
     private async Task ClearAllAsync()
     {
+        var snapshot = EntryItems.ToArray();
+        if (snapshot.Length == 0)
+        {
+            return;
+        }
+
+        var animationTasks = snapshot.Select(async (item, index) =>
+        {
+            await Task.Delay(index * ClearAllStaggerMs).ConfigureAwait(false);
+            await MainThread.InvokeOnMainThreadAsync(() => HistoryEntryCard.AnimateOutIfPresentAsync(item));
+        });
+
+        await Task.WhenAll(animationTasks).ConfigureAwait(false);
         await historyService.ClearAllAsync().ConfigureAwait(false);
         await MainThread.InvokeOnMainThreadAsync(() =>
         {
-            Entries.Clear();
+            EntryItems.Clear();
             NotifyEntriesChanged();
         });
     }
+
+    private static HistoryEntryItem CreateItem(HistoryEntry entry, int index) =>
+        new(entry, index % 2 == 0 ? 1 : -1);
 }

@@ -12,6 +12,7 @@ public partial class MainPage : ContentPage
     private const double CollapsedEditorHeight = 44;
     private const double ExpansionAnchorGap = 12;
     private const string AuthorShimmerAnimationName = "AuthorShimmer";
+    private const string EditorHeightAnimationName = "GenerateInputEditorHeight";
     private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
     private readonly MainViewModel _viewModel;
@@ -141,6 +142,7 @@ public partial class MainPage : ContentPage
         _viewModel.Generate.PropertyChanged -= OnGenerateViewModelPropertyChanged;
         ScanPanel.StopAnimations();
         GeneratePanel.StopAnimations();
+        GenerateInputEditor.AbortAnimation(EditorHeightAnimationName);
     }
 
     private void OnContentHostSizeChanged(object? sender, EventArgs e)
@@ -171,7 +173,7 @@ public partial class MainPage : ContentPage
 
         if (e.IsProperty(nameof(GenerateViewModel.HasQrCode)) && _viewModel.Generate.HasQrCode)
         {
-            CollapseGenerateInputEditor();
+            _ = CollapseGenerateInputEditorAsync();
         }
     }
 
@@ -228,7 +230,7 @@ public partial class MainPage : ContentPage
         {
             try
             {
-                await scrollView.ScrollToAsync(qrCard, ScrollToPosition.MakeVisible, animated: false);
+                await scrollView.ScrollToAsync(qrCard, ScrollToPosition.MakeVisible, animated: true);
             }
             catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
             {
@@ -236,6 +238,7 @@ public partial class MainPage : ContentPage
             }
         }
 
+        double targetHeight = CollapsedEditorHeight;
         for (var attempt = 0; attempt < 4; attempt++)
         {
             if (_isUnloaded || !GenerateInputEditor.IsFocused)
@@ -243,11 +246,10 @@ public partial class MainPage : ContentPage
                 return;
             }
 
-            ExpandGenerateInputEditor();
-
-            if (GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8)
+            targetHeight = Math.Max(CollapsedEditorHeight, CalculateExpandedEditorMaxHeight());
+            if (targetHeight > CollapsedEditorHeight + 8)
             {
-                return;
+                break;
             }
 
             await Task.Delay(attempt switch
@@ -257,23 +259,49 @@ public partial class MainPage : ContentPage
                 _ => 48
             });
         }
+
+        if (_isUnloaded || !GenerateInputEditor.IsFocused)
+        {
+            return;
+        }
+
+        await GenerateInputEditor.AnimateHeightRequestAsync(
+            targetHeight,
+            ViewAnimationExtensions.EditorExpandDuration,
+            ViewAnimationExtensions.StandardEase,
+            EditorHeightAnimationName);
     }
 
-    private void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
+    private async void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
     {
         UpdateInputEditorSeparatorState(isFocused: false);
-        GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
+        await CollapseGenerateInputEditorAsync();
     }
 
-    private void CollapseGenerateInputEditor()
+    private async Task CollapseGenerateInputEditorAsync()
     {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
         UpdateInputEditorSeparatorState(isFocused: false);
-        GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
 
         if (GenerateInputEditor.IsFocused)
         {
             GenerateInputEditor.Unfocus();
         }
+
+        await GenerateInputEditor.AnimateHeightRequestAsync(
+            CollapsedEditorHeight,
+            ViewAnimationExtensions.EditorExpandDuration,
+            ViewAnimationExtensions.StandardEase,
+            EditorHeightAnimationName);
+    }
+
+    private void CollapseGenerateInputEditor()
+    {
+        _ = CollapseGenerateInputEditorAsync();
     }
 
     private void OnGenerateInputEditorCompleted(object? sender, EventArgs e)
@@ -284,17 +312,6 @@ public partial class MainPage : ContentPage
         }
 
         GenerateInputEditor.Unfocus();
-    }
-
-    private void ExpandGenerateInputEditor()
-    {
-        if (_isUnloaded)
-        {
-            return;
-        }
-
-        var maxHeight = CalculateExpandedEditorMaxHeight();
-        GenerateInputEditor.HeightRequest = Math.Max(CollapsedEditorHeight, maxHeight);
     }
 
     private double CalculateExpandedEditorMaxHeight()
