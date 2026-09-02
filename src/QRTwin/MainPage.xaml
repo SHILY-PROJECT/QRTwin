@@ -111,10 +111,9 @@
       </Grid>
 
       <Border x:Name="GenerateInputBar"
-              Style="{StaticResource GlassChromeBar}"
+              Style="{StaticResource GlassCard}"
               Margin="16,0,16,8"
               Padding="6"
-              StrokeShape="RoundRectangle 20"
               HorizontalOptions="Fill"
               VerticalOptions="End"
               ZIndex="10"
@@ -144,11 +143,7 @@
                 HorizontalOptions="Fill">
             <Border x:Name="ImageGenButton"
                     Grid.Column="0"
-                    StrokeShape="RoundRectangle 16"
-                    HeightRequest="44"
-                    BackgroundColor="{DynamicResource SurfaceElevated}"
-                    effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
-                    HorizontalOptions="Fill">
+                    Style="{StaticResource GlassCardButton}">
               <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnImageGenTapped" />
               </Border.GestureRecognizers>
@@ -164,11 +159,7 @@
 
             <Border x:Name="WandButton"
                     Grid.Column="1"
-                    StrokeShape="RoundRectangle 16"
-                    HeightRequest="44"
-                    BackgroundColor="{DynamicResource SurfaceElevated}"
-                    effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}"
-                    HorizontalOptions="Fill">
+                    Style="{StaticResource GlassCardButton}">
               <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnWandTapped" />
               </Border.GestureRecognizers>

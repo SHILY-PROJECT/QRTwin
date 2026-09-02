@@ -27,6 +27,16 @@
         <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
     </Style>
 
+    <Style x:Key="GlassCardButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
+    </Style>
+
     <Style x:Key="GlassOverlayCard" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource OverlayPanelBrush}" />
         <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />

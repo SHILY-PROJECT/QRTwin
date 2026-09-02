@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using QRTwin.Controls;
 using QRTwin.Effects;
 using QRTwin.Extensions;
 using QRTwin.Models;
@@ -20,7 +21,6 @@ public partial class MainPage : ContentPage
 
     private readonly MainViewModel _viewModel;
     private readonly IThemeService _themeService;
-    private Color _inactiveButtonBackground = null!;
     private Color _inactiveIconColor = null!;
     private readonly Color _activeIconColor = Colors.White;
     private Color _separatorInactiveColor = null!;
@@ -98,7 +98,6 @@ public partial class MainPage : ContentPage
 
     private void RefreshThemeColors()
     {
-        _inactiveButtonBackground = (Color)Application.Current!.Resources["SurfaceElevated"];
         _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
         _separatorInactiveColor = (Color)Application.Current.Resources["Border"];
         _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
@@ -227,22 +226,33 @@ public partial class MainPage : ContentPage
 
         if (hasText)
         {
-            ImageGenButton.Background = activeBrush;
-            ImageGenButton.BackgroundColor = Colors.Transparent;
-            WandButton.Background = activeBrush;
-            WandButton.BackgroundColor = Colors.Transparent;
-            ImageGenIcon.IconColor = _activeIconColor;
-            WandIcon.IconColor = _activeIconColor;
+            ApplyActiveInputButtonStyle(ImageGenButton, ImageGenIcon, activeBrush);
+            ApplyActiveInputButtonStyle(WandButton, WandIcon, activeBrush);
+            return;
         }
-        else
-        {
-            ImageGenButton.Background = null;
-            ImageGenButton.BackgroundColor = _inactiveButtonBackground;
-            WandButton.Background = null;
-            WandButton.BackgroundColor = _inactiveButtonBackground;
-            ImageGenIcon.IconColor = _inactiveIconColor;
-            WandIcon.IconColor = _inactiveIconColor;
-        }
+
+        ApplyInactiveInputButtonStyle(ImageGenButton, ImageGenIcon);
+        ApplyInactiveInputButtonStyle(WandButton, WandIcon);
+    }
+
+    private void ApplyActiveInputButtonStyle(Border button, SvgIconView icon, Brush activeBrush)
+    {
+        button.Background = activeBrush;
+        button.BackgroundColor = Colors.Transparent;
+        button.Stroke = Colors.Transparent;
+        button.StrokeThickness = 0;
+        GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
+        icon.IconColor = _activeIconColor;
+    }
+
+    private void ApplyInactiveInputButtonStyle(Border button, SvgIconView icon)
+    {
+        button.Background = null;
+        button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
+        button.Stroke = (Color)Application.Current.Resources["BorderLight"];
+        button.StrokeThickness = 1;
+        GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
+        icon.IconColor = _inactiveIconColor;
     }
 
     private void UpdateInputEditorSeparatorState(bool isFocused)
