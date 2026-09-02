@@ -54,7 +54,7 @@
           <Label Text="Создайте QR-код"
                  Style="{StaticResource HeaderLabel}"
                  HorizontalTextAlignment="Center" />
-          <Label Text="Введите текст или ссылку в поле ниже и нажмите Enter для генерации"
+          <Label Text="Введите текст или ссылку в поле ниже и нажмите на изображение под ним для генерации"
                  Style="{StaticResource SubtitleLabel}"
                  HorizontalTextAlignment="Center"
                  LineBreakMode="WordWrap"

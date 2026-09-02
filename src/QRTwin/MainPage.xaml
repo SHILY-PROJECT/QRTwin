@@ -47,7 +47,8 @@
                  Style="{StaticResource CaptionLabel}" />
           <Label x:Name="AuthorCreditLabel"
                  Text=" by MrSHILY"
-                 Style="{StaticResource CaptionLabel}">
+                 Style="{StaticResource CaptionLabel}"
+                 Padding="0,0,4,0">
             <Label.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnAuthorCreditTapped" />
             </Label.GestureRecognizers>

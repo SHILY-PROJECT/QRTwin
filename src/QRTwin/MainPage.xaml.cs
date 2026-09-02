@@ -11,7 +11,6 @@ public partial class MainPage : ContentPage
     private const double CollapsedEditorHeight = 44;
     private const double ExpansionAnchorGap = 12;
     private const string AuthorShimmerAnimationName = "AuthorShimmer";
-    private static readonly Color AuthorAccentColor = Color.FromArgb("#03AFFF");
     private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
     private readonly MainViewModel _viewModel;
@@ -82,6 +81,7 @@ public partial class MainPage : ContentPage
         _isUnloaded = true;
         _authorShimmerRunning = false;
         AuthorCreditLabel.StopAnimations();
+        AuthorCreditLabel.Shadow = CreateAuthorCreditGlow(0);
         _themeService.ThemeChanged -= OnThemeChanged;
         ContentHost.SizeChanged -= OnContentHostSizeChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
@@ -409,13 +409,13 @@ public partial class MainPage : ContentPage
 
             try
             {
-                await AnimateAuthorCreditColorAsync(baseColor, AuthorAccentColor, 1200);
+                await AnimateAuthorCreditVisualAsync(baseColor, Colors.White, 0, 1, 1200);
                 if (!_authorShimmerRunning)
                 {
                     break;
                 }
 
-                await AnimateAuthorCreditColorAsync(AuthorAccentColor, baseColor, 1200);
+                await AnimateAuthorCreditVisualAsync(Colors.White, baseColor, 1, 0, 1200);
             }
             catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
             {
@@ -424,7 +424,12 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private Task AnimateAuthorCreditColorAsync(Color from, Color to, uint duration)
+    private Task AnimateAuthorCreditVisualAsync(
+        Color from,
+        Color to,
+        double glowFrom,
+        double glowTo,
+        uint duration)
     {
         if (AuthorCreditLabel is null)
         {
@@ -433,10 +438,12 @@ public partial class MainPage : ContentPage
 
         var completion = new TaskCompletionSource();
 
-        var animation = new Animation(
-            progress => AuthorCreditLabel.TextColor = InterpolateColor(from, to, progress),
-            0,
-            1);
+        var animation = new Animation(progress =>
+        {
+            AuthorCreditLabel.TextColor = InterpolateColor(from, to, progress);
+            var glowStrength = glowFrom + ((glowTo - glowFrom) * progress);
+            AuthorCreditLabel.Shadow = CreateAuthorCreditGlow(glowStrength);
+        });
 
         animation.Commit(
             AuthorCreditLabel,
@@ -447,6 +454,19 @@ public partial class MainPage : ContentPage
             (_, _) => completion.TrySetResult());
 
         return completion.Task;
+    }
+
+    private static Shadow CreateAuthorCreditGlow(double strength)
+    {
+        strength = Math.Clamp(strength, 0, 1);
+
+        return new Shadow
+        {
+            Brush = Colors.White,
+            Radius = (float)(1 + (strength * 14)),
+            Offset = new Point(0, 0),
+            Opacity = (float)(strength * 0.9)
+        };
     }
 
     private static Color InterpolateColor(Color from, Color to, double progress) =>
