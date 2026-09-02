@@ -118,12 +118,11 @@
                     IsVisible="{Binding ShowScanAnimation}"
                     InputTransparent="True">
                 <BoxView x:Name="ScanLine"
-                         Color="{StaticResource ScannerLine}"
-                         HeightRequest="2"
+                         Background="{StaticResource ScannerBeamBrush}"
+                         HeightRequest="56"
                          HorizontalOptions="Fill"
                          VerticalOptions="Start"
-                         Margin="24,0"
-                         Opacity="0.9"
+                         Opacity="1"
                          InputTransparent="True" />
               </Grid>
 

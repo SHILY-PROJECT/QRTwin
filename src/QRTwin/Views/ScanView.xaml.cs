@@ -7,6 +7,8 @@ namespace QRTwin.Views;
 
 public partial class ScanView : ContentView
 {
+    private const double ScanBeamHeight = 56;
+
     private bool _blinkRunning;
     private bool _scanLineRunning;
 
@@ -80,19 +82,44 @@ public partial class ScanView : ContentView
         }
     }
 
-    private double GetScanLineTravel()
+    private double GetScanAreaHeight()
     {
         if (CameraScanOverlay?.Height is > 0 and var height)
         {
-            return Math.Max(0, height - 4);
+            return height;
         }
 
         if (ScannerContent?.Height is > 0 and var contentHeight)
         {
-            return Math.Max(0, contentHeight - 4);
+            return contentHeight;
         }
 
         return 280;
+    }
+
+    private (double Top, double Bottom) GetScanLinePositions()
+    {
+        var areaHeight = GetScanAreaHeight();
+        var top = -ScanBeamHeight;
+        var bottom = Math.Max(top, areaHeight - ScanBeamHeight);
+        return (top, bottom);
+    }
+
+    private async Task PulseScanLineAsync(uint duration)
+    {
+        if (ScanLine is null)
+        {
+            return;
+        }
+
+        var half = duration / 2;
+        await ScanLine.FadeToAsync(0.72, half, Easing.SinInOut);
+        if (!_scanLineRunning)
+        {
+            return;
+        }
+
+        await ScanLine.FadeToAsync(1, half, Easing.SinInOut);
     }
 
     private async void StartScanLineAnimation()
@@ -106,15 +133,23 @@ public partial class ScanView : ContentView
 
         while (_scanLineRunning && ScanLine is not null)
         {
-            ScanLine.TranslationY = 0;
-            var travel = GetScanLineTravel();
-            await ScanLine.TranslateToAsync(0, travel, 1800, Easing.SinInOut);
+            var (top, bottom) = GetScanLinePositions();
+            ScanLine.TranslationY = top;
+            ScanLine.Opacity = 1;
+            const uint duration = 1800;
+            await Task.WhenAll(
+                ScanLine.TranslateToAsync(0, bottom, duration, Easing.SinInOut),
+                PulseScanLineAsync(duration));
             if (!_scanLineRunning)
             {
                 break;
             }
 
-            await ScanLine.TranslateToAsync(0, 0, 1800, Easing.SinInOut);
+            ScanLine.TranslationY = bottom;
+            ScanLine.Opacity = 1;
+            await Task.WhenAll(
+                ScanLine.TranslateToAsync(0, top, duration, Easing.SinInOut),
+                PulseScanLineAsync(duration));
         }
     }
 

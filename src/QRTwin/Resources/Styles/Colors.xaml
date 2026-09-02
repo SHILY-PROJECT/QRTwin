@@ -41,4 +41,11 @@
         <GradientStop Color="#242424" Offset="0.0" />
         <GradientStop Color="#1A1A1A" Offset="1.0" />
     </LinearGradientBrush>
+
+    <LinearGradientBrush x:Key="ScannerBeamBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#00FF4D00" Offset="0.0" />
+        <GradientStop Color="#33FF4D00" Offset="0.55" />
+        <GradientStop Color="#80FF4D00" Offset="0.85" />
+        <GradientStop Color="#FF4D00" Offset="1.0" />
+    </LinearGradientBrush>
 </ResourceDictionary>
