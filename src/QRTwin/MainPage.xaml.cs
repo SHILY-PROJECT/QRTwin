@@ -1,4 +1,5 @@
-﻿using QRTwin.Extensions;
+﻿using Microsoft.Maui.Controls.Shapes;
+using QRTwin.Extensions;
 using QRTwin.Models;
 using QRTwin.ViewModels;
 
@@ -7,10 +8,7 @@ namespace QRTwin;
 public partial class MainPage : ContentPage
 {
     private const double CollapsedEditorHeight = 44;
-    private const double ActionButtonSize = 44;
-    private const double InputBarPadding = 12;
-    private const double ButtonsBlockSpacing = 8;
-    private const double SeparatorBlockHeight = 17;
+    private const double ExpansionAnchorGap = 12;
 
     private readonly MainViewModel _viewModel;
     private readonly Color _inactiveButtonBackground;
@@ -19,6 +17,7 @@ public partial class MainPage : ContentPage
     private readonly Color _separatorInactiveColor;
     private readonly Color _separatorActiveColor;
     private bool _isUnloaded;
+    private double? _referenceExpandedEditorHeight;
 
     public MainPage(MainViewModel viewModel)
     {
@@ -38,6 +37,8 @@ public partial class MainPage : ContentPage
         UpdateTabPanels(viewModel.SelectedTab);
         UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
         UpdateInputEditorSeparatorState(isFocused: false);
+        ContentHost.SizeChanged += OnContentHostSizeChanged;
+        UpdateContentHostClip();
 
 #if ANDROID
         Platforms.Android.KeyboardInsetsHelper.Attach(RootLayout, GenerateInputBar);
@@ -47,10 +48,25 @@ public partial class MainPage : ContentPage
     private void OnUnloaded(object? sender, EventArgs e)
     {
         _isUnloaded = true;
+        ContentHost.SizeChanged -= OnContentHostSizeChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.Generate.PropertyChanged -= OnGenerateViewModelPropertyChanged;
         ScanPanel.StopAnimations();
         GeneratePanel.StopAnimations();
+    }
+
+    private void OnContentHostSizeChanged(object? sender, EventArgs e)
+    {
+        _referenceExpandedEditorHeight = null;
+        UpdateContentHostClip();
+    }
+
+    private void UpdateContentHostClip()
+    {
+        if (ContentHost.Width > 0 && ContentHost.Height > 0)
+        {
+            ContentHost.Clip = new RectangleGeometry(new Rect(0, 0, ContentHost.Width, ContentHost.Height));
+        }
     }
 
     private void OnGenerateViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -58,6 +74,11 @@ public partial class MainPage : ContentPage
         if (e.IsProperty(nameof(GenerateViewModel.InputText)))
         {
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+        }
+
+        if (e.IsProperty(nameof(GenerateViewModel.HasQrCode)) && _viewModel.Generate.HasQrCode)
+        {
+            CollapseGenerateInputEditor();
         }
     }
 
@@ -84,13 +105,68 @@ public partial class MainPage : ContentPage
         }
 
         UpdateInputEditorSeparatorState(isFocused: true);
-        Dispatcher.Dispatch(ExpandGenerateInputEditor);
+        _ = ExpandGenerateInputEditorAsync();
+    }
+
+    private async Task ExpandGenerateInputEditorAsync()
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        if (_viewModel.Generate.HasQrCode
+            && GenerateContent.FindByName<ScrollView>("GenerateScrollView") is { } scrollView
+            && GenerateContent.FindByName<Border>("QrCard") is { } qrCard)
+        {
+            try
+            {
+                await scrollView.ScrollToAsync(qrCard, ScrollToPosition.MakeVisible, animated: false);
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+            {
+                return;
+            }
+        }
+
+        for (var attempt = 0; attempt < 4; attempt++)
+        {
+            if (_isUnloaded || !GenerateInputEditor.IsFocused)
+            {
+                return;
+            }
+
+            ExpandGenerateInputEditor();
+
+            if (GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8)
+            {
+                return;
+            }
+
+            await Task.Delay(attempt switch
+            {
+                0 => 16,
+                1 => 32,
+                _ => 48
+            });
+        }
     }
 
     private void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
     {
         UpdateInputEditorSeparatorState(isFocused: false);
         GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
+    }
+
+    private void CollapseGenerateInputEditor()
+    {
+        UpdateInputEditorSeparatorState(isFocused: false);
+        GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
+
+        if (GenerateInputEditor.IsFocused)
+        {
+            GenerateInputEditor.Unfocus();
+        }
     }
 
     private void OnGenerateInputEditorCompleted(object? sender, EventArgs e)
@@ -116,46 +192,38 @@ public partial class MainPage : ContentPage
 
     private double CalculateExpandedEditorMaxHeight()
     {
-        var buttonsBlock = ActionButtonSize + ButtonsBlockSpacing + SeparatorBlockHeight;
-        var chrome = InputBarPadding + GenerateInputBar.Padding.Top + GenerateInputBar.Padding.Bottom;
-
         if (ContentHost.Height <= 0)
         {
-            return 120;
+            return CollapsedEditorHeight;
         }
 
-        var inputBarTop = ContentHost.Y + ContentHost.Height;
-        var contentTop = ContentHost.Y;
-
-#if WINDOWS
-        if (GenerateContent.FindByName<Border>("EmptyStateCard") is { IsVisible: true } emptyStateCard
-            && emptyStateCard.Height > 0)
+        if (!_viewModel.Generate.HasQrCode && _referenceExpandedEditorHeight is { } cachedHeight)
         {
-            var cardBottom = contentTop + GetOffsetY(emptyStateCard, ContentHost) + emptyStateCard.Height;
-            var availableToCard = inputBarTop - cardBottom - 16 - buttonsBlock - chrome;
-            if (availableToCard > CollapsedEditorHeight)
-            {
-                return availableToCard;
-            }
+            return cachedHeight;
         }
-#endif
 
-        var available = inputBarTop - contentTop - buttonsBlock - chrome;
-        return Math.Max(CollapsedEditorHeight, available);
-    }
+        var freeSpace = _viewModel.Generate.HasQrCode
+            ? GenerateContent.GetFreeSpaceBelowQrCard(
+                ContentHost.Height,
+                ContentHost.Padding,
+                ContentHost.Width)
+            : GenerateContent.GetFreeSpaceBelowEmptyState(
+                ContentHost.Height,
+                ContentHost.Padding);
 
-    private static double GetOffsetY(VisualElement element, VisualElement ancestor)
-    {
-        var offset = 0d;
-        var current = element;
-
-        while (current is not null && current != ancestor)
+        if (freeSpace < 0)
         {
-            offset += current.Y;
-            current = current.Parent as VisualElement;
+            return CollapsedEditorHeight;
         }
 
-        return offset;
+        var maxHeight = CollapsedEditorHeight + Math.Max(0, freeSpace - ExpansionAnchorGap);
+
+        if (!_viewModel.Generate.HasQrCode)
+        {
+            _referenceExpandedEditorHeight = maxHeight;
+        }
+
+        return maxHeight;
     }
 
     private void OnImageGenTapped(object? sender, TappedEventArgs e)

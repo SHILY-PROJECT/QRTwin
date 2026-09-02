@@ -98,6 +98,7 @@
                 Style="{StaticResource InputEditor}"
                 Margin="12,4,12,0"
                 HeightRequest="44"
+                BackgroundColor="Transparent"
                 Placeholder="Введите текст или ссылку..."
                 Text="{Binding Generate.InputText}"
                 Focused="OnGenerateInputEditorFocused"
