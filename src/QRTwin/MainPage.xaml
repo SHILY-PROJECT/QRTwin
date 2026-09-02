@@ -104,12 +104,14 @@
                 Unfocused="OnGenerateInputEditorUnfocused"
                 Completed="OnGenerateInputEditorCompleted" />
 
-        <HorizontalStackLayout Spacing="8"
-                               HorizontalOptions="End">
+        <Grid ColumnDefinitions="8*,2*"
+              ColumnSpacing="8"
+              HorizontalOptions="Fill">
           <Border x:Name="ImageGenButton"
+                  Grid.Column="0"
                   StrokeShape="RoundRectangle 16"
-                  WidthRequest="44"
-                  HeightRequest="44">
+                  HeightRequest="44"
+                  HorizontalOptions="Fill">
             <Border.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnImageGenTapped" />
             </Border.GestureRecognizers>
@@ -121,9 +123,10 @@
           </Border>
 
           <Border x:Name="WandButton"
+                  Grid.Column="1"
                   StrokeShape="RoundRectangle 16"
-                  WidthRequest="44"
-                  HeightRequest="44">
+                  HeightRequest="44"
+                  HorizontalOptions="Fill">
             <Border.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnWandTapped" />
             </Border.GestureRecognizers>
@@ -133,7 +136,7 @@
                                   VerticalOptions="Center"
                                   InputTransparent="True" />
           </Border>
-        </HorizontalStackLayout>
+        </Grid>
       </VerticalStackLayout>
     </Border>
 
