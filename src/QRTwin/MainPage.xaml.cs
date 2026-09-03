@@ -17,18 +17,16 @@ public partial class MainPage : ContentPage
     private const string EditorHeightAnimationName = "GenerateInputEditorHeight";
     private const string InputBarAnimationName = "GenerateInputBar";
     private const string InputButtonGlowAnimationName = "InputButtonGlow";
+    private const string DuplicateToastAnimationName = "DuplicateQrToast";
     private const double DefaultInputBarInset = 128;
     private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
     private readonly MainViewModel _viewModel;
     private readonly IThemeService _themeService;
-    private Color _inactiveIconColor = null!;
-    private readonly Color _activeIconColor = Colors.White;
     private Color _separatorInactiveColor = null!;
     private Color _separatorActiveColor = null!;
     private bool _isUnloaded;
     private bool _authorShimmerRunning;
-    private double? _referenceExpandedEditorHeight;
     private AppTab _displayedTab;
     private bool _isTabAnimating;
     private bool _isPanning;
@@ -36,7 +34,10 @@ public partial class MainPage : ContentPage
     private bool _themesOverlayUiVisible;
     private int _inputBarAnimationGeneration;
     private int _inputButtonAnimationGeneration;
+    private int _editorExpandGeneration;
+    private int _duplicateToastGeneration;
     private bool _inputButtonsAreActive;
+    private bool _inputEditorIsFocused;
     private bool _swipeIsHorizontal;
     private double _panTotalX;
 
@@ -51,13 +52,14 @@ public partial class MainPage : ContentPage
 
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.Generate.PropertyChanged += OnGenerateViewModelPropertyChanged;
+        viewModel.Generate.DuplicateGenerateNotified += OnDuplicateGenerateNotified;
         Unloaded += OnUnloaded;
         _displayedTab = viewModel.SelectedTab;
         UpdateTabVisuals(viewModel.SelectedTab);
         UpdateHeaderAndOverlayChrome();
         SyncTabPositions();
         UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
-        UpdateInputEditorSeparatorState(isFocused: false);
+        UpdateGenerateInputBarActiveChrome(isFocused: false);
         ContentHost.SizeChanged += OnContentHostSizeChanged;
         UpdateContentHostClip();
 
@@ -87,7 +89,7 @@ public partial class MainPage : ContentPage
             UpdateTabVisuals(_viewModel.SelectedTab);
             UpdateHeaderAndOverlayChrome();
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
-            UpdateInputEditorSeparatorState(GenerateInputEditor.IsFocused);
+            UpdateGenerateInputBarActiveChrome(GenerateInputEditor.IsFocused);
 
             if (_historyOverlayUiVisible)
             {
@@ -103,8 +105,7 @@ public partial class MainPage : ContentPage
 
     private void RefreshThemeColors()
     {
-        _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
-        _separatorInactiveColor = (Color)Application.Current.Resources["Border"];
+        _separatorInactiveColor = (Color)Application.Current.Resources["BorderLight"];
         _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
     }
 
@@ -154,10 +155,12 @@ public partial class MainPage : ContentPage
         ContentHost.SizeChanged -= OnContentHostSizeChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.Generate.PropertyChanged -= OnGenerateViewModelPropertyChanged;
+        _viewModel.Generate.DuplicateGenerateNotified -= OnDuplicateGenerateNotified;
         ScanPanel.StopAnimations();
         GeneratePanel.StopAnimations();
         GenerateInputEditor.AbortAnimation(EditorHeightAnimationName);
         GenerateInputBar.AbortAnimation(InputBarAnimationName);
+        DuplicateQrToast.AbortAnimation(DuplicateToastAnimationName);
     }
 
     private void OnGenerateInputBarSizeChanged(object? sender, EventArgs e)
@@ -165,7 +168,6 @@ public partial class MainPage : ContentPage
         if (_displayedTab is AppTab.Generate && GenerateInputBar.IsVisible)
         {
             UpdateGenerateContentInset(true);
-            _referenceExpandedEditorHeight = null;
         }
     }
 
@@ -195,12 +197,20 @@ public partial class MainPage : ContentPage
 
     private void OnContentHostSizeChanged(object? sender, EventArgs e)
     {
-        _referenceExpandedEditorHeight = null;
         UpdateContentHostClip();
 
         if (!_isTabAnimating && !_isPanning)
         {
             SyncTabPositions();
+        }
+
+        if (_displayedTab is AppTab.Generate
+            && GenerateInputBar.IsVisible
+            && GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8
+            && (GenerateInputEditor.IsFocused || _viewModel.Generate.InputText.IsNotBlank()))
+        {
+            // Keep filling free space while editing or while text is still present.
+            _ = ExpandGenerateInputEditorAsync(requireFocus: _viewModel.Generate.HasQrCode);
         }
     }
 
@@ -216,10 +226,40 @@ public partial class MainPage : ContentPage
     {
         if (e.IsProperty(nameof(GenerateViewModel.InputText)))
         {
-            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+            var hasText = _viewModel.Generate.InputText.IsNotBlank();
+            UpdateInputBarButtonStates(hasText);
+
+            if (!hasText
+                && !GenerateInputEditor.IsFocused
+                && _displayedTab is AppTab.Generate
+                && GenerateInputBar.IsVisible)
+            {
+                _ = CollapseGenerateInputEditorAsync();
+            }
         }
 
-        if (e.IsProperty(nameof(GenerateViewModel.HasQrCode)) && _viewModel.Generate.HasQrCode)
+        if (!e.IsProperty(nameof(GenerateViewModel.HasQrCode)))
+        {
+            return;
+        }
+
+        if (_viewModel.Generate.HasQrCode)
+        {
+            _ = CollapseGenerateInputEditorAsync();
+            return;
+        }
+
+        if (_displayedTab is not AppTab.Generate || !GenerateInputBar.IsVisible)
+        {
+            return;
+        }
+
+        // Empty inactive field stays collapsed; expand only when there is text to show.
+        if (_viewModel.Generate.InputText.IsNotBlank())
+        {
+            _ = ExpandGenerateInputEditorAsync(requireFocus: false);
+        }
+        else if (!GenerateInputEditor.IsFocused)
         {
             _ = CollapseGenerateInputEditorAsync();
         }
@@ -238,28 +278,28 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        // Target state must update immediately — otherwise a reverse while the
+        // fade-in is still running is treated as a no-op and glow stays on.
+        _inputButtonsAreActive = hasText;
         _ = AnimateInputBarButtonStatesAsync(hasText);
     }
 
     private void ApplyInputBarButtonStatesImmediate(bool hasText)
     {
         _inputButtonAnimationGeneration++;
-        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        ImageGenButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{ImageGenButton.GetHashCode()}");
-        WandButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{WandButton.GetHashCode()}");
+        AbortInputButtonFadeAnimations();
 
         _inputButtonsAreActive = hasText;
 
         if (hasText)
         {
-            SetActiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIcon);
-            SetActiveInputButtonFinalState(WandButton, WandButtonGlow, WandIcon);
+            SetActiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIconLit);
+            SetActiveInputButtonFinalState(WandButton, WandButtonGlow, WandIconLit);
             return;
         }
 
-        SetInactiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIcon);
-        SetInactiveInputButtonFinalState(WandButton, WandButtonGlow, WandIcon);
+        SetInactiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIconLit);
+        SetInactiveInputButtonFinalState(WandButton, WandButtonGlow, WandIconLit);
     }
 
     private async Task AnimateInputBarButtonStatesAsync(bool hasText)
@@ -270,26 +310,23 @@ public partial class MainPage : ContentPage
         }
 
         var generation = ++_inputButtonAnimationGeneration;
-        var duration = ViewAnimationExtensions.StandardDuration;
-        var fromIcon = ImageGenIcon.IconColor;
-        var toIcon = hasText ? _activeIconColor : _inactiveIconColor;
-        var targetGlow = hasText ? 1.0 : 0.0;
-        var easing = hasText ? ViewAnimationExtensions.EnterEase : ViewAnimationExtensions.ExitEase;
+        var duration = ViewAnimationExtensions.ButtonGlowDuration;
+        var easing = ViewAnimationExtensions.SoftEase;
+        var target = hasText ? 1.0 : 0.0;
 
-        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        ImageGenButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{ImageGenButton.GetHashCode()}");
-        WandButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{WandButton.GetHashCode()}");
+        AbortInputButtonFadeAnimations();
+
+        // Stroke color snaps; thickness stays fixed — only opacity fades.
+        ApplyInputButtonStroke(ImageGenButton);
+        ApplyInputButtonStroke(WandButton);
 
         try
         {
             await Task.WhenAll(
-                ImageGenButtonGlow.FadeToAsync(targetGlow, duration, easing),
-                WandButtonGlow.FadeToAsync(targetGlow, duration, easing),
-                ImageGenIcon.AnimateIconColorAsync(fromIcon, toIcon, duration, easing),
-                WandIcon.AnimateIconColorAsync(fromIcon, toIcon, duration, easing),
-                AnimateInputButtonStrokeAsync(ImageGenButton, hasText, duration, easing),
-                AnimateInputButtonStrokeAsync(WandButton, hasText, duration, easing));
+                FadeOpacityAsync(ImageGenButtonGlow, target, duration, easing),
+                FadeOpacityAsync(WandButtonGlow, target, duration, easing),
+                FadeOpacityAsync(ImageGenIconLit, target, duration, easing),
+                FadeOpacityAsync(WandIconLit, target, duration, easing));
         }
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
@@ -301,66 +338,110 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        ApplyInputBarButtonStatesImmediate(hasText);
+        ImageGenButtonGlow.Opacity = target;
+        WandButtonGlow.Opacity = target;
+        ImageGenIconLit.Opacity = target;
+        WandIconLit.Opacity = target;
     }
 
-    private static Color GetBorderStrokeColor(Border button) =>
-        button.Stroke is SolidColorBrush solid ? solid.Color : Colors.Transparent;
-
-    private Task AnimateInputButtonStrokeAsync(Border button, bool active, uint duration, Easing easing)
+    private void AbortInputButtonFadeAnimations()
     {
-        var borderLight = (Color)Application.Current!.Resources["BorderLight"];
-        var fromThickness = button.StrokeThickness;
-        var toThickness = active ? 0.0 : 1.0;
-        var fromColor = GetBorderStrokeColor(button);
-        var toColor = active ? Colors.Transparent : borderLight;
-        var animationName = $"{InputButtonGlowAnimationName}_Stroke_{button.GetHashCode()}";
-        button.AbortAnimation(animationName);
+        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        ImageGenIconLit.AbortAnimation(InputButtonGlowAnimationName);
+        WandIconLit.AbortAnimation(InputButtonGlowAnimationName);
+    }
+
+    private static Task FadeOpacityAsync(VisualElement element, double opacity, uint duration, Easing easing)
+    {
+        element.AbortAnimation(InputButtonGlowAnimationName);
+
+        var from = element.Opacity;
+        if (Math.Abs(from - opacity) < 0.005)
+        {
+            element.Opacity = opacity;
+            return Task.CompletedTask;
+        }
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var animation = new Animation(progress =>
-        {
-            button.Stroke = ViewAnimationExtensions.InterpolateColor(fromColor, toColor, progress);
-            button.StrokeThickness = fromThickness + ((toThickness - fromThickness) * progress);
-        });
+        new Animation(value => element.Opacity = value, from, opacity)
+            .Commit(
+                element,
+                InputButtonGlowAnimationName,
+                length: duration,
+                easing: easing,
+                finished: (_, cancelled) =>
+                {
+                    if (!cancelled)
+                    {
+                        element.Opacity = opacity;
+                    }
 
-        animation.Commit(
-            button,
-            animationName,
-            length: duration,
-            easing: easing,
-            finished: (_, _) => tcs.TrySetResult());
+                    tcs.TrySetResult();
+                });
 
         return tcs.Task;
     }
 
-    private void SetActiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
+    private void SetActiveInputButtonFinalState(Border button, VisualElement glow, VisualElement litIcon)
     {
         button.Background = null;
-        button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
-        button.Stroke = Colors.Transparent;
-        button.StrokeThickness = 0;
-        glow.Background = (Brush)Application.Current.Resources["AccentGradientBrush"];
+        button.BackgroundColor = Colors.Transparent;
+        ApplyInputButtonStroke(button);
         glow.Opacity = 1;
-        GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
-        GlassEffect.SetIntensity(glow, GlassEffectIntensity.Normal);
-        icon.IconColor = _activeIconColor;
+        litIcon.Opacity = 1;
     }
 
-    private void SetInactiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
+    private void SetInactiveInputButtonFinalState(Border button, VisualElement glow, VisualElement litIcon)
     {
         button.Background = null;
-        button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
-        button.Stroke = (Color)Application.Current.Resources["BorderLight"];
-        button.StrokeThickness = 1;
+        button.BackgroundColor = Colors.Transparent;
+        ApplyInputButtonStroke(button);
         glow.Opacity = 0;
-        GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
-        icon.IconColor = _inactiveIconColor;
+        litIcon.Opacity = 0;
+    }
+
+    private void ApplyInputButtonStroke(Border button)
+    {
+        // Icons only / glow — never draw an outline on the wand/image buttons.
+        // Thickness stays 1.5 so content never reflows if stroke is reintroduced later.
+        button.StrokeThickness = 1.5;
+        button.Stroke = Colors.Transparent;
     }
 
     private void UpdateInputEditorSeparatorState(bool isFocused)
     {
         InputEditorSeparator.Color = isFocused ? _separatorActiveColor : _separatorInactiveColor;
+    }
+
+    private void UpdateGenerateInputBarActiveChrome(bool isFocused)
+    {
+        _inputEditorIsFocused = isFocused;
+        UpdateInputEditorSeparatorState(isFocused);
+
+        // BorderShimmer owns Stroke — don't overwrite it with BorderLight (near-white on Glass).
+        if (!BorderShimmer.GetIsEnabled(GenerateInputBar))
+        {
+            var accent = (Color)Application.Current!.Resources["Accent"];
+            var borderLight = (Color)Application.Current.Resources["BorderLight"];
+
+            if (isFocused)
+            {
+                GenerateInputBar.Stroke = accent;
+                GenerateInputBar.StrokeThickness = 1.5;
+            }
+            else
+            {
+                GenerateInputBar.Stroke = borderLight;
+                GenerateInputBar.StrokeThickness = 1;
+            }
+        }
+        else
+        {
+            GenerateInputBar.StrokeThickness = isFocused ? 1.5 : 1;
+        }
+
+        ApplyInputBarButtonStatesImmediate(_inputButtonsAreActive);
     }
 
     private void OnGenerateInputEditorFocused(object? sender, FocusEventArgs e)
@@ -370,16 +451,18 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        UpdateInputEditorSeparatorState(isFocused: true);
-        _ = ExpandGenerateInputEditorAsync();
+        UpdateGenerateInputBarActiveChrome(isFocused: true);
+        _ = ExpandGenerateInputEditorAsync(requireFocus: true);
     }
 
-    private async Task ExpandGenerateInputEditorAsync()
+    private async Task ExpandGenerateInputEditorAsync(bool requireFocus = true)
     {
-        if (_isUnloaded)
+        if (_isUnloaded || _displayedTab is not AppTab.Generate)
         {
             return;
         }
+
+        var generation = ++_editorExpandGeneration;
 
         if (_viewModel.Generate.HasQrCode
             && GenerateContent.FindByName<ScrollView>("GenerateScrollView") is { } scrollView
@@ -396,15 +479,17 @@ public partial class MainPage : ContentPage
         }
 
         double targetHeight = CollapsedEditorHeight;
-        for (var attempt = 0; attempt < 4; attempt++)
+        for (var attempt = 0; attempt < 8; attempt++)
         {
-            if (_isUnloaded || !GenerateInputEditor.IsFocused)
+            if (_isUnloaded
+                || generation != _editorExpandGeneration
+                || (requireFocus && !GenerateInputEditor.IsFocused))
             {
                 return;
             }
 
-            targetHeight = Math.Max(CollapsedEditorHeight, CalculateExpandedEditorMaxHeight());
-            if (targetHeight > CollapsedEditorHeight + 8)
+            if (TryCalculateExpandedEditorMaxHeight(out targetHeight)
+                && targetHeight > CollapsedEditorHeight + 8)
             {
                 break;
             }
@@ -413,11 +498,19 @@ public partial class MainPage : ContentPage
             {
                 0 => 16,
                 1 => 32,
-                _ => 48
+                2 => 48,
+                _ => 64
             });
         }
 
-        if (_isUnloaded || !GenerateInputEditor.IsFocused)
+        if (_isUnloaded
+            || generation != _editorExpandGeneration
+            || (requireFocus && !GenerateInputEditor.IsFocused))
+        {
+            return;
+        }
+
+        if (targetHeight <= CollapsedEditorHeight + 8)
         {
             return;
         }
@@ -429,12 +522,37 @@ public partial class MainPage : ContentPage
             EditorHeightAnimationName);
 
         UpdateGenerateContentInset(true);
+
+        // Layout settles after the bar grows — correct residual gap on a second pass.
+        await Task.Delay(48);
+        if (_isUnloaded
+            || generation != _editorExpandGeneration
+            || (requireFocus && !GenerateInputEditor.IsFocused))
+        {
+            return;
+        }
+
+        if (TryCalculateExpandedEditorMaxHeight(out var correctedHeight)
+            && Math.Abs(correctedHeight - GenerateInputEditor.HeightRequest) > 4)
+        {
+            await GenerateInputEditor.AnimateHeightRequestAsync(
+                correctedHeight,
+                ViewAnimationExtensions.StandardDuration,
+                ViewAnimationExtensions.StandardEase,
+                EditorHeightAnimationName);
+            UpdateGenerateContentInset(true);
+        }
     }
 
     private async void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
     {
-        UpdateInputEditorSeparatorState(isFocused: false);
-        await CollapseGenerateInputEditorAsync();
+        UpdateGenerateInputBarActiveChrome(isFocused: false);
+
+        // Collapse when inactive and empty, or when a QR result owns the space.
+        if (_viewModel.Generate.HasQrCode || !_viewModel.Generate.InputText.IsNotBlank())
+        {
+            await CollapseGenerateInputEditorAsync();
+        }
     }
 
     private async Task CollapseGenerateInputEditorAsync()
@@ -444,7 +562,8 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        UpdateInputEditorSeparatorState(isFocused: false);
+        _editorExpandGeneration++;
+        UpdateGenerateInputBarActiveChrome(isFocused: false);
 
         if (GenerateInputEditor.IsFocused)
         {
@@ -467,50 +586,61 @@ public partial class MainPage : ContentPage
 
     private void OnGenerateInputEditorCompleted(object? sender, EventArgs e)
     {
-        if (_viewModel.Generate.GenerateCommand.CanExecute(null))
-        {
-            _viewModel.Generate.GenerateCommand.Execute(null);
-        }
-
+        // Generation is only via the image button — Completed also fires on some
+        // platforms when tapping outside the editor, which must not generate.
         GenerateInputEditor.Unfocus();
     }
 
-    private double CalculateExpandedEditorMaxHeight()
+    /// <summary>
+    /// Grows the editor so the input bar top sits just below the empty-state / QR card.
+    /// Uses live layout bounds so repeated expand/collapse cycles stay correct.
+    /// </summary>
+    private bool TryCalculateExpandedEditorMaxHeight(out double maxHeight)
     {
-        if (ContentHost.Height <= 0)
+        maxHeight = CollapsedEditorHeight;
+
+        if (ContentAreaGrid.Height <= 0 || GenerateInputBar.Height <= 0)
         {
-            return CollapsedEditorHeight;
+            return false;
         }
 
-        if (!_viewModel.Generate.HasQrCode && _referenceExpandedEditorHeight is { } cachedHeight)
+        // End-aligned bar must have a real Y once laid out.
+        if (GenerateInputBar.Y <= 0 && ContentAreaGrid.Height > GenerateInputBar.Height + 24)
         {
-            return cachedHeight;
+            return false;
         }
 
-        var freeSpace = _viewModel.Generate.HasQrCode
-            ? GenerateContent.GetFreeSpaceBelowQrCard(
-                ContentHost.Height,
-                ContentHost.Padding,
-                ContentHost.Width)
-            : GenerateContent.GetFreeSpaceBelowEmptyState(
-                ContentHost.Height,
-                ContentHost.Padding);
-
-        freeSpace -= GetGenerateInputBarInset();
-
-        if (freeSpace < 0)
+        double anchorBottom;
+        if (_viewModel.Generate.HasQrCode)
         {
-            return CollapsedEditorHeight;
+            if (!GenerateContent.TryGetQrCardBottomIn(ContentAreaGrid, out anchorBottom))
+            {
+                return false;
+            }
+        }
+        else if (!GenerateContent.TryGetEmptyStateBottomIn(ContentAreaGrid, out anchorBottom))
+        {
+            return false;
         }
 
-        var maxHeight = CollapsedEditorHeight + Math.Max(0, freeSpace - ExpansionAnchorGap);
-
-        if (!_viewModel.Generate.HasQrCode)
+        var barTop = GenerateInputBar.Y;
+        var gapAboveBar = barTop - anchorBottom;
+        if (double.IsNaN(gapAboveBar) || double.IsInfinity(gapAboveBar))
         {
-            _referenceExpandedEditorHeight = maxHeight;
+            return false;
         }
 
-        return maxHeight;
+        var currentEditorHeight = GenerateInputEditor.HeightRequest > 0
+            ? GenerateInputEditor.HeightRequest
+            : CollapsedEditorHeight;
+        if (GenerateInputEditor.Height > 0)
+        {
+            currentEditorHeight = Math.Max(currentEditorHeight, GenerateInputEditor.Height);
+        }
+
+        // Positive gap → grow editor; negative → shrink so the small anchor gap remains.
+        maxHeight = Math.Max(CollapsedEditorHeight, currentEditorHeight + gapAboveBar - ExpansionAnchorGap);
+        return true;
     }
 
     private void OnImageGenTapped(object? sender, TappedEventArgs e)
@@ -524,6 +654,70 @@ public partial class MainPage : ContentPage
         {
             _viewModel.Generate.GenerateImageCommand.Execute(null);
         }
+    }
+
+    private void OnDuplicateGenerateNotified(object? sender, EventArgs e)
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        MainThread.BeginInvokeOnMainThread(() => _ = ShowDuplicateQrToastAsync());
+    }
+
+    private async Task ShowDuplicateQrToastAsync()
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        var generation = ++_duplicateToastGeneration;
+        DuplicateQrToast.AbortAnimation(DuplicateToastAnimationName);
+        DuplicateQrToast.IsVisible = true;
+        DuplicateQrToast.Opacity = 0;
+        DuplicateQrToast.TranslationY = -12;
+
+        try
+        {
+            await DuplicateQrToast.FadeSlideToAsync(
+                1,
+                0,
+                ViewAnimationExtensions.StandardDuration,
+                ViewAnimationExtensions.EnterEase);
+
+            if (_isUnloaded || generation != _duplicateToastGeneration)
+            {
+                return;
+            }
+
+            await Task.Delay(2000);
+
+            if (_isUnloaded || generation != _duplicateToastGeneration)
+            {
+                return;
+            }
+
+            await DuplicateQrToast.FadeSlideToAsync(
+                0,
+                -12,
+                ViewAnimationExtensions.StandardDuration,
+                ViewAnimationExtensions.ExitEase);
+        }
+        catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+        {
+            return;
+        }
+
+        if (_isUnloaded || generation != _duplicateToastGeneration)
+        {
+            return;
+        }
+
+        DuplicateQrToast.IsVisible = false;
+        DuplicateQrToast.Opacity = 0;
+        DuplicateQrToast.TranslationY = -12;
     }
 
     private void OnWandTapped(object? sender, TappedEventArgs e)
@@ -612,6 +806,8 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        PreparePanelsForTransition();
+
         if (!fromCurrentPosition)
         {
             SyncTabPositions();
@@ -635,6 +831,7 @@ public partial class MainPage : ContentPage
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
             _isTabAnimating = false;
+            SyncTabPositions();
             return;
         }
 
@@ -647,6 +844,30 @@ public partial class MainPage : ContentPage
         _displayedTab = newTab;
         UpdateGenerateContentInset(_displayedTab is AppTab.Generate);
         _isTabAnimating = false;
+        SyncTabPositions();
+    }
+
+    private void PreparePanelsForTransition()
+    {
+        var width = ContentHost.Width;
+        if (width <= 0)
+        {
+            return;
+        }
+
+        // Mount both panels before translating. On Android the camera SurfaceView can keep
+        // stealing hits if the inactive panel stays in the tree after a swipe.
+        ScanPanel.IsVisible = true;
+        GeneratePanel.IsVisible = true;
+        ScanPanel.InputTransparent = false;
+        GeneratePanel.InputTransparent = false;
+        ScanPanel.Opacity = 1;
+        GeneratePanel.Opacity = 1;
+
+        if (Math.Abs(ScanPanel.TranslationX) < 0.5 && Math.Abs(GeneratePanel.TranslationX) < 0.5)
+        {
+            SyncTabPositions();
+        }
     }
 
     private void SyncTabPositions(double panOffset = 0)
@@ -660,25 +881,60 @@ public partial class MainPage : ContentPage
             GeneratePanel.TranslationX = 0;
             ScanPanel.Opacity = 1;
             GeneratePanel.Opacity = 1;
+            ScanPanel.InputTransparent = _displayedTab is not AppTab.Scan;
+            GeneratePanel.InputTransparent = _displayedTab is not AppTab.Generate;
             return;
         }
 
+        var transitioning = _isPanning || _isTabAnimating || Math.Abs(panOffset) > 0.5;
+
+        if (transitioning)
+        {
+            ScanPanel.IsVisible = true;
+            GeneratePanel.IsVisible = true;
+            ScanPanel.InputTransparent = false;
+            GeneratePanel.InputTransparent = false;
+
+            switch (_displayedTab)
+            {
+                case AppTab.Scan:
+                    ScanPanel.TranslationX = panOffset;
+                    GeneratePanel.TranslationX = width + panOffset;
+                    break;
+                case AppTab.Generate:
+                    ScanPanel.TranslationX = -width + panOffset;
+                    GeneratePanel.TranslationX = panOffset;
+                    break;
+            }
+
+            ScanPanel.Opacity = 1;
+            GeneratePanel.Opacity = 1;
+            return;
+        }
+
+        // Settled: hide the inactive panel so Android camera/native views cannot intercept input.
         switch (_displayedTab)
         {
             case AppTab.Scan:
-                ScanPanel.TranslationX = panOffset;
-                GeneratePanel.TranslationX = width + panOffset;
+                ScanPanel.TranslationX = 0;
+                GeneratePanel.TranslationX = width;
+                ScanPanel.IsVisible = true;
+                GeneratePanel.IsVisible = false;
+                ScanPanel.InputTransparent = false;
+                GeneratePanel.InputTransparent = true;
                 break;
             case AppTab.Generate:
-                ScanPanel.TranslationX = -width + panOffset;
-                GeneratePanel.TranslationX = panOffset;
+                ScanPanel.TranslationX = -width;
+                GeneratePanel.TranslationX = 0;
+                ScanPanel.IsVisible = false;
+                GeneratePanel.IsVisible = true;
+                ScanPanel.InputTransparent = true;
+                GeneratePanel.InputTransparent = false;
                 break;
         }
 
         ScanPanel.Opacity = 1;
         GeneratePanel.Opacity = 1;
-        ScanPanel.IsVisible = true;
-        GeneratePanel.IsVisible = true;
     }
 
     private void OnContentPanUpdated(object? sender, PanUpdatedEventArgs e)
@@ -700,6 +956,7 @@ public partial class MainPage : ContentPage
                 _isPanning = true;
                 _swipeIsHorizontal = false;
                 _panTotalX = 0;
+                PreparePanelsForTransition();
                 GenerateInputEditor.Unfocus();
                 break;
 
@@ -749,6 +1006,7 @@ public partial class MainPage : ContentPage
                 {
                     _swipeIsHorizontal = false;
                     _panTotalX = 0;
+                    SyncTabPositions();
                     return;
                 }
 
@@ -795,6 +1053,9 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        _isTabAnimating = true;
+        PreparePanelsForTransition();
+
         var targetScanX = _displayedTab is AppTab.Scan ? 0 : -width;
         var targetGenerateX = _displayedTab is AppTab.Scan ? width : 0;
 
@@ -807,6 +1068,9 @@ public partial class MainPage : ContentPage
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
         }
+
+        _isTabAnimating = false;
+        SyncTabPositions();
     }
 
     private async Task SetGenerateInputBarVisibleAsync(bool show)
@@ -825,6 +1089,14 @@ public partial class MainPage : ContentPage
             {
                 UpdateGenerateContentInset(true);
                 UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
+
+                if (!_viewModel.Generate.HasQrCode
+                    && _viewModel.Generate.InputText.IsNotBlank()
+                    && GenerateInputEditor.HeightRequest <= CollapsedEditorHeight + 8)
+                {
+                    _ = ExpandGenerateInputEditorAsync(requireFocus: false);
+                }
+
                 return;
             }
 
@@ -862,6 +1134,12 @@ public partial class MainPage : ContentPage
             GenerateInputBar.InputTransparent = false;
             UpdateGenerateContentInset(true);
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
+
+            if (!_viewModel.Generate.HasQrCode && _viewModel.Generate.InputText.IsNotBlank())
+            {
+                _ = ExpandGenerateInputEditorAsync(requireFocus: false);
+            }
+
             return;
         }
 
@@ -1068,6 +1346,20 @@ public partial class MainPage : ContentPage
         ThemesHeaderButton.Style = (Style)resources[isGlass ? "GlassHeaderIconButton" : "IconButton"];
         HistoryHeaderButton.Style = (Style)resources[isGlass ? "GlassHeaderIconButton" : "AccentIconButton"];
 
+        // Glass header chrome uses frosted fills only; drop any leftover Intensity from other styles.
+        if (isGlass)
+        {
+            if (ThemesHeaderButton.IsSet(GlassEffect.IntensityProperty))
+            {
+                ThemesHeaderButton.ClearValue(GlassEffect.IntensityProperty);
+            }
+
+            if (HistoryHeaderButton.IsSet(GlassEffect.IntensityProperty))
+            {
+                HistoryHeaderButton.ClearValue(GlassEffect.IntensityProperty);
+            }
+        }
+
         var accent = (Color)resources["Accent"];
         ThemesHeaderIcon.IconColor = accent;
         HistoryHeaderIcon.IconColor = isGlass ? accent : Colors.White;
@@ -1078,15 +1370,26 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        ApplyGlassPanelShadow(HistoryOverlayPanel);
-        ApplyGlassPanelShadow(ThemesOverlayPanel);
+        if (!BorderShimmer.GetIsEnabled(HistoryOverlayPanel))
+        {
+            ApplyGlassPanelShadow(HistoryOverlayPanel);
+        }
+
+        if (!BorderShimmer.GetIsEnabled(ThemesOverlayPanel))
+        {
+            ApplyGlassPanelShadow(ThemesOverlayPanel);
+        }
     }
 
     private static void ClearGlassPanelChrome(params Border[] borders)
     {
         foreach (var border in borders)
         {
-            border.ClearValue(VisualElement.ShadowProperty);
+            if (!BorderShimmer.GetIsEnabled(border))
+            {
+                border.ClearValue(VisualElement.ShadowProperty);
+            }
+
             if (border.IsSet(GlassEffect.IntensityProperty))
             {
                 border.ClearValue(GlassEffect.IntensityProperty);
@@ -1098,6 +1401,11 @@ public partial class MainPage : ContentPage
 
     private static void ApplyGlassPanelShadow(Border panel)
     {
+        if (BorderShimmer.GetIsEnabled(panel))
+        {
+            return;
+        }
+
         if (Application.Current?.Resources.TryGetValue("GlassVisualEffects", out var value) != true
             || value is not GlassVisualEffects effects)
         {

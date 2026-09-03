@@ -52,45 +52,51 @@ function Get-VersionName {
 
 function Publish-Windows {
     $output = Join-Path $BuildRoot "windows"
-    $binDir = Join-Path $Root "src\QRTwin\bin\$Configuration\net10.0-windows10.0.19041.0\win-x64"
     $version = Get-VersionName
 
-    Write-Host "Building Windows to $output ..."
+    Write-Host "Publishing Windows (single-file) to $output ..."
 
     Clear-BuildCache -Framework "net10.0-windows10.0.19041.0"
 
-    # dotnet publish with PublishSingleFile omits Platforms\Windows\App.xbf and crashes at startup.
-    dotnet build $Project `
-        -f net10.0-windows10.0.19041.0 `
-        -c $Configuration `
-        -p:RuntimeIdentifierOverride=win-x64 `
-        -p:WindowsPackageType=None `
-        -p:WindowsAppSDKSelfContained=true `
-        -p:SelfContained=true
-
-    if ($LASTEXITCODE -ne 0) {
-        throw "Windows build failed with exit code $LASTEXITCODE"
-    }
-
-    if (-not (Test-Path $binDir)) {
-        throw "Windows build output not found: $binDir"
-    }
-
+    # Unpackaged WinUI single-file requires IncludeAllContentForSelfExtract + EnableMsixTooling
+    # so App.xbf / PRI extract next to the host at first launch.
+    # https://learn.microsoft.com/windows/apps/package-and-deploy/unpackage-winui-app
     if (Test-Path $output) {
         Remove-Item -Path $output -Recurse -Force
     }
 
-    New-Item -ItemType Directory -Force -Path $output | Out-Null
-    Copy-Item -Path (Join-Path $binDir "*") -Destination $output -Recurse -Force
+    dotnet publish $Project `
+        -f net10.0-windows10.0.19041.0 `
+        -c $Configuration `
+        -o $output `
+        -p:RuntimeIdentifierOverride=win-x64 `
+        -p:WindowsPackageType=None `
+        -p:WindowsAppSDKSelfContained=true `
+        -p:SelfContained=true `
+        -p:PublishSingleFile=true `
+        -p:IncludeAllContentForSelfExtract=true `
+        -p:EnableMsixTooling=true
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Windows publish failed with exit code $LASTEXITCODE"
+    }
 
     $exe = Join-Path $output "qrtwin.exe"
     if (-not (Test-Path $exe)) {
-        throw "Windows executable not found: $exe"
+        $exe = Get-ChildItem -Path $output -Filter "*.exe" |
+            Where-Object { $_.Name -notlike "RestartAgent.exe" } |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1 |
+            ForEach-Object { $_.FullName }
     }
 
-    # WinApp SDK / MAUI resolve the app host by AssemblyName; renaming the .exe breaks startup.
+    if (-not $exe -or -not (Test-Path $exe)) {
+        throw "Windows executable not found in $output"
+    }
+
+    # WinApp SDK expects the host name to match AssemblyName (qrtwin.exe).
     Write-Host "Windows executable: $exe (version $version)"
-    Write-Host "Windows build complete: $output"
+    Write-Host "Windows publish complete: $output"
 }
 
 function Build-Android {

@@ -1,3 +1,4 @@
+using QRTwin.Effects;
 using QRTwin.Models;
 using QRTwin.Themes;
 
@@ -53,6 +54,7 @@ public sealed class ThemeService : IThemeService
         }
 
         AppThemeCatalog.GetPalette(themeId).ApplyTo(resources);
+        BorderShimmer.InvalidateThemeCache();
         ThemeChanged?.Invoke(this, EventArgs.Empty);
     }
 }

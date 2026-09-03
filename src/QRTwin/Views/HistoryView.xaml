@@ -11,14 +11,17 @@
              HorizontalOptions="Fill"
              VerticalOptions="Fill">
 
-  <Grid RowDefinitions="*,Auto" RowSpacing="12">
+  <Grid RowDefinitions="*,Auto">
 
     <Grid Grid.Row="0">
+      <!-- ScrollView is edge-to-edge; item padding keeps content inset while scrollbar hugs the Border. -->
       <ScrollView IsVisible="{Binding HasEntries}"
-                  VerticalOptions="Fill">
+                  VerticalOptions="Fill"
+                  VerticalScrollBarVisibility="Default"
+                  HorizontalScrollBarVisibility="Never">
         <VerticalStackLayout BindableLayout.ItemsSource="{Binding EntryItems}"
                              Spacing="8"
-                             Padding="0,0,0,4">
+                             Padding="20,4,20,16">
           <BindableLayout.ItemTemplate>
             <DataTemplate x:DataType="vm:HistoryEntryItem">
               <views:HistoryEntryCard />
@@ -34,7 +37,7 @@
                            Padding="24">
         <Border WidthRequest="64"
                 HeightRequest="64"
-                StrokeShape="RoundRectangle 18"
+                StrokeShape="RoundRectangle 10"
                 BackgroundColor="{DynamicResource AccentSoft}">
           <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
                                 IconColor="{DynamicResource Accent}"
@@ -56,6 +59,7 @@
             Text="Очистить всё"
             Style="{StaticResource SecondaryButton}"
             TextColor="{DynamicResource Danger}"
+            Margin="20,8,20,20"
             IsVisible="{Binding HasEntries}"
             Command="{Binding ClearAllCommand}" />
   </Grid>

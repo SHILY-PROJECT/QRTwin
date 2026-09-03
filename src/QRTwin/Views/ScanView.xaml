@@ -14,33 +14,39 @@
   <Grid>
 
     <!-- Scanner area -->
-    <Border
-            Style="{StaticResource GlassCard}"
+    <Border Style="{StaticResource GlassCard}"
             Padding="0"
             Stroke="{DynamicResource Accent}"
-            StrokeThickness="1.5">
+            StrokeThickness="1.5"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
       <Grid RowDefinitions="Auto,*">
 
         <Label Grid.Row="0"
                Text="Наведите камеру на QR-код"
                Style="{StaticResource SubtitleLabel}"
                HorizontalTextAlignment="Center"
-               Margin="0,16,0,8" />
+               Margin="16,16,16,8"
+               LineBreakMode="WordWrap" />
 
-        <Grid Grid.Row="1"
-              MinimumHeightRequest="280"
-              VerticalOptions="Fill">
+        <Grid x:Name="ScannerHost"
+              Grid.Row="1"
+              Padding="16"
+              VerticalOptions="Fill"
+              HorizontalOptions="Fill">
 
           <!-- No permission / error state -->
           <VerticalStackLayout IsVisible="{Binding HasCameraPermission, Converter={StaticResource InvertedBoolConverter}}"
                                VerticalOptions="Center"
                                HorizontalOptions="Center"
                                Spacing="16"
-                               Padding="24">
+                               Padding="24"
+                               MaximumWidthRequest="420">
             <Border WidthRequest="72"
                     HeightRequest="72"
-                    StrokeShape="RoundRectangle 20"
-                    BackgroundColor="{DynamicResource AccentSoft}">
+                    StrokeShape="RoundRectangle 10"
+                    BackgroundColor="{DynamicResource AccentSoft}"
+                    HorizontalOptions="Center">
               <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Scan}"
                                     IconColor="{DynamicResource Accent}"
                                     WidthRequest="36"
@@ -59,18 +65,18 @@
                     HorizontalOptions="Center" />
           </VerticalStackLayout>
 
-          <!-- Scanner frame -->
+          <!-- Adaptive square scanner frame (size set from ScannerHost.SizeChanged) -->
           <Border x:Name="ScannerFrame"
                   IsVisible="{Binding HasCameraPermission}"
-                  HorizontalOptions="Fill"
-                  VerticalOptions="Fill"
-                  WidthRequest="{OnPlatform WinUI=360, Default=-1}"
-                  HeightRequest="{OnPlatform WinUI=360, Default=-1}"
+                  HorizontalOptions="Center"
+                  VerticalOptions="Center"
                   Background="Transparent"
                   Stroke="{DynamicResource Accent}"
                   StrokeThickness="2"
-                  StrokeShape="RoundRectangle 24">
-            <Grid x:Name="ScannerContent">
+                  StrokeShape="RoundRectangle 10"
+                  effects:BorderShimmer.IsEnabled="True">
+            <Grid x:Name="ScannerContent"
+                  IsClippedToBounds="True">
               <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
                                              BarcodesDetected="OnBarcodesDetected"
                                              IsDetecting="{Binding IsScanning}"
@@ -80,24 +86,25 @@
                                              HeightRequest="{OnPlatform Android=-1, Default=1}"
                                              HorizontalOptions="{OnPlatform Android=Fill, Default=Start}"
                                              VerticalOptions="{OnPlatform Android=Fill, Default=Start}"
-                                             InputTransparent="{OnPlatform Android=False, Default=True}" />
+                                             InputTransparent="True" />
 
-              <VerticalStackLayout Spacing="12"
-                                   VerticalOptions="Center"
-                                   HorizontalOptions="Center"
-                                   Padding="20"
-                                   IsVisible="{Binding ShowSamplePreview}">
+              <!-- Sample preview: title / QR+beam / caption — beam never overlaps caption -->
+              <Grid IsVisible="{Binding ShowSamplePreview}"
+                    Padding="16"
+                    RowDefinitions="Auto,*,Auto"
+                    RowSpacing="10">
                 <Label Text="Пример QR-кода"
                        Style="{StaticResource SubtitleLabel}"
                        HorizontalTextAlignment="Center"
-                       FontSize="13" />
+                       FontSize="13"
+                       LineBreakMode="TailTruncation" />
 
                 <Grid x:Name="QrScanArea"
-                      WidthRequest="{OnPlatform WinUI=220, Default=200}"
-                      HeightRequest="{OnPlatform WinUI=220, Default=200}"
-                      HorizontalOptions="Center">
+                      Grid.Row="1"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center">
                   <Border BackgroundColor="#FFFFFF"
-                          StrokeShape="RoundRectangle 16"
+                          StrokeShape="RoundRectangle 10"
                           Padding="10"
                           HorizontalOptions="Fill"
                           VerticalOptions="Fill">
@@ -107,18 +114,42 @@
                            HorizontalOptions="Fill"
                            VerticalOptions="Fill" />
                   </Border>
+
+                  <Grid x:Name="SampleScanOverlay"
+                        IsVisible="{Binding ShowScanAnimation}"
+                        InputTransparent="True"
+                        IsClippedToBounds="True">
+                    <BoxView x:Name="SampleScanLine"
+                             Background="{DynamicResource ScannerBeamBrush}"
+                             HeightRequest="56"
+                             HorizontalOptions="Fill"
+                             VerticalOptions="Start"
+                             Opacity="1"
+                             InputTransparent="True" />
+                  </Grid>
                 </Grid>
 
-                <Label Text="Наведите камеру на любой QR-код"
+                <Label Grid.Row="2"
+                       Text="Наведите камеру на любой QR-код"
                        TextColor="{DynamicResource MutedText}"
                        FontSize="12"
-                       HorizontalTextAlignment="Center" />
-              </VerticalStackLayout>
+                       HorizontalTextAlignment="Center"
+                       LineBreakMode="WordWrap" />
+              </Grid>
 
+              <!-- Camera beam (Android): sweeps the full viewfinder -->
               <Grid x:Name="CameraScanOverlay"
                     IsVisible="{Binding ShowScanAnimation}"
-                    InputTransparent="True">
-                <BoxView x:Name="ScanLine"
+                    InputTransparent="True"
+                    IsClippedToBounds="True">
+                <Grid.Triggers>
+                  <DataTrigger TargetType="Grid"
+                               Binding="{Binding ShowSamplePreview}"
+                               Value="True">
+                    <Setter Property="IsVisible" Value="False" />
+                  </DataTrigger>
+                </Grid.Triggers>
+                <BoxView x:Name="CameraScanLine"
                          Background="{DynamicResource ScannerBeamBrush}"
                          HeightRequest="56"
                          HorizontalOptions="Fill"
@@ -129,52 +160,62 @@
 
               <Grid IsVisible="{Binding HasResult}"
                     BackgroundColor="#CC000000"
-                    Padding="24">
+                    Padding="20">
                 <VerticalStackLayout VerticalOptions="Center"
-                                     HorizontalOptions="Center"
+                                     HorizontalOptions="Fill"
                                      Spacing="16"
-                                     MaximumWidthRequest="320">
+                                     MaximumWidthRequest="360">
                   <Label Text="Результат"
                          Style="{StaticResource HeaderLabel}"
                          FontSize="18"
                          HorizontalTextAlignment="Center" />
 
-                  <Grid ColumnDefinitions="*,Auto"
-                        ColumnSpacing="12">
-                    <Label Grid.Column="0"
-                           Text="{Binding ScanResult}"
-                           TextColor="{DynamicResource Accent}"
-                           FontSize="15"
-                           LineBreakMode="WordWrap"
-                           HorizontalTextAlignment="Center">
-                      <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding OpenUrlCommand}" />
-                      </Label.GestureRecognizers>
-                      <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding IsUrl}"
-                                     Value="False">
-                          <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
-                        </DataTrigger>
-                      </Label.Triggers>
-                    </Label>
+                  <Label Text="{Binding ScanResult}"
+                         TextColor="{DynamicResource Accent}"
+                         FontSize="15"
+                         LineBreakMode="WordWrap"
+                         HorizontalTextAlignment="Center">
+                    <Label.GestureRecognizers>
+                      <TapGestureRecognizer Command="{Binding OpenUrlCommand}" />
+                    </Label.GestureRecognizers>
+                    <Label.Triggers>
+                      <DataTrigger TargetType="Label"
+                                   Binding="{Binding IsUrl}"
+                                   Value="False">
+                        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
+                      </DataTrigger>
+                    </Label.Triggers>
+                  </Label>
+
+                  <Grid ColumnDefinitions="8*,2*"
+                        ColumnSpacing="8"
+                        HorizontalOptions="Fill">
+                    <Button Grid.Column="0"
+                            Text="Сканировать снова"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalOptions="Fill"
+                            Command="{Binding ResetScanCommand}" />
 
                     <Border Grid.Column="1"
                             Style="{StaticResource IconButton}"
                             BackgroundColor="{DynamicResource AccentSoft}"
-                            VerticalOptions="Start">
+                            WidthRequest="-1"
+                            HeightRequest="-1"
+                            MinimumHeightRequest="52"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill"
+                            Padding="0">
                       <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding CopyResultCommand}" />
                       </Border.GestureRecognizers>
                       <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Copy}"
-                                            IconColor="{DynamicResource Accent}" />
+                                            IconColor="{DynamicResource Accent}"
+                                            WidthRequest="22"
+                                            HeightRequest="22"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
                     </Border>
                   </Grid>
-
-                  <Button Text="Сканировать снова"
-                          Style="{StaticResource SecondaryButton}"
-                          HorizontalOptions="Fill"
-                          Command="{Binding ResetScanCommand}" />
                 </VerticalStackLayout>
               </Grid>
             </Grid>

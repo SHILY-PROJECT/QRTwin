@@ -1,7 +1,4 @@
 #if ANDROID
-using Android.Graphics;
-using Android.Views;
-using Android.Widget;
 using AView = Android.Views.View;
 
 namespace QRTwin.Effects;
@@ -10,19 +7,9 @@ public static partial class GlassBlur
 {
     static partial void ApplyPlatform(VisualElement element, float radius)
     {
-        if (element.Handler?.PlatformView is not AView nativeView)
-        {
-            return;
-        }
-
-        if (!OperatingSystem.IsAndroidVersionAtLeast(31))
-        {
-            return;
-        }
-
-        var blurRadius = Math.Clamp(radius, 0f, 32f);
-        nativeView.SetRenderEffect(
-            RenderEffect.CreateBlurEffect(blurRadius, blurRadius, Shader.TileMode.Clamp!));
+        // Android RenderEffect blur is content blur (children become unreadable), not backdrop
+        // blur. Match Windows: rely on frosted SurfaceGlass fills + bloom shadows instead.
+        ClearPlatform(element);
     }
 
     static partial void ClearPlatform(VisualElement element)

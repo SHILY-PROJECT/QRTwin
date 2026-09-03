@@ -31,24 +31,135 @@ public partial class GenerateView : ContentView
         return hostHeight - hostPadding.Top - hostPadding.Bottom - StackTopPadding - qrHeight;
     }
 
-    public double GetFreeSpaceBelowEmptyState(double hostHeight, Thickness hostPadding)
+    public bool TryGetEmptyStateBottomIn(VisualElement ancestor, out double bottom)
     {
+        bottom = 0;
+
         if (BindingContext is GenerateViewModel { HasQrCode: true })
         {
-            return 0;
+            return false;
         }
 
+        var cardHeight = MeasureEmptyStateCardHeight(ancestor.Width > 0 ? ancestor.Width : Width);
+        if (cardHeight <= 0)
+        {
+            return false;
+        }
+
+        if (EmptyStateCard.IsVisible
+            && EmptyStateCard.Width > 0
+            && TryGetOffsetToAncestor(EmptyStateCard, ancestor, out _, out var offsetY))
+        {
+            bottom = offsetY + (EmptyStateCard.Height > 0 ? EmptyStateCard.Height : cardHeight);
+            return true;
+        }
+
+        // Fall back before first layout: empty state sits near the top of this view.
+        if (!TryGetOffsetToAncestor(this, ancestor, out _, out var viewTop))
+        {
+            return false;
+        }
+
+        bottom = viewTop + StackTopPadding + cardHeight;
+        return true;
+    }
+
+    public bool TryGetQrCardBottomIn(VisualElement ancestor, out double bottom)
+    {
+        bottom = 0;
+
+        if (BindingContext is not GenerateViewModel { HasQrCode: true } || !QrCard.IsVisible)
+        {
+            return false;
+        }
+
+        var cardHeight = MeasureQrCardHeight(ancestor.Width > 0 ? ancestor.Width : Width);
+        if (cardHeight <= 0)
+        {
+            return false;
+        }
+
+        if (QrCard.Width > 0
+            && TryGetOffsetToAncestor(QrCard, ancestor, out _, out var offsetY))
+        {
+            bottom = offsetY + (QrCard.Height > 0 ? QrCard.Height : cardHeight);
+            return true;
+        }
+
+        if (!TryGetOffsetToAncestor(this, ancestor, out _, out var viewTop))
+        {
+            return false;
+        }
+
+        bottom = viewTop + StackTopPadding + cardHeight;
+        return true;
+    }
+
+    private double MeasureEmptyStateCardHeight(double hostWidth)
+    {
         if (EmptyStateCard.IsVisible && EmptyStateCard.Height > 0)
         {
-            var cardBottom = StackTopPadding + EmptyStateCard.Y + EmptyStateCard.Height;
-            var innerHeight = hostHeight - hostPadding.Top - hostPadding.Bottom;
-            return innerHeight - cardBottom;
+            return EmptyStateCard.Height;
         }
 
-        var contentHeight = Math.Max(0, hostHeight - hostPadding.Top - hostPadding.Bottom);
-        var anchorBottom = StackTopPadding + (contentHeight / 2) + (280 / 2);
-        return contentHeight - anchorBottom;
+        var width = hostWidth > 0 ? hostWidth : Width;
+        if (width > 0)
+        {
+            EmptyStateCard.Measure(width, double.PositiveInfinity);
+            if (EmptyStateCard.DesiredSize.Height > 0)
+            {
+                return EmptyStateCard.DesiredSize.Height;
+            }
+        }
+
+        return Math.Max(280, EmptyStateCard.MinimumHeightRequest);
     }
+
+    private static bool TryGetOffsetToAncestor(
+        VisualElement view,
+        VisualElement ancestor,
+        out double offsetX,
+        out double offsetY)
+    {
+        offsetX = 0;
+        offsetY = 0;
+
+        VisualElement? current = view;
+        while (current is not null && !ReferenceEquals(current, ancestor))
+        {
+            offsetX += current.X + current.TranslationX;
+            offsetY += current.Y + current.TranslationY;
+
+            if (current.Parent is ScrollView scrollView)
+            {
+                offsetY -= scrollView.ScrollY;
+                offsetX -= scrollView.ScrollX;
+            }
+
+            if (current.Parent is not VisualElement parent)
+            {
+                return false;
+            }
+
+            // Child X/Y are relative to the parent's padded content area.
+            var padding = GetElementPadding(parent);
+            offsetX += padding.Left;
+            offsetY += padding.Top;
+            current = parent;
+        }
+
+        return ReferenceEquals(current, ancestor);
+    }
+
+    private static Thickness GetElementPadding(VisualElement element) =>
+        element switch
+        {
+            Layout layout => layout.Padding,
+            Border border => border.Padding,
+            ContentView contentView => contentView.Padding,
+            ScrollView scrollView => scrollView.Padding,
+            _ => Thickness.Zero
+        };
 
     private double MeasureQrCardHeight(double hostWidth)
     {

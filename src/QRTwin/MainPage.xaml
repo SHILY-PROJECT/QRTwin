@@ -33,7 +33,7 @@
           ColumnSpacing="12">
       <Border WidthRequest="44"
               HeightRequest="44"
-              StrokeShape="RoundRectangle 14"
+              StrokeShape="RoundRectangle 10"
               Background="{DynamicResource AccentGradientBrush}"
               effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}">
         <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
@@ -48,14 +48,18 @@
         <Label Text="QRTwin"
                FontSize="22"
                FontAttributes="Bold"
-               TextColor="{DynamicResource PrimaryText}" />
+               TextColor="{DynamicResource PrimaryText}"
+               LineBreakMode="TailTruncation" />
         <HorizontalStackLayout Spacing="0" VerticalOptions="Center">
-          <Label Text="Сканируйте и создавайте QR-коды | "
-                 Style="{StaticResource CaptionLabel}" />
+          <Label Text="Сканируйте и создавайте QR-коды |"
+                 Style="{StaticResource CaptionLabel}"
+                 LineBreakMode="TailTruncation"
+                 MaxLines="1"
+                 VerticalOptions="Center" />
           <Label x:Name="AuthorCreditLabel"
                  Text=" by MrSHILY"
                  Style="{StaticResource CaptionLabel}"
-                 Padding="0,0,4,0">
+                 VerticalOptions="Center">
             <Label.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnAuthorCreditTapped" />
             </Label.GestureRecognizers>
@@ -88,6 +92,32 @@
         </Border>
       </HorizontalStackLayout>
     </Grid>
+
+    <!-- Duplicate generate toast -->
+    <Border x:Name="DuplicateQrToast"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Style="{StaticResource GlassCard}"
+            Stroke="{DynamicResource Accent}"
+            StrokeThickness="1.5"
+            Margin="16,12"
+            Padding="16,12"
+            MaximumWidthRequest="720"
+            HorizontalOptions="Fill"
+            VerticalOptions="Start"
+            ZIndex="200"
+            IsVisible="False"
+            Opacity="0"
+            InputTransparent="True"
+            TranslationY="-12">
+      <Label x:Name="DuplicateQrToastLabel"
+             Text="Вы только что сгенерировали такой QR-код"
+             TextColor="{DynamicResource PrimaryText}"
+             FontSize="14"
+             FontAttributes="Bold"
+             HorizontalTextAlignment="Center"
+             LineBreakMode="WordWrap" />
+    </Border>
 
     <!-- Main content area + floating generate input -->
     <Grid x:Name="ContentAreaGrid"
@@ -127,7 +157,7 @@
         <VerticalStackLayout Spacing="0">
           <Editor x:Name="GenerateInputEditor"
                   Style="{StaticResource InputEditor}"
-                  Margin="12,4,12,0"
+                  Margin="0,4,0,0"
                   HeightRequest="44"
                   BackgroundColor="Transparent"
                   Placeholder="Введите текст или ссылку..."
@@ -137,14 +167,13 @@
                   Completed="OnGenerateInputEditorCompleted" />
 
           <BoxView x:Name="InputEditorSeparator"
-                   HeightRequest="1"
-                   Margin="12,8,12,8"
+                   HeightRequest="1.5"
+                   Margin="0,8"
                    HorizontalOptions="Fill"
-                   Color="{DynamicResource Border}" />
+                   Color="{DynamicResource BorderLight}" />
 
           <Grid ColumnDefinitions="8*,2*"
                 ColumnSpacing="8"
-                Margin="12,0,12,0"
                 HorizontalOptions="Fill">
             <Border x:Name="ImageGenButton"
                     Grid.Column="0"
@@ -153,17 +182,25 @@
                 <TapGestureRecognizer Tapped="OnImageGenTapped" />
               </Border.GestureRecognizers>
               <Grid>
-                <Border x:Name="ImageGenButtonGlow"
-                        Background="{DynamicResource AccentGradientBrush}"
-                        StrokeShape="RoundRectangle 10"
-                        Opacity="0"
-                        InputTransparent="True"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill"
-                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <BoxView x:Name="ImageGenButtonGlow"
+                         Color="{DynamicResource Accent}"
+                         CornerRadius="10"
+                         Opacity="0"
+                         InputTransparent="True"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill" />
                 <controls:SvgIconView x:Name="ImageGenIcon"
                                       IconName="{x:Static helpers:IconPaths.Image}"
                                       IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+                <controls:SvgIconView x:Name="ImageGenIconLit"
+                                      IconName="{x:Static helpers:IconPaths.Image}"
+                                      IconColor="White"
+                                      Opacity="0"
                                       WidthRequest="24"
                                       HeightRequest="24"
                                       HorizontalOptions="Center"
@@ -179,17 +216,25 @@
                 <TapGestureRecognizer Tapped="OnWandTapped" />
               </Border.GestureRecognizers>
               <Grid>
-                <Border x:Name="WandButtonGlow"
-                        Background="{DynamicResource AccentGradientBrush}"
-                        StrokeShape="RoundRectangle 10"
-                        Opacity="0"
-                        InputTransparent="True"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill"
-                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <BoxView x:Name="WandButtonGlow"
+                         Color="{DynamicResource Accent}"
+                         CornerRadius="10"
+                         Opacity="0"
+                         InputTransparent="True"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill" />
                 <controls:SvgIconView x:Name="WandIcon"
                                       IconName="{x:Static helpers:IconPaths.Wand}"
                                       IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+                <controls:SvgIconView x:Name="WandIconLit"
+                                      IconName="{x:Static helpers:IconPaths.Wand}"
+                                      IconColor="White"
+                                      Opacity="0"
                                       WidthRequest="24"
                                       HeightRequest="24"
                                       HorizontalOptions="Center"
@@ -208,7 +253,7 @@
             Style="{StaticResource GlassChromeBar}"
             Margin="16,0,16,20"
             Padding="4"
-            StrokeShape="RoundRectangle 24"
+            StrokeShape="RoundRectangle 10"
             MaximumWidthRequest="720"
             HorizontalOptions="Fill">
       <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
@@ -217,17 +262,24 @@
           <Border.GestureRecognizers>
             <TapGestureRecognizer Tapped="OnScanTabTapped" />
           </Border.GestureRecognizers>
-          <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+          <Grid ColumnDefinitions="Auto,*"
+                ColumnSpacing="8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
             <controls:SvgIconView x:Name="ScanTabIcon"
                                   IconName="{x:Static helpers:IconPaths.Scan}"
                                   WidthRequest="20"
-                                  HeightRequest="20" />
-            <Label Text="Сканировать"
+                                  HeightRequest="20"
+                                  VerticalOptions="Center" />
+            <Label Grid.Column="1"
+                   Text="Сканировать"
                    FontSize="14"
                    FontAttributes="Bold"
                    VerticalOptions="Center"
+                   LineBreakMode="TailTruncation"
+                   MaxLines="1"
                    x:Name="ScanTabLabel" />
-          </HorizontalStackLayout>
+          </Grid>
         </Border>
 
         <Border Grid.Column="1"
@@ -236,17 +288,24 @@
           <Border.GestureRecognizers>
             <TapGestureRecognizer Tapped="OnGenerateTabTapped" />
           </Border.GestureRecognizers>
-          <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+          <Grid ColumnDefinitions="Auto,*"
+                ColumnSpacing="8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
             <controls:SvgIconView x:Name="GenerateTabIcon"
                                   IconName="{x:Static helpers:IconPaths.Generate}"
                                   WidthRequest="20"
-                                  HeightRequest="20" />
-            <Label Text="Генерировать"
+                                  HeightRequest="20"
+                                  VerticalOptions="Center" />
+            <Label Grid.Column="1"
+                   Text="Генерировать"
                    FontSize="14"
                    FontAttributes="Bold"
                    VerticalOptions="Center"
+                   LineBreakMode="TailTruncation"
+                   MaxLines="1"
                    x:Name="GenerateTabLabel" />
-          </HorizontalStackLayout>
+          </Grid>
         </Border>
       </Grid>
     </Border>
@@ -274,8 +333,9 @@
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
-                RowSpacing="18">
+                RowSpacing="0">
             <Grid Grid.Row="0"
+                  Padding="20,20,20,12"
                   ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
               <Label Text="История"
@@ -330,8 +390,9 @@
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
-                RowSpacing="18">
+                RowSpacing="0">
             <Grid Grid.Row="0"
+                  Padding="20,20,20,12"
                   ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
               <Label Text="Темы"

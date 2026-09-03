@@ -12,20 +12,20 @@ public static class AppThemeCatalog
 {
     public const string PreferenceKey = "AppThemeId";
 
-    public static AppThemeId DefaultThemeId => AppThemeId.Neon;
+    public static AppThemeId DefaultThemeId => AppThemeId.Classic;
 
     public static IReadOnlyList<AppThemeDescriptor> All { get; } =
     [
-        new(
-            AppThemeId.Neon,
-            "Неон",
-            "Градиент иконки QRTwin: голубой, синий и фиолетовый",
-            CreateNeonPalette),
         new(
             AppThemeId.Classic,
             "Классика",
             "Тёмная тема с оранжевыми акцентами",
             CreateClassicPalette),
+        new(
+            AppThemeId.Neon,
+            "Неон",
+            "Градиент иконки QRTwin: голубой, синий и фиолетовый",
+            CreateNeonPalette),
         new(
             AppThemeId.Glass,
             "Стекло",
