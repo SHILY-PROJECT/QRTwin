@@ -37,6 +37,7 @@ public partial class MainPage : ContentPage
     private int _inputButtonAnimationGeneration;
     private int _editorExpandGeneration;
     private bool _inputButtonsAreActive;
+    private bool _inputEditorIsFocused;
     private bool _swipeIsHorizontal;
     private double _panTotalX;
 
@@ -57,7 +58,7 @@ public partial class MainPage : ContentPage
         UpdateHeaderAndOverlayChrome();
         SyncTabPositions();
         UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
-        UpdateInputEditorSeparatorState(isFocused: false);
+        UpdateGenerateInputBarActiveChrome(isFocused: false);
         ContentHost.SizeChanged += OnContentHostSizeChanged;
         UpdateContentHostClip();
 
@@ -87,7 +88,7 @@ public partial class MainPage : ContentPage
             UpdateTabVisuals(_viewModel.SelectedTab);
             UpdateHeaderAndOverlayChrome();
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
-            UpdateInputEditorSeparatorState(GenerateInputEditor.IsFocused);
+            UpdateGenerateInputBarActiveChrome(GenerateInputEditor.IsFocused);
 
             if (_historyOverlayUiVisible)
             {
@@ -326,11 +327,13 @@ public partial class MainPage : ContentPage
 
     private Task AnimateInputButtonStrokeAsync(Border button, bool active, uint duration, Easing easing)
     {
-        var borderLight = (Color)Application.Current!.Resources["BorderLight"];
+        var accent = (Color)Application.Current!.Resources["Accent"];
         var fromThickness = button.StrokeThickness;
-        var toThickness = active ? 0.0 : 1.0;
+        // Stroke only when the field is focused and empty; glowing buttons have no outline.
+        var showOutline = _inputEditorIsFocused && !active;
+        var toThickness = showOutline ? 1.5 : 0.0;
         var fromColor = GetBorderStrokeColor(button);
-        var toColor = active ? Colors.Transparent : borderLight;
+        var toColor = showOutline ? accent : Colors.Transparent;
         var animationName = $"{InputButtonGlowAnimationName}_Stroke_{button.GetHashCode()}";
         button.AbortAnimation(animationName);
 
@@ -354,12 +357,11 @@ public partial class MainPage : ContentPage
     private void SetActiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
     {
         button.Background = null;
-        button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
-        button.Stroke = Colors.Transparent;
-        button.StrokeThickness = 0;
-        glow.Background = (Brush)Application.Current.Resources["AccentGradientBrush"];
+        button.BackgroundColor = Colors.Transparent;
+        ApplyInputButtonStroke(button, isContentActive: true);
+        ClearInputButtonChrome(button);
+        glow.Background = (Brush)Application.Current!.Resources["AccentGradientBrush"];
         glow.Opacity = 1;
-        GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
         GlassEffect.SetIntensity(glow, GlassEffectIntensity.Normal);
         icon.IconColor = _activeIconColor;
     }
@@ -367,17 +369,71 @@ public partial class MainPage : ContentPage
     private void SetInactiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
     {
         button.Background = null;
-        button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
-        button.Stroke = (Color)Application.Current.Resources["BorderLight"];
-        button.StrokeThickness = 1;
+        button.BackgroundColor = Colors.Transparent;
+        ApplyInputButtonStroke(button, isContentActive: false);
+        ClearInputButtonChrome(button);
         glow.Opacity = 0;
-        GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
+        if (glow.IsSet(GlassEffect.IntensityProperty))
+        {
+            glow.ClearValue(GlassEffect.IntensityProperty);
+        }
+
+        GlassBlur.Clear(glow);
         icon.IconColor = _inactiveIconColor;
+    }
+
+    private void ApplyInputButtonStroke(Border button, bool isContentActive)
+    {
+        // Has text → glow only, no outline.
+        // Empty + focused → accent outline, no glow.
+        // Empty + unfocused → invisible chrome, icons only.
+        if (isContentActive || !_inputEditorIsFocused)
+        {
+            button.Stroke = Colors.Transparent;
+            button.StrokeThickness = 0;
+            return;
+        }
+
+        button.Stroke = (Color)Application.Current!.Resources["Accent"];
+        button.StrokeThickness = 1.5;
+    }
+
+    private static void ClearInputButtonChrome(Border button)
+    {
+        if (button.IsSet(GlassEffect.IntensityProperty))
+        {
+            button.ClearValue(GlassEffect.IntensityProperty);
+        }
+
+        button.ClearValue(VisualElement.ShadowProperty);
+        GlassBlur.Clear(button);
     }
 
     private void UpdateInputEditorSeparatorState(bool isFocused)
     {
         InputEditorSeparator.Color = isFocused ? _separatorActiveColor : _separatorInactiveColor;
+    }
+
+    private void UpdateGenerateInputBarActiveChrome(bool isFocused)
+    {
+        _inputEditorIsFocused = isFocused;
+        UpdateInputEditorSeparatorState(isFocused);
+
+        var accent = (Color)Application.Current!.Resources["Accent"];
+        var borderLight = (Color)Application.Current.Resources["BorderLight"];
+
+        if (isFocused)
+        {
+            GenerateInputBar.Stroke = accent;
+            GenerateInputBar.StrokeThickness = 1.5;
+        }
+        else
+        {
+            GenerateInputBar.Stroke = borderLight;
+            GenerateInputBar.StrokeThickness = 1;
+        }
+
+        ApplyInputBarButtonStatesImmediate(_inputButtonsAreActive);
     }
 
     private void OnGenerateInputEditorFocused(object? sender, FocusEventArgs e)
@@ -387,7 +443,7 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        UpdateInputEditorSeparatorState(isFocused: true);
+        UpdateGenerateInputBarActiveChrome(isFocused: true);
         _ = ExpandGenerateInputEditorAsync(requireFocus: true);
     }
 
@@ -482,7 +538,7 @@ public partial class MainPage : ContentPage
 
     private async void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
     {
-        UpdateInputEditorSeparatorState(isFocused: false);
+        UpdateGenerateInputBarActiveChrome(isFocused: false);
 
         // Without a QR the editor should keep filling the free area even when unfocused.
         // With a QR, collapse back so the result card stays primary.
@@ -500,7 +556,7 @@ public partial class MainPage : ContentPage
         }
 
         _editorExpandGeneration++;
-        UpdateInputEditorSeparatorState(isFocused: false);
+        UpdateGenerateInputBarActiveChrome(isFocused: false);
 
         if (GenerateInputEditor.IsFocused)
         {
