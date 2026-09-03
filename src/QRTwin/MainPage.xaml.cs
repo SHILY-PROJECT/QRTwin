@@ -23,8 +23,6 @@ public partial class MainPage : ContentPage
 
     private readonly MainViewModel _viewModel;
     private readonly IThemeService _themeService;
-    private Color _inactiveIconColor = null!;
-    private readonly Color _activeIconColor = Colors.White;
     private Color _separatorInactiveColor = null!;
     private Color _separatorActiveColor = null!;
     private bool _isUnloaded;
@@ -107,7 +105,6 @@ public partial class MainPage : ContentPage
 
     private void RefreshThemeColors()
     {
-        _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
         _separatorInactiveColor = (Color)Application.Current.Resources["BorderLight"];
         _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
     }
@@ -281,28 +278,28 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        // Target state must update immediately — otherwise a reverse while the
+        // fade-in is still running is treated as a no-op and glow stays on.
+        _inputButtonsAreActive = hasText;
         _ = AnimateInputBarButtonStatesAsync(hasText);
     }
 
     private void ApplyInputBarButtonStatesImmediate(bool hasText)
     {
         _inputButtonAnimationGeneration++;
-        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        ImageGenButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{ImageGenButton.GetHashCode()}");
-        WandButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{WandButton.GetHashCode()}");
+        AbortInputButtonFadeAnimations();
 
         _inputButtonsAreActive = hasText;
 
         if (hasText)
         {
-            SetActiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIcon);
-            SetActiveInputButtonFinalState(WandButton, WandButtonGlow, WandIcon);
+            SetActiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIconLit);
+            SetActiveInputButtonFinalState(WandButton, WandButtonGlow, WandIconLit);
             return;
         }
 
-        SetInactiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIcon);
-        SetInactiveInputButtonFinalState(WandButton, WandButtonGlow, WandIcon);
+        SetInactiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIconLit);
+        SetInactiveInputButtonFinalState(WandButton, WandButtonGlow, WandIconLit);
     }
 
     private async Task AnimateInputBarButtonStatesAsync(bool hasText)
@@ -313,26 +310,23 @@ public partial class MainPage : ContentPage
         }
 
         var generation = ++_inputButtonAnimationGeneration;
-        var duration = ViewAnimationExtensions.StandardDuration;
-        var fromIcon = ImageGenIcon.IconColor;
-        var toIcon = hasText ? _activeIconColor : _inactiveIconColor;
-        var targetGlow = hasText ? 1.0 : 0.0;
-        var easing = hasText ? ViewAnimationExtensions.EnterEase : ViewAnimationExtensions.ExitEase;
+        var duration = ViewAnimationExtensions.ButtonGlowDuration;
+        var easing = ViewAnimationExtensions.SoftEase;
+        var target = hasText ? 1.0 : 0.0;
 
-        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
-        ImageGenButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{ImageGenButton.GetHashCode()}");
-        WandButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{WandButton.GetHashCode()}");
+        AbortInputButtonFadeAnimations();
+
+        // Stroke color snaps; thickness stays fixed — only opacity fades.
+        ApplyInputButtonStroke(ImageGenButton, isContentActive: hasText);
+        ApplyInputButtonStroke(WandButton, isContentActive: hasText);
 
         try
         {
             await Task.WhenAll(
-                ImageGenButtonGlow.FadeToAsync(targetGlow, duration, easing),
-                WandButtonGlow.FadeToAsync(targetGlow, duration, easing),
-                ImageGenIcon.AnimateIconColorAsync(fromIcon, toIcon, duration, easing),
-                WandIcon.AnimateIconColorAsync(fromIcon, toIcon, duration, easing),
-                AnimateInputButtonStrokeAsync(ImageGenButton, hasText, duration, easing),
-                AnimateInputButtonStrokeAsync(WandButton, hasText, duration, easing));
+                FadeOpacityAsync(ImageGenButtonGlow, target, duration, easing),
+                FadeOpacityAsync(WandButtonGlow, target, duration, easing),
+                FadeOpacityAsync(ImageGenIconLit, target, duration, easing),
+                FadeOpacityAsync(WandIconLit, target, duration, easing));
         }
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
@@ -344,67 +338,67 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        ApplyInputBarButtonStatesImmediate(hasText);
+        ImageGenButtonGlow.Opacity = target;
+        WandButtonGlow.Opacity = target;
+        ImageGenIconLit.Opacity = target;
+        WandIconLit.Opacity = target;
     }
 
-    private static Color GetBorderStrokeColor(Border button) =>
-        button.Stroke is SolidColorBrush solid ? solid.Color : Colors.Transparent;
-
-    private Task AnimateInputButtonStrokeAsync(Border button, bool active, uint duration, Easing easing)
+    private void AbortInputButtonFadeAnimations()
     {
-        var accent = (Color)Application.Current!.Resources["Accent"];
-        var fromThickness = button.StrokeThickness;
-        // Stroke only when the field is focused and empty; glowing buttons have no outline.
-        var showOutline = _inputEditorIsFocused && !active;
-        var toThickness = showOutline ? 1.5 : 0.0;
-        var fromColor = GetBorderStrokeColor(button);
-        var toColor = showOutline ? accent : Colors.Transparent;
-        var animationName = $"{InputButtonGlowAnimationName}_Stroke_{button.GetHashCode()}";
-        button.AbortAnimation(animationName);
+        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        ImageGenIconLit.AbortAnimation(InputButtonGlowAnimationName);
+        WandIconLit.AbortAnimation(InputButtonGlowAnimationName);
+    }
+
+    private static Task FadeOpacityAsync(VisualElement element, double opacity, uint duration, Easing easing)
+    {
+        element.AbortAnimation(InputButtonGlowAnimationName);
+
+        var from = element.Opacity;
+        if (Math.Abs(from - opacity) < 0.005)
+        {
+            element.Opacity = opacity;
+            return Task.CompletedTask;
+        }
 
         var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-        var animation = new Animation(progress =>
-        {
-            button.Stroke = ViewAnimationExtensions.InterpolateColor(fromColor, toColor, progress);
-            button.StrokeThickness = fromThickness + ((toThickness - fromThickness) * progress);
-        });
+        new Animation(value => element.Opacity = value, from, opacity)
+            .Commit(
+                element,
+                InputButtonGlowAnimationName,
+                length: duration,
+                easing: easing,
+                finished: (_, cancelled) =>
+                {
+                    if (!cancelled)
+                    {
+                        element.Opacity = opacity;
+                    }
 
-        animation.Commit(
-            button,
-            animationName,
-            length: duration,
-            easing: easing,
-            finished: (_, _) => tcs.TrySetResult());
+                    tcs.TrySetResult();
+                });
 
         return tcs.Task;
     }
 
-    private void SetActiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
+    private void SetActiveInputButtonFinalState(Border button, VisualElement glow, VisualElement litIcon)
     {
         button.Background = null;
         button.BackgroundColor = Colors.Transparent;
         ApplyInputButtonStroke(button, isContentActive: true);
-        ClearInputButtonChrome(button);
-        glow.Background = (Brush)Application.Current!.Resources["AccentGradientBrush"];
         glow.Opacity = 1;
-        GlassEffect.SetIntensity(glow, GlassEffectIntensity.Normal);
-        icon.IconColor = _activeIconColor;
+        litIcon.Opacity = 1;
     }
 
-    private void SetInactiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
+    private void SetInactiveInputButtonFinalState(Border button, VisualElement glow, VisualElement litIcon)
     {
         button.Background = null;
         button.BackgroundColor = Colors.Transparent;
         ApplyInputButtonStroke(button, isContentActive: false);
-        ClearInputButtonChrome(button);
         glow.Opacity = 0;
-        if (glow.IsSet(GlassEffect.IntensityProperty))
-        {
-            glow.ClearValue(GlassEffect.IntensityProperty);
-        }
-
-        GlassBlur.Clear(glow);
-        icon.IconColor = _inactiveIconColor;
+        litIcon.Opacity = 0;
     }
 
     private void ApplyInputButtonStroke(Border button, bool isContentActive)
@@ -412,26 +406,15 @@ public partial class MainPage : ContentPage
         // Has text → glow only, no outline.
         // Empty + focused → accent outline, no glow.
         // Empty + unfocused → invisible chrome, icons only.
+        // Thickness stays 1.5 always so content never reflows.
+        button.StrokeThickness = 1.5;
         if (isContentActive || !_inputEditorIsFocused)
         {
             button.Stroke = Colors.Transparent;
-            button.StrokeThickness = 0;
             return;
         }
 
         button.Stroke = (Color)Application.Current!.Resources["Accent"];
-        button.StrokeThickness = 1.5;
-    }
-
-    private static void ClearInputButtonChrome(Border button)
-    {
-        if (button.IsSet(GlassEffect.IntensityProperty))
-        {
-            button.ClearValue(GlassEffect.IntensityProperty);
-        }
-
-        button.ClearValue(VisualElement.ShadowProperty);
-        GlassBlur.Clear(button);
     }
 
     private void UpdateInputEditorSeparatorState(bool isFocused)

@@ -8,10 +8,20 @@ namespace QRTwin.Controls;
 public sealed class SvgIconView : SKCanvasView
 {
     public static readonly BindableProperty IconNameProperty =
-        BindableProperty.Create(nameof(IconName), typeof(string), typeof(SvgIconView), string.Empty, propertyChanged: OnIconChanged);
+        BindableProperty.Create(
+            nameof(IconName),
+            typeof(string),
+            typeof(SvgIconView),
+            string.Empty,
+            propertyChanged: OnIconNameChanged);
 
     public static readonly BindableProperty IconColorProperty =
-        BindableProperty.Create(nameof(IconColor), typeof(Color), typeof(SvgIconView), Colors.White, propertyChanged: OnIconChanged);
+        BindableProperty.Create(
+            nameof(IconColor),
+            typeof(Color),
+            typeof(SvgIconView),
+            Colors.White,
+            propertyChanged: OnIconColorChanged);
 
     private SKSvg? _svg;
 
@@ -40,11 +50,22 @@ public sealed class SvgIconView : SKCanvasView
 #endif
     }
 
-    private static void OnIconChanged(BindableObject bindable, object oldValue, object newValue)
+    private static void OnIconNameChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is not SvgIconView view)
+        {
+            return;
+        }
+
+        view.LoadSvg();
+        view.InvalidateSurface();
+    }
+
+    private static void OnIconColorChanged(BindableObject bindable, object oldValue, object newValue)
     {
         if (bindable is SvgIconView view)
         {
-            view.LoadSvg();
+            // Color is applied in PaintSurface via ColorFilter — do not reload the SVG.
             view.InvalidateSurface();
         }
     }

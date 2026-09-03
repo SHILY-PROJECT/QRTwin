@@ -3,6 +3,7 @@ namespace QRTwin.Extensions;
 public static class ViewAnimationExtensions
 {
     public const uint StandardDuration = 320;
+    public const uint ButtonGlowDuration = 340;
     public const uint TabDuration = 300;
     public const uint OverlayDuration = 340;
     public const uint EditorExpandDuration = 420;
@@ -11,6 +12,7 @@ public static class ViewAnimationExtensions
     public static readonly Easing StandardEase = Easing.CubicInOut;
     public static readonly Easing EnterEase = Easing.CubicOut;
     public static readonly Easing ExitEase = Easing.CubicIn;
+    public static readonly Easing SoftEase = Easing.SinInOut;
 
     public static Task AnimateHeightRequestAsync(
         this VisualElement element,

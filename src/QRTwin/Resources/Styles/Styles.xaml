@@ -32,7 +32,8 @@
     <Style x:Key="GlassCardButton" TargetType="Border">
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="Stroke" Value="Transparent" />
-        <Setter Property="StrokeThickness" Value="0" />
+        <!-- Keep thickness fixed so outline color fades never resize content. -->
+        <Setter Property="StrokeThickness" Value="1.5" />
         <Setter Property="StrokeShape" Value="RoundRectangle 10" />
         <Setter Property="HeightRequest" Value="44" />
         <Setter Property="HorizontalOptions" Value="Fill" />

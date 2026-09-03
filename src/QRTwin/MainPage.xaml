@@ -178,17 +178,25 @@
                 <TapGestureRecognizer Tapped="OnImageGenTapped" />
               </Border.GestureRecognizers>
               <Grid>
-                <Border x:Name="ImageGenButtonGlow"
-                        Background="{DynamicResource AccentGradientBrush}"
-                        StrokeShape="RoundRectangle 10"
-                        Opacity="0"
-                        InputTransparent="True"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill"
-                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <BoxView x:Name="ImageGenButtonGlow"
+                         Color="{DynamicResource Accent}"
+                         CornerRadius="10"
+                         Opacity="0"
+                         InputTransparent="True"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill" />
                 <controls:SvgIconView x:Name="ImageGenIcon"
                                       IconName="{x:Static helpers:IconPaths.Image}"
                                       IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+                <controls:SvgIconView x:Name="ImageGenIconLit"
+                                      IconName="{x:Static helpers:IconPaths.Image}"
+                                      IconColor="White"
+                                      Opacity="0"
                                       WidthRequest="24"
                                       HeightRequest="24"
                                       HorizontalOptions="Center"
@@ -204,17 +212,25 @@
                 <TapGestureRecognizer Tapped="OnWandTapped" />
               </Border.GestureRecognizers>
               <Grid>
-                <Border x:Name="WandButtonGlow"
-                        Background="{DynamicResource AccentGradientBrush}"
-                        StrokeShape="RoundRectangle 10"
-                        Opacity="0"
-                        InputTransparent="True"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill"
-                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <BoxView x:Name="WandButtonGlow"
+                         Color="{DynamicResource Accent}"
+                         CornerRadius="10"
+                         Opacity="0"
+                         InputTransparent="True"
+                         HorizontalOptions="Fill"
+                         VerticalOptions="Fill" />
                 <controls:SvgIconView x:Name="WandIcon"
                                       IconName="{x:Static helpers:IconPaths.Wand}"
                                       IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+                <controls:SvgIconView x:Name="WandIconLit"
+                                      IconName="{x:Static helpers:IconPaths.Wand}"
+                                      IconColor="White"
+                                      Opacity="0"
                                       WidthRequest="24"
                                       HeightRequest="24"
                                       HorizontalOptions="Center"
