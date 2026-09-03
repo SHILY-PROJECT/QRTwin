@@ -5,8 +5,8 @@ public static partial class GlassBlur
 {
     static partial void ApplyPlatform(VisualElement element, float radius)
     {
-        // Per-element backdrop blur is not reliably available for MAUI Border on WinUI.
-        // Glass theme uses cyan bloom (Shadow) plus semi-transparent fills on Windows.
+        // WinUI does not expose reliable per-Border backdrop blur in MAUI.
+        // Glass panels use opaque frosted fills from the theme palette instead.
     }
 
     static partial void ClearPlatform(VisualElement element)

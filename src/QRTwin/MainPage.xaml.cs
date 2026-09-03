@@ -54,6 +54,7 @@ public partial class MainPage : ContentPage
         Unloaded += OnUnloaded;
         _displayedTab = viewModel.SelectedTab;
         UpdateTabVisuals(viewModel.SelectedTab);
+        UpdateHeaderAndOverlayChrome();
         SyncTabPositions();
         UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
         UpdateInputEditorSeparatorState(isFocused: false);
@@ -84,17 +85,18 @@ public partial class MainPage : ContentPage
         {
             RefreshThemeColors();
             UpdateTabVisuals(_viewModel.SelectedTab);
+            UpdateHeaderAndOverlayChrome();
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
             UpdateInputEditorSeparatorState(GenerateInputEditor.IsFocused);
 
             if (_historyOverlayUiVisible)
             {
-                GlassEffect.RefreshVisualTree(HistoryOverlayPanel);
+                ApplyGlassPanelShadow(HistoryOverlayPanel);
             }
 
             if (_themesOverlayUiVisible)
             {
-                GlassEffect.RefreshVisualTree(ThemesOverlayPanel);
+                ApplyGlassPanelShadow(ThemesOverlayPanel);
             }
         });
     }
@@ -925,7 +927,7 @@ public partial class MainPage : ContentPage
 
             if (!_isUnloaded && _viewModel.IsHistoryVisible)
             {
-                GlassEffect.RefreshVisualTree(HistoryOverlayPanel);
+                ApplyGlassPanelShadow(HistoryOverlayPanel);
             }
 
             return;
@@ -989,7 +991,7 @@ public partial class MainPage : ContentPage
 
             if (!_isUnloaded && _viewModel.IsThemesVisible)
             {
-                GlassEffect.RefreshVisualTree(ThemesOverlayPanel);
+                ApplyGlassPanelShadow(ThemesOverlayPanel);
             }
 
             return;
@@ -1054,6 +1056,66 @@ public partial class MainPage : ContentPage
         ApplyTabGlassEffect(ScanTab, scanActive);
         ApplyTabGlassEffect(GenerateTab, generateActive);
     }
+
+    private void UpdateHeaderAndOverlayChrome()
+    {
+        var resources = Application.Current!.Resources;
+        var isGlass = IsGlassThemeEnabled();
+
+        HistoryOverlayPanel.Style = (Style)resources[isGlass ? "GlassPanelCard" : "GlassOverlayCard"];
+        ThemesOverlayPanel.Style = (Style)resources[isGlass ? "GlassPanelCard" : "GlassOverlayCard"];
+
+        ThemesHeaderButton.Style = (Style)resources[isGlass ? "GlassHeaderIconButton" : "IconButton"];
+        HistoryHeaderButton.Style = (Style)resources[isGlass ? "GlassHeaderIconButton" : "AccentIconButton"];
+
+        var accent = (Color)resources["Accent"];
+        ThemesHeaderIcon.IconColor = accent;
+        HistoryHeaderIcon.IconColor = isGlass ? accent : Colors.White;
+
+        if (!isGlass)
+        {
+            ClearGlassPanelChrome(HistoryOverlayPanel, ThemesOverlayPanel, ThemesHeaderButton, HistoryHeaderButton);
+            return;
+        }
+
+        ApplyGlassPanelShadow(HistoryOverlayPanel);
+        ApplyGlassPanelShadow(ThemesOverlayPanel);
+    }
+
+    private static void ClearGlassPanelChrome(params Border[] borders)
+    {
+        foreach (var border in borders)
+        {
+            border.ClearValue(VisualElement.ShadowProperty);
+            if (border.IsSet(GlassEffect.IntensityProperty))
+            {
+                border.ClearValue(GlassEffect.IntensityProperty);
+            }
+
+            GlassBlur.Clear(border);
+        }
+    }
+
+    private static void ApplyGlassPanelShadow(Border panel)
+    {
+        if (Application.Current?.Resources.TryGetValue("GlassVisualEffects", out var value) != true
+            || value is not GlassVisualEffects effects)
+        {
+            return;
+        }
+
+        panel.Shadow = new Shadow
+        {
+            Brush = new SolidColorBrush(effects.DropShadowColor),
+            Radius = effects.DropShadowRadius,
+            Offset = new Point(0, effects.DropShadowOffsetY),
+            Opacity = effects.DropShadowOpacity * 0.75f,
+        };
+    }
+
+    private static bool IsGlassThemeEnabled() =>
+        Application.Current?.Resources.TryGetValue("GlassVisualEffects", out var value) == true
+        && value is GlassVisualEffects { IsEnabled: true };
 
     private static void ApplyTabBackground(Border tab, bool active, Brush? activeBrush, Color activeColor)
     {

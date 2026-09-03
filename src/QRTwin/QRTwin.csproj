@@ -17,7 +17,7 @@
         <ApplicationId>com.qrtwin.manager</ApplicationId>
 
         <!-- Single source of truth for app version -->
-        <Version>0.9.82</Version>
+        <Version>0.9.83</Version>
         <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
         <!-- Android versionCode: 0.9.78 -> 978 -->
         <ApplicationVersion>$([System.Int32]::Parse($([System.String]::Copy('$(Version)').Replace('.',''))))</ApplicationVersion>

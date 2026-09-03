@@ -67,19 +67,23 @@
                              Spacing="8"
                              HorizontalOptions="End"
                              VerticalOptions="Center">
-        <Border Style="{StaticResource IconButton}">
+        <Border x:Name="ThemesHeaderButton"
+                Style="{StaticResource IconButton}">
           <Border.GestureRecognizers>
             <TapGestureRecognizer Command="{Binding OpenThemesCommand}" />
           </Border.GestureRecognizers>
-          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Themes}"
+          <controls:SvgIconView x:Name="ThemesHeaderIcon"
+                                IconName="{x:Static helpers:IconPaths.Themes}"
                                 IconColor="{DynamicResource Accent}" />
         </Border>
 
-        <Border Style="{StaticResource AccentIconButton}">
+        <Border x:Name="HistoryHeaderButton"
+                Style="{StaticResource AccentIconButton}">
           <Border.GestureRecognizers>
             <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
           </Border.GestureRecognizers>
-          <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
+          <controls:SvgIconView x:Name="HistoryHeaderIcon"
+                                IconName="{x:Static helpers:IconPaths.History}"
                                 IconColor="#FFFFFF" />
         </Border>
       </HorizontalStackLayout>
@@ -140,6 +144,7 @@
 
           <Grid ColumnDefinitions="8*,2*"
                 ColumnSpacing="8"
+                Margin="12,0,12,0"
                 HorizontalOptions="Fill">
             <Border x:Name="ImageGenButton"
                     Grid.Column="0"
@@ -150,7 +155,7 @@
               <Grid>
                 <Border x:Name="ImageGenButtonGlow"
                         Background="{DynamicResource AccentGradientBrush}"
-                        StrokeShape="RoundRectangle 16"
+                        StrokeShape="RoundRectangle 10"
                         Opacity="0"
                         InputTransparent="True"
                         HorizontalOptions="Fill"
@@ -176,7 +181,7 @@
               <Grid>
                 <Border x:Name="WandButtonGlow"
                         Background="{DynamicResource AccentGradientBrush}"
-                        StrokeShape="RoundRectangle 16"
+                        StrokeShape="RoundRectangle 10"
                         Opacity="0"
                         InputTransparent="True"
                         HorizontalOptions="Fill"
@@ -269,7 +274,7 @@
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
-                RowSpacing="8">
+                RowSpacing="18">
             <Grid Grid.Row="0"
                   ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
@@ -279,19 +284,17 @@
                      VerticalOptions="Center"
                      LineBreakMode="TailTruncation" />
               <Border Grid.Column="1"
-                      Style="{StaticResource GlassOverlayItem}"
-                      StrokeShape="RoundRectangle 12"
-                      Padding="12,8"
-                      HorizontalOptions="End"
-                      VerticalOptions="Center">
+                      Style="{StaticResource OverlayCloseButton}">
                 <Border.GestureRecognizers>
                   <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
                 </Border.GestureRecognizers>
-                <Label Text="Закрыть"
-                       TextColor="{DynamicResource Accent}"
-                       FontAttributes="Bold"
-                       FontSize="14"
-                       LineBreakMode="NoWrap" />
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Close}"
+                                      IconColor="#FFFFFF"
+                                      WidthRequest="18"
+                                      HeightRequest="18"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
               </Border>
             </Grid>
 
@@ -327,7 +330,7 @@
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
-                RowSpacing="8">
+                RowSpacing="18">
             <Grid Grid.Row="0"
                   ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
@@ -337,19 +340,17 @@
                      VerticalOptions="Center"
                      LineBreakMode="TailTruncation" />
               <Border Grid.Column="1"
-                      Style="{StaticResource GlassOverlayItem}"
-                      StrokeShape="RoundRectangle 12"
-                      Padding="12,8"
-                      HorizontalOptions="End"
-                      VerticalOptions="Center">
+                      Style="{StaticResource OverlayCloseButton}">
                 <Border.GestureRecognizers>
                   <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
                 </Border.GestureRecognizers>
-                <Label Text="Закрыть"
-                       TextColor="{DynamicResource Accent}"
-                       FontAttributes="Bold"
-                       FontSize="14"
-                       LineBreakMode="NoWrap" />
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Close}"
+                                      IconColor="#FFFFFF"
+                                      WidthRequest="18"
+                                      HeightRequest="18"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
               </Border>
             </Grid>
 

@@ -57,15 +57,38 @@ public static class GlassEffect
 
         var (bloomRadius, bloomOpacity, blurRadius) = effects.GetPreset(GetIntensity(border));
 
-        border.Shadow = new Shadow
+        if (GetIntensity(border) is GlassEffectIntensity.Elevated)
         {
-            Brush = effects.BloomColor,
-            Radius = bloomRadius,
-            Offset = new Point(0, 0),
-            Opacity = bloomOpacity
-        };
+            border.Shadow = new Shadow
+            {
+                Brush = new SolidColorBrush(effects.DropShadowColor),
+                Radius = effects.DropShadowRadius,
+                Offset = new Point(0, effects.DropShadowOffsetY),
+                Opacity = effects.DropShadowOpacity
+            };
+        }
+        else
+        {
+            border.Shadow = new Shadow
+            {
+                Brush = effects.BloomColor,
+                Radius = bloomRadius,
+                Offset = new Point(0, 0),
+                Opacity = bloomOpacity
+            };
+        }
 
         GlassBlur.Apply(border, blurRadius);
+    }
+
+    public static void Refresh(Border border)
+    {
+        if (!border.IsSet(IntensityProperty))
+        {
+            return;
+        }
+
+        ApplyEffects(border);
     }
 
     private static GlassVisualEffects? GetEffects()

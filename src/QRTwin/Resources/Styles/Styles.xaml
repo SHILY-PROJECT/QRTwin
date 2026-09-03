@@ -31,7 +31,7 @@
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
         <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
         <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 10" />
         <Setter Property="HeightRequest" Value="44" />
         <Setter Property="HorizontalOptions" Value="Fill" />
         <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
@@ -46,9 +46,41 @@
         <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
     </Style>
 
+    <Style x:Key="GlassPanelCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style x:Key="GlassHeaderIconButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="OverlayCloseButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="#c4373e" />
+        <Setter Property="Stroke" Value="Transparent" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
     <Style x:Key="GlassOverlayItem" TargetType="Border">
-        <Setter Property="Background" Value="{DynamicResource OverlayItemBrush}" />
-        <Setter Property="Stroke" Value="{DynamicResource Border}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 18" />
     </Style>

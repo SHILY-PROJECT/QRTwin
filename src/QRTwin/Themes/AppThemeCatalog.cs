@@ -243,7 +243,7 @@ public static class AppThemeCatalog
         AppBackgroundDeep = Color.FromArgb("#030810"),
         Surface = Color.FromArgb("#990A1628"),
         SurfaceElevated = Color.FromArgb("#B3142040"),
-        SurfaceGlass = Color.FromArgb("#24FFFFFF"),
+        SurfaceGlass = Color.FromArgb("#D9122038"),
         PrimaryText = Color.FromArgb("#FFFFFF"),
         SecondaryText = Color.FromArgb("#E8B8C8D8"),
         MutedText = Color.FromArgb("#A0B0C0D0"),
@@ -270,11 +270,16 @@ public static class AppThemeCatalog
             NormalBloomRadius = 20,
             StrongBloomRadius = 30,
             SubtleBloomOpacity = 0.32f,
-            NormalBloomOpacity = 0.48f,
-            StrongBloomOpacity = 0.62f,
+            NormalBloomOpacity = 0.28f,
+            StrongBloomOpacity = 0.38f,
             SubtleBlurRadius = 10,
             NormalBlurRadius = 18,
-            StrongBlurRadius = 24
+            StrongBlurRadius = 24,
+            ElevatedBlurRadius = 26,
+            DropShadowColor = Color.FromArgb("#70050818"),
+            DropShadowRadius = 16,
+            DropShadowOffsetY = 10,
+            DropShadowOpacity = 0.38f
         },
         PageBackgroundBrush = new LinearGradientBrush
         {
@@ -328,8 +333,8 @@ public static class AppThemeCatalog
             EndPoint = new Point(0, 1),
             GradientStops =
             [
-                new(Color.FromArgb("#40FFFFFF"), 0f),
-                new(Color.FromArgb("#1AFFFFFF"), 1f)
+                new(Color.FromArgb("#E0142438"), 0f),
+                new(Color.FromArgb("#CC0E1828"), 1f)
             ]
         },
         OverlayScrimBrush = new RadialGradientBrush
@@ -343,27 +348,8 @@ public static class AppThemeCatalog
                 new(Color.FromArgb("#E0050818"), 1f)
             ]
         },
-        OverlayPanelBrush = new LinearGradientBrush
-        {
-            StartPoint = new Point(0, 0),
-            EndPoint = new Point(0, 1),
-            GradientStops =
-            [
-                new(Color.FromArgb("#F0121E32"), 0f),
-                new(Color.FromArgb("#EB0E1828"), 0.55f),
-                new(Color.FromArgb("#E60A1420"), 1f)
-            ]
-        },
-        OverlayItemBrush = new LinearGradientBrush
-        {
-            StartPoint = new Point(0, 0),
-            EndPoint = new Point(0, 1),
-            GradientStops =
-            [
-                new(Color.FromArgb("#E6182438"), 0f),
-                new(Color.FromArgb("#D9141E30"), 1f)
-            ]
-        },
+        OverlayPanelBrush = new SolidColorBrush(Color.FromArgb("#E00E1828")),
+        OverlayItemBrush = new SolidColorBrush(Color.FromArgb("#CC141E30")),
         ScannerBeamBrush = new LinearGradientBrush
         {
             StartPoint = new Point(0, 0),
