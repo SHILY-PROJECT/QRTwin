@@ -17,7 +17,7 @@
         <ApplicationId>com.qrtwin.manager</ApplicationId>
 
         <!-- Single source of truth for app version -->
-        <Version>0.9.83</Version>
+        <Version>0.9.84</Version>
         <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
         <!-- Android versionCode: 0.9.78 -> 978 -->
         <ApplicationVersion>$([System.Int32]::Parse($([System.String]::Copy('$(Version)').Replace('.',''))))</ApplicationVersion>
@@ -44,6 +44,14 @@
 
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
         <OutputType>WinExe</OutputType>
+    </PropertyGroup>
+
+    <!-- Single-file unpackaged WinUI publish (used by build.ps1 / dotnet publish). -->
+    <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(PublishSingleFile)' == 'true'">
+        <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+        <SelfContained>true</SelfContained>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <EnableMsixTooling>true</EnableMsixTooling>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' and '$(RuntimeIdentifierOverride)' != ''">

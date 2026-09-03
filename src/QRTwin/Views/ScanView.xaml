@@ -139,42 +139,52 @@
                          FontSize="18"
                          HorizontalTextAlignment="Center" />
 
-                  <Grid ColumnDefinitions="*,Auto"
-                        ColumnSpacing="12">
-                    <Label Grid.Column="0"
-                           Text="{Binding ScanResult}"
-                           TextColor="{DynamicResource Accent}"
-                           FontSize="15"
-                           LineBreakMode="WordWrap"
-                           HorizontalTextAlignment="Center">
-                      <Label.GestureRecognizers>
-                        <TapGestureRecognizer Command="{Binding OpenUrlCommand}" />
-                      </Label.GestureRecognizers>
-                      <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding IsUrl}"
-                                     Value="False">
-                          <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
-                        </DataTrigger>
-                      </Label.Triggers>
-                    </Label>
+                  <Label Text="{Binding ScanResult}"
+                         TextColor="{DynamicResource Accent}"
+                         FontSize="15"
+                         LineBreakMode="WordWrap"
+                         HorizontalTextAlignment="Center">
+                    <Label.GestureRecognizers>
+                      <TapGestureRecognizer Command="{Binding OpenUrlCommand}" />
+                    </Label.GestureRecognizers>
+                    <Label.Triggers>
+                      <DataTrigger TargetType="Label"
+                                   Binding="{Binding IsUrl}"
+                                   Value="False">
+                        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
+                      </DataTrigger>
+                    </Label.Triggers>
+                  </Label>
+
+                  <Grid ColumnDefinitions="8*,2*"
+                        ColumnSpacing="8"
+                        HorizontalOptions="Fill">
+                    <Button Grid.Column="0"
+                            Text="Сканировать снова"
+                            Style="{StaticResource SecondaryButton}"
+                            HorizontalOptions="Fill"
+                            Command="{Binding ResetScanCommand}" />
 
                     <Border Grid.Column="1"
                             Style="{StaticResource IconButton}"
                             BackgroundColor="{DynamicResource AccentSoft}"
-                            VerticalOptions="Start">
+                            WidthRequest="-1"
+                            HeightRequest="-1"
+                            MinimumHeightRequest="52"
+                            HorizontalOptions="Fill"
+                            VerticalOptions="Fill"
+                            Padding="0">
                       <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding CopyResultCommand}" />
                       </Border.GestureRecognizers>
                       <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Copy}"
-                                            IconColor="{DynamicResource Accent}" />
+                                            IconColor="{DynamicResource Accent}"
+                                            WidthRequest="22"
+                                            HeightRequest="22"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
                     </Border>
                   </Grid>
-
-                  <Button Text="Сканировать снова"
-                          Style="{StaticResource SecondaryButton}"
-                          HorizontalOptions="Fill"
-                          Command="{Binding ResetScanCommand}" />
                 </VerticalStackLayout>
               </Grid>
             </Grid>
