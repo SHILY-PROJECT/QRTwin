@@ -108,7 +108,7 @@ public partial class MainPage : ContentPage
     private void RefreshThemeColors()
     {
         _inactiveIconColor = (Color)Application.Current.Resources["MutedText"];
-        _separatorInactiveColor = (Color)Application.Current.Resources["Border"];
+        _separatorInactiveColor = (Color)Application.Current.Resources["BorderLight"];
         _separatorActiveColor = (Color)Application.Current.Resources["Accent"];
     }
 

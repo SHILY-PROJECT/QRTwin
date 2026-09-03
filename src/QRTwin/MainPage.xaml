@@ -163,10 +163,10 @@
                   Completed="OnGenerateInputEditorCompleted" />
 
           <BoxView x:Name="InputEditorSeparator"
-                   HeightRequest="1"
+                   HeightRequest="1.5"
                    Margin="0,8"
                    HorizontalOptions="Fill"
-                   Color="{DynamicResource Border}" />
+                   Color="{DynamicResource BorderLight}" />
 
           <Grid ColumnDefinitions="8*,2*"
                 ColumnSpacing="8"
