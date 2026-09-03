@@ -89,6 +89,32 @@
       </HorizontalStackLayout>
     </Grid>
 
+    <!-- Duplicate generate toast -->
+    <Border x:Name="DuplicateQrToast"
+            Grid.Row="0"
+            Grid.RowSpan="3"
+            Style="{StaticResource GlassCard}"
+            Stroke="{DynamicResource Accent}"
+            StrokeThickness="1.5"
+            Margin="16,12"
+            Padding="16,12"
+            MaximumWidthRequest="720"
+            HorizontalOptions="Fill"
+            VerticalOptions="Start"
+            ZIndex="200"
+            IsVisible="False"
+            Opacity="0"
+            InputTransparent="True"
+            TranslationY="-12">
+      <Label x:Name="DuplicateQrToastLabel"
+             Text="Вы только что сгенерировали такой QR-код"
+             TextColor="{DynamicResource PrimaryText}"
+             FontSize="14"
+             FontAttributes="Bold"
+             HorizontalTextAlignment="Center"
+             LineBreakMode="WordWrap" />
+    </Border>
+
     <!-- Main content area + floating generate input -->
     <Grid x:Name="ContentAreaGrid"
           Grid.Row="1"

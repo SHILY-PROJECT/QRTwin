@@ -12,9 +12,12 @@ public partial class GenerateViewModel(
     private const int GenerateBlockMs = 400;
 
     private string? _tempFilePath;
+    private string? _lastGeneratedContent;
     private long _generateBlockedUntilTicks;
 
     public event EventHandler? HistorySaved;
+
+    public event EventHandler? DuplicateGenerateNotified;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(GenerateCommand))]
@@ -86,13 +89,30 @@ public partial class GenerateViewModel(
             return;
         }
 
+        var content = InputText.TrimmedOrEmpty();
+        if (saveToHistory
+            && content.Length > 0
+            && string.Equals(content, _lastGeneratedContent, StringComparison.Ordinal))
+        {
+            try
+            {
+                await MainThread.InvokeOnMainThreadAsync(() =>
+                    DuplicateGenerateNotified?.Invoke(this, EventArgs.Empty));
+            }
+            catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+            {
+            }
+
+            return;
+        }
+
         ErrorMessage = string.Empty;
         IsGenerating = true;
 
         try
         {
             var image = await qrCodeService
-                .GenerateQrCodeAsync(InputText, QrEncodeOptions.Presentation)
+                .GenerateQrCodeAsync(content, QrEncodeOptions.Presentation)
                 .ConfigureAwait(false);
 
             if (image is null)
@@ -114,11 +134,12 @@ public partial class GenerateViewModel(
                 return;
             }
 
+            _lastGeneratedContent = content;
             _tempFilePath = await qrCodeService.SaveToTempFileAsync(image).ConfigureAwait(false);
 
             if (saveToHistory)
             {
-                await historyService.AddAsync(HistoryEntryType.Generate, InputText.TrimmedOrEmpty()).ConfigureAwait(false);
+                await historyService.AddAsync(HistoryEntryType.Generate, content).ConfigureAwait(false);
                 HistorySaved?.Invoke(this, EventArgs.Empty);
             }
         }

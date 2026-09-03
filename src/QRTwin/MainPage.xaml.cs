@@ -17,6 +17,7 @@ public partial class MainPage : ContentPage
     private const string EditorHeightAnimationName = "GenerateInputEditorHeight";
     private const string InputBarAnimationName = "GenerateInputBar";
     private const string InputButtonGlowAnimationName = "InputButtonGlow";
+    private const string DuplicateToastAnimationName = "DuplicateQrToast";
     private const double DefaultInputBarInset = 128;
     private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
@@ -36,6 +37,7 @@ public partial class MainPage : ContentPage
     private int _inputBarAnimationGeneration;
     private int _inputButtonAnimationGeneration;
     private int _editorExpandGeneration;
+    private int _duplicateToastGeneration;
     private bool _inputButtonsAreActive;
     private bool _inputEditorIsFocused;
     private bool _swipeIsHorizontal;
@@ -52,6 +54,7 @@ public partial class MainPage : ContentPage
 
         viewModel.PropertyChanged += OnViewModelPropertyChanged;
         viewModel.Generate.PropertyChanged += OnGenerateViewModelPropertyChanged;
+        viewModel.Generate.DuplicateGenerateNotified += OnDuplicateGenerateNotified;
         Unloaded += OnUnloaded;
         _displayedTab = viewModel.SelectedTab;
         UpdateTabVisuals(viewModel.SelectedTab);
@@ -155,10 +158,12 @@ public partial class MainPage : ContentPage
         ContentHost.SizeChanged -= OnContentHostSizeChanged;
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _viewModel.Generate.PropertyChanged -= OnGenerateViewModelPropertyChanged;
+        _viewModel.Generate.DuplicateGenerateNotified -= OnDuplicateGenerateNotified;
         ScanPanel.StopAnimations();
         GeneratePanel.StopAnimations();
         GenerateInputEditor.AbortAnimation(EditorHeightAnimationName);
         GenerateInputBar.AbortAnimation(InputBarAnimationName);
+        DuplicateQrToast.AbortAnimation(DuplicateToastAnimationName);
     }
 
     private void OnGenerateInputBarSizeChanged(object? sender, EventArgs e)
@@ -666,6 +671,70 @@ public partial class MainPage : ContentPage
         {
             _viewModel.Generate.GenerateImageCommand.Execute(null);
         }
+    }
+
+    private void OnDuplicateGenerateNotified(object? sender, EventArgs e)
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        MainThread.BeginInvokeOnMainThread(() => _ = ShowDuplicateQrToastAsync());
+    }
+
+    private async Task ShowDuplicateQrToastAsync()
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        var generation = ++_duplicateToastGeneration;
+        DuplicateQrToast.AbortAnimation(DuplicateToastAnimationName);
+        DuplicateQrToast.IsVisible = true;
+        DuplicateQrToast.Opacity = 0;
+        DuplicateQrToast.TranslationY = -12;
+
+        try
+        {
+            await DuplicateQrToast.FadeSlideToAsync(
+                1,
+                0,
+                ViewAnimationExtensions.StandardDuration,
+                ViewAnimationExtensions.EnterEase);
+
+            if (_isUnloaded || generation != _duplicateToastGeneration)
+            {
+                return;
+            }
+
+            await Task.Delay(2000);
+
+            if (_isUnloaded || generation != _duplicateToastGeneration)
+            {
+                return;
+            }
+
+            await DuplicateQrToast.FadeSlideToAsync(
+                0,
+                -12,
+                ViewAnimationExtensions.StandardDuration,
+                ViewAnimationExtensions.ExitEase);
+        }
+        catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+        {
+            return;
+        }
+
+        if (_isUnloaded || generation != _duplicateToastGeneration)
+        {
+            return;
+        }
+
+        DuplicateQrToast.IsVisible = false;
+        DuplicateQrToast.Opacity = 0;
+        DuplicateQrToast.TranslationY = -12;
     }
 
     private void OnWandTapped(object? sender, TappedEventArgs e)
