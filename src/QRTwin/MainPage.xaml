@@ -5,20 +5,26 @@
              xmlns:views="clr-namespace:QRTwin.Views"
              xmlns:controls="clr-namespace:QRTwin.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             xmlns:effects="clr-namespace:QRTwin.Effects"
+             xmlns:themes="clr-namespace:QRTwin.Themes"
              x:Class="QRTwin.MainPage"
              x:Name="MainPageRoot"
              x:DataType="vm:MainViewModel"
              Shell.NavBarIsVisible="False"
-             BackgroundColor="{StaticResource AppBackground}">
+             Background="{DynamicResource PageBackgroundBrush}">
 
   <Grid x:Name="RootLayout"
-        RowDefinitions="Auto,*,Auto,Auto"
+        RowDefinitions="Auto,*,Auto"
         SafeAreaEdges="All">
 
     <!-- Background glow -->
-    <BoxView Grid.RowSpan="4"
+    <BoxView Grid.RowSpan="3"
              InputTransparent="True"
-             Background="{StaticResource BackgroundGlowBrush}" />
+             Background="{DynamicResource BackgroundGlowBrush}" />
+    <BoxView x:Name="BackgroundGlowSecondary"
+             Grid.RowSpan="3"
+             InputTransparent="True"
+             Background="{DynamicResource BackgroundGlowSecondaryBrush}" />
 
     <!-- Header -->
     <Grid Grid.Row="0"
@@ -28,11 +34,12 @@
       <Border WidthRequest="44"
               HeightRequest="44"
               StrokeShape="RoundRectangle 14"
-              Background="{StaticResource AccentGradientBrush}">
+              Background="{DynamicResource AccentGradientBrush}"
+              effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}">
         <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
                               IconColor="#FFFFFF"
-                              WidthRequest="22"
-                              HeightRequest="22"
+                              WidthRequest="40"
+                              HeightRequest="40"
                               HorizontalOptions="Center"
                               VerticalOptions="Center" />
       </Border>
@@ -41,120 +48,166 @@
         <Label Text="QRTwin"
                FontSize="22"
                FontAttributes="Bold"
-               TextColor="{StaticResource PrimaryText}" />
-        <Label Text="Сканируйте и создавайте QR-коды"
-               Style="{StaticResource CaptionLabel}" />
+               TextColor="{DynamicResource PrimaryText}" />
+        <HorizontalStackLayout Spacing="0" VerticalOptions="Center">
+          <Label Text="Сканируйте и создавайте QR-коды | "
+                 Style="{StaticResource CaptionLabel}" />
+          <Label x:Name="AuthorCreditLabel"
+                 Text=" by MrSHILY"
+                 Style="{StaticResource CaptionLabel}"
+                 Padding="0,0,4,0">
+            <Label.GestureRecognizers>
+              <TapGestureRecognizer Tapped="OnAuthorCreditTapped" />
+            </Label.GestureRecognizers>
+          </Label>
+        </HorizontalStackLayout>
       </VerticalStackLayout>
 
-      <Border Grid.Column="2"
-              Style="{StaticResource IconButton}">
-        <Border.GestureRecognizers>
-          <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
-        </Border.GestureRecognizers>
-        <controls:SvgIconView IconName="{x:Static helpers:IconPaths.History}"
-                              IconColor="{StaticResource Accent}" />
-      </Border>
+      <HorizontalStackLayout Grid.Column="2"
+                             Spacing="8"
+                             HorizontalOptions="End"
+                             VerticalOptions="Center">
+        <Border x:Name="ThemesHeaderButton"
+                Style="{StaticResource IconButton}">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding OpenThemesCommand}" />
+          </Border.GestureRecognizers>
+          <controls:SvgIconView x:Name="ThemesHeaderIcon"
+                                IconName="{x:Static helpers:IconPaths.Themes}"
+                                IconColor="{DynamicResource Accent}" />
+        </Border>
+
+        <Border x:Name="HistoryHeaderButton"
+                Style="{StaticResource AccentIconButton}">
+          <Border.GestureRecognizers>
+            <TapGestureRecognizer Command="{Binding OpenHistoryCommand}" />
+          </Border.GestureRecognizers>
+          <controls:SvgIconView x:Name="HistoryHeaderIcon"
+                                IconName="{x:Static helpers:IconPaths.History}"
+                                IconColor="#FFFFFF" />
+        </Border>
+      </HorizontalStackLayout>
     </Grid>
 
-    <!-- Main content area -->
-    <Grid Grid.Row="1"
-          x:Name="ContentHost"
-          Padding="16,8"
-          RowDefinitions="*"
+    <!-- Main content area + floating generate input -->
+    <Grid x:Name="ContentAreaGrid"
+          Grid.Row="1"
           MaximumWidthRequest="720"
           HorizontalOptions="Fill">
 
-      <Grid x:Name="ScanPanel"
-            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Scan}">
-        <views:ScanView x:Name="ScanContent"
-                        BindingContext="{Binding Scan}"
-                        HorizontalOptions="Fill"
-                        VerticalOptions="Fill" />
-      </Grid>
+      <Grid x:Name="ContentHost"
+            Padding="16,8"
+            RowDefinitions="*">
 
-      <Grid x:Name="GeneratePanel"
-            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
-        <views:GenerateView x:Name="GenerateContent"
-                            BindingContext="{Binding Generate}"
-                            HorizontalOptions="Fill"
-                            VerticalOptions="Fill" />
-      </Grid>
-    </Grid>
-
-    <!-- Generate input bar -->
-    <Border x:Name="GenerateInputBar"
-            Grid.Row="2"
-            Margin="16,4,16,8"
-            Padding="6"
-            BackgroundColor="{StaticResource Surface}"
-            Stroke="{StaticResource Border}"
-            StrokeThickness="1"
-            StrokeShape="RoundRectangle 20"
-            MaximumWidthRequest="720"
-            HorizontalOptions="Fill"
-            IsVisible="{Binding SelectedTab, Converter={StaticResource AppTabToBoolConverter}, ConverterParameter=Generate}">
-      <VerticalStackLayout Spacing="0">
-        <Editor x:Name="GenerateInputEditor"
-                Style="{StaticResource InputEditor}"
-                Margin="12,4,12,0"
-                HeightRequest="44"
-                BackgroundColor="Transparent"
-                Placeholder="Введите текст или ссылку..."
-                Text="{Binding Generate.InputText}"
-                Focused="OnGenerateInputEditorFocused"
-                Unfocused="OnGenerateInputEditorUnfocused"
-                Completed="OnGenerateInputEditorCompleted" />
-
-        <BoxView x:Name="InputEditorSeparator"
-                 HeightRequest="1"
-                 Margin="12,8,12,8"
-                 HorizontalOptions="Fill"
-                 Color="{StaticResource Border}" />
-
-        <Grid ColumnDefinitions="8*,2*"
-              ColumnSpacing="8"
-              HorizontalOptions="Fill">
-          <Border x:Name="ImageGenButton"
-                  Grid.Column="0"
-                  StrokeShape="RoundRectangle 16"
-                  HeightRequest="44"
-                  HorizontalOptions="Fill">
-            <Border.GestureRecognizers>
-              <TapGestureRecognizer Tapped="OnImageGenTapped" />
-            </Border.GestureRecognizers>
-            <controls:SvgIconView x:Name="ImageGenIcon"
-                                  IconName="{x:Static helpers:IconPaths.Image}"
-                                  HorizontalOptions="Center"
-                                  VerticalOptions="Center"
-                                  InputTransparent="True" />
-          </Border>
-
-          <Border x:Name="WandButton"
-                  Grid.Column="1"
-                  StrokeShape="RoundRectangle 16"
-                  HeightRequest="44"
-                  HorizontalOptions="Fill">
-            <Border.GestureRecognizers>
-              <TapGestureRecognizer Tapped="OnWandTapped" />
-            </Border.GestureRecognizers>
-            <controls:SvgIconView x:Name="WandIcon"
-                                  IconName="{x:Static helpers:IconPaths.Wand}"
-                                  HorizontalOptions="Center"
-                                  VerticalOptions="Center"
-                                  InputTransparent="True" />
-          </Border>
+        <Grid x:Name="ScanPanel">
+          <views:ScanView x:Name="ScanContent"
+                          BindingContext="{Binding Scan}"
+                          HorizontalOptions="Fill"
+                          VerticalOptions="Fill" />
         </Grid>
-      </VerticalStackLayout>
-    </Border>
+
+        <Grid x:Name="GeneratePanel">
+          <views:GenerateView x:Name="GenerateContent"
+                              BindingContext="{Binding Generate}"
+                              HorizontalOptions="Fill"
+                              VerticalOptions="Fill" />
+        </Grid>
+      </Grid>
+
+      <Border x:Name="GenerateInputBar"
+              Style="{StaticResource GlassCard}"
+              Margin="16,0,16,8"
+              Padding="6"
+              HorizontalOptions="Fill"
+              VerticalOptions="End"
+              ZIndex="10"
+              IsVisible="False"
+              Opacity="0"
+              InputTransparent="True">
+        <VerticalStackLayout Spacing="0">
+          <Editor x:Name="GenerateInputEditor"
+                  Style="{StaticResource InputEditor}"
+                  Margin="12,4,12,0"
+                  HeightRequest="44"
+                  BackgroundColor="Transparent"
+                  Placeholder="Введите текст или ссылку..."
+                  Text="{Binding Generate.InputText}"
+                  Focused="OnGenerateInputEditorFocused"
+                  Unfocused="OnGenerateInputEditorUnfocused"
+                  Completed="OnGenerateInputEditorCompleted" />
+
+          <BoxView x:Name="InputEditorSeparator"
+                   HeightRequest="1"
+                   Margin="12,8,12,8"
+                   HorizontalOptions="Fill"
+                   Color="{DynamicResource Border}" />
+
+          <Grid ColumnDefinitions="8*,2*"
+                ColumnSpacing="8"
+                Margin="12,0,12,0"
+                HorizontalOptions="Fill">
+            <Border x:Name="ImageGenButton"
+                    Grid.Column="0"
+                    Style="{StaticResource GlassCardButton}">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnImageGenTapped" />
+              </Border.GestureRecognizers>
+              <Grid>
+                <Border x:Name="ImageGenButtonGlow"
+                        Background="{DynamicResource AccentGradientBrush}"
+                        StrokeShape="RoundRectangle 10"
+                        Opacity="0"
+                        InputTransparent="True"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <controls:SvgIconView x:Name="ImageGenIcon"
+                                      IconName="{x:Static helpers:IconPaths.Image}"
+                                      IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+              </Grid>
+            </Border>
+
+            <Border x:Name="WandButton"
+                    Grid.Column="1"
+                    Style="{StaticResource GlassCardButton}">
+              <Border.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnWandTapped" />
+              </Border.GestureRecognizers>
+              <Grid>
+                <Border x:Name="WandButtonGlow"
+                        Background="{DynamicResource AccentGradientBrush}"
+                        StrokeShape="RoundRectangle 10"
+                        Opacity="0"
+                        InputTransparent="True"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <controls:SvgIconView x:Name="WandIcon"
+                                      IconName="{x:Static helpers:IconPaths.Wand}"
+                                      IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+              </Grid>
+            </Border>
+          </Grid>
+        </VerticalStackLayout>
+      </Border>
+    </Grid>
 
     <!-- Bottom tab bar -->
     <Border x:Name="BottomTabBar"
-            Grid.Row="3"
+            Grid.Row="2"
+            Style="{StaticResource GlassChromeBar}"
             Margin="16,0,16,20"
             Padding="4"
-            BackgroundColor="{StaticResource Surface}"
-            Stroke="{StaticResource Border}"
-            StrokeThickness="1"
             StrokeShape="RoundRectangle 24"
             MaximumWidthRequest="720"
             HorizontalOptions="Fill">
@@ -199,47 +252,115 @@
     </Border>
 
     <!-- History overlay -->
-    <Grid Grid.RowSpan="4"
-          IsVisible="{Binding IsHistoryVisible}"
-          BackgroundColor="#E6000000"
+    <Grid x:Name="HistoryOverlay"
+          Grid.RowSpan="3"
+          IsVisible="False"
+          InputTransparent="True"
           ZIndex="100">
-      <Grid.GestureRecognizers>
-        <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
-      </Grid.GestureRecognizers>
+      <BoxView x:Name="HistoryOverlayScrim"
+               Opacity="0"
+               Background="{DynamicResource OverlayScrimBrush}">
+        <BoxView.GestureRecognizers>
+          <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+        </BoxView.GestureRecognizers>
+      </BoxView>
 
-      <Border Margin="20,48,20,24"
-              Style="{StaticResource GlassCard}"
-              VerticalOptions="Fill"
-              HorizontalOptions="Fill"
-              MaximumWidthRequest="640"
-              InputTransparent="False">
-        <Grid RowDefinitions="Auto,*">
-          <Grid Grid.Row="0"
-                ColumnDefinitions="*,Auto"
-                Margin="0,0,0,8">
-            <Label Text="История"
-                   Style="{StaticResource TitleLabel}"
-                   FontSize="20" />
-            <Border Grid.Column="1"
-                    BackgroundColor="{StaticResource SurfaceElevated}"
-                    StrokeShape="RoundRectangle 12"
-                    Padding="12,8">
-              <Border.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
-              </Border.GestureRecognizers>
-              <Label Text="Закрыть"
-                     TextColor="{StaticResource Accent}"
-                     FontAttributes="Bold"
-                     FontSize="14" />
-            </Border>
+      <Grid Padding="20,48,20,24"
+            MaximumWidthRequest="640"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
+        <Border x:Name="HistoryOverlayPanel"
+                Style="{StaticResource GlassOverlayCard}"
+                VerticalOptions="Fill"
+                HorizontalOptions="Fill">
+          <Grid RowDefinitions="Auto,*"
+                RowSpacing="18">
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  ColumnSpacing="12">
+              <Label Text="История"
+                     Style="{StaticResource TitleLabel}"
+                     FontSize="20"
+                     VerticalOptions="Center"
+                     LineBreakMode="TailTruncation" />
+              <Border Grid.Column="1"
+                      Style="{StaticResource OverlayCloseButton}">
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding CloseHistoryCommand}" />
+                </Border.GestureRecognizers>
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Close}"
+                                      IconColor="#FFFFFF"
+                                      WidthRequest="18"
+                                      HeightRequest="18"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+              </Border>
+            </Grid>
+
+            <views:HistoryView Grid.Row="1"
+                               BindingContext="{Binding History}"
+                               HorizontalOptions="Fill"
+                               VerticalOptions="Fill" />
           </Grid>
+        </Border>
+      </Grid>
+    </Grid>
 
-          <views:HistoryView Grid.Row="1"
-                             BindingContext="{Binding History}"
-                             HorizontalOptions="Fill"
-                             VerticalOptions="Fill" />
-        </Grid>
-      </Border>
+    <!-- Themes overlay -->
+    <Grid x:Name="ThemesOverlay"
+          Grid.RowSpan="3"
+          IsVisible="False"
+          InputTransparent="True"
+          ZIndex="101">
+      <BoxView x:Name="ThemesOverlayScrim"
+               Opacity="0"
+               Background="{DynamicResource OverlayScrimBrush}">
+        <BoxView.GestureRecognizers>
+          <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
+        </BoxView.GestureRecognizers>
+      </BoxView>
+
+      <Grid Padding="20,48,20,24"
+            MaximumWidthRequest="640"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
+        <Border x:Name="ThemesOverlayPanel"
+                Style="{StaticResource GlassOverlayCard}"
+                VerticalOptions="Fill"
+                HorizontalOptions="Fill">
+          <Grid RowDefinitions="Auto,*"
+                RowSpacing="18">
+            <Grid Grid.Row="0"
+                  ColumnDefinitions="*,Auto"
+                  ColumnSpacing="12">
+              <Label Text="Темы"
+                     Style="{StaticResource TitleLabel}"
+                     FontSize="20"
+                     VerticalOptions="Center"
+                     LineBreakMode="TailTruncation" />
+              <Border Grid.Column="1"
+                      Style="{StaticResource OverlayCloseButton}">
+                <Border.GestureRecognizers>
+                  <TapGestureRecognizer Command="{Binding CloseThemesCommand}" />
+                </Border.GestureRecognizers>
+                <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Close}"
+                                      IconColor="#FFFFFF"
+                                      WidthRequest="18"
+                                      HeightRequest="18"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+              </Border>
+            </Grid>
+
+            <views:ThemesView Grid.Row="1"
+                              BindingContext="{Binding Themes}"
+                              HorizontalOptions="Fill"
+                              VerticalOptions="Fill" />
+          </Grid>
+        </Border>
+      </Grid>
     </Grid>
   </Grid>
 
@@ -250,6 +371,9 @@
           <VisualState.StateTriggers>
             <AdaptiveTrigger MinWindowWidth="0" />
           </VisualState.StateTriggers>
+          <VisualState.Setters>
+            <Setter TargetName="BackgroundGlowSecondary" Property="Opacity" Value="1" />
+          </VisualState.Setters>
         </VisualState>
         <VisualState x:Name="Wide">
           <VisualState.StateTriggers>
@@ -257,6 +381,7 @@
           </VisualState.StateTriggers>
           <VisualState.Setters>
             <Setter TargetName="ContentHost" Property="Padding" Value="24,12" />
+            <Setter TargetName="BackgroundGlowSecondary" Property="Opacity" Value="0.72" />
           </VisualState.Setters>
         </VisualState>
       </VisualStateGroup>

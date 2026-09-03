@@ -1,10 +1,13 @@
 ﻿namespace QRTwin;
 
+using QRTwin.Services;
+
 public partial class App : Application
 {
-    public App()
+    public App(IThemeService themeService)
     {
         InitializeComponent();
+        themeService.Initialize();
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -16,11 +19,12 @@ public partial class App : Application
 
         var window = new Window(services.GetRequiredService<MainPage>())
         {
-            Title = "QRTwin"
+            Title = "QRTwin - Сканируйте и создавайте QR-коды"
         };
 
 #if WINDOWS
         Platforms.Windows.WindowGeometryPersistence.Attach(window);
+        Platforms.Windows.GlassWindowBackdrop.Attach(window, services.GetRequiredService<IThemeService>());
 #endif
 
         return window;

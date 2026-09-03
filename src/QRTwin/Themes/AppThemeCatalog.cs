@@ -1,0 +1,366 @@
+using QRTwin.Models;
+
+namespace QRTwin.Themes;
+
+public sealed record AppThemeDescriptor(
+    AppThemeId Id,
+    string DisplayName,
+    string Description,
+    Func<AppThemePalette> CreatePalette);
+
+public static class AppThemeCatalog
+{
+    public const string PreferenceKey = "AppThemeId";
+
+    public static AppThemeId DefaultThemeId => AppThemeId.Neon;
+
+    public static IReadOnlyList<AppThemeDescriptor> All { get; } =
+    [
+        new(
+            AppThemeId.Neon,
+            "Неон",
+            "Градиент иконки QRTwin: голубой, синий и фиолетовый",
+            CreateNeonPalette),
+        new(
+            AppThemeId.Classic,
+            "Классика",
+            "Тёмная тема с оранжевыми акцентами",
+            CreateClassicPalette),
+        new(
+            AppThemeId.Glass,
+            "Стекло",
+            "Glassmorphism: глубокий синий, матовое стекло и cyan-свечение",
+            CreateGlassPalette)
+    ];
+
+    public static AppThemePalette GetPalette(AppThemeId themeId) =>
+        All.First(theme => theme.Id == themeId).CreatePalette();
+
+    public static AppThemeDescriptor GetDescriptor(AppThemeId themeId) =>
+        All.First(theme => theme.Id == themeId);
+
+    private static AppThemePalette CreateNeonPalette() => new()
+    {
+        AppBackground = Color.FromArgb("#0B1028"),
+        AppBackgroundDeep = Color.FromArgb("#060918"),
+        Surface = Color.FromArgb("#CC1A2248"),
+        SurfaceElevated = Color.FromArgb("#D9222D5C"),
+        SurfaceGlass = Color.FromArgb("#B3182038"),
+        PrimaryText = Color.FromArgb("#FFFFFF"),
+        SecondaryText = Color.FromArgb("#D9C8D8F0"),
+        MutedText = Color.FromArgb("#997A8FA8"),
+        Accent = Color.FromArgb("#03AFFF"),
+        AccentLight = Color.FromArgb("#4FC8FF"),
+        AccentGlow = Color.FromArgb("#4003AFFF"),
+        AccentSoft = Color.FromArgb("#2603AFFF"),
+        Danger = Color.FromArgb("#FF5C7A"),
+        Success = Color.FromArgb("#00E676"),
+        ScannerLine = Color.FromArgb("#03AFFF"),
+        Border = Color.FromArgb("#CC2A3560"),
+        BorderLight = Color.FromArgb("#CC3D4A78"),
+        TabActiveBackground = Color.FromArgb("#03AFFF"),
+        TabActiveText = Colors.White,
+        TabActiveIcon = Colors.White,
+        TabInactiveText = Color.FromArgb("#D9C8D8F0"),
+        TabInactiveIcon = Color.FromArgb("#997A8FA8"),
+        VisualEffects = GlassVisualEffects.Disabled,
+        PageBackgroundBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(1, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#0B1028"), 0f),
+                new(Color.FromArgb("#121A3A"), 0.45f),
+                new(Color.FromArgb("#1A1248"), 1f)
+            ]
+        },
+        BackgroundGlowBrush = new RadialGradientBrush
+        {
+            Center = new Point(0.5, 0),
+            Radius = 1.4,
+            GradientStops =
+            [
+                new(Color.FromArgb("#4503AFFF"), 0f),
+                new(Color.FromArgb("#352962FF"), 0.35f),
+                new(Color.FromArgb("#186200EA"), 0.65f),
+                new(Color.FromArgb("#000B1028"), 1f)
+            ]
+        },
+        BackgroundGlowSecondaryBrush = new SolidColorBrush(Colors.Transparent),
+        AccentGradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(1, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#03AFFF"), 0f),
+                new(Color.FromArgb("#2979FF"), 0.55f),
+                new(Color.FromArgb("#6A1B9A"), 1f)
+            ]
+        },
+        CardGradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#CC243058"), 0f),
+                new(Color.FromArgb("#CC182040"), 1f)
+            ]
+        },
+        OverlayScrimBrush = new SolidColorBrush(Color.FromArgb("#E6000000")),
+        OverlayPanelBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#CC243058"), 0f),
+                new(Color.FromArgb("#CC182040"), 1f)
+            ]
+        },
+        OverlayItemBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#CC1E2848"), 0f),
+                new(Color.FromArgb("#CC182038"), 1f)
+            ]
+        },
+        ScannerBeamBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#0003AFFF"), 0f),
+                new(Color.FromArgb("#3303AFFF"), 0.55f),
+                new(Color.FromArgb("#8003AFFF"), 0.85f),
+                new(Color.FromArgb("#03AFFF"), 1f)
+            ]
+        }
+    };
+
+    private static AppThemePalette CreateClassicPalette() => new()
+    {
+        AppBackground = Color.FromArgb("#121212"),
+        AppBackgroundDeep = Color.FromArgb("#0A0A0A"),
+        Surface = Color.FromArgb("#D91E1E1E"),
+        SurfaceElevated = Color.FromArgb("#D9282828"),
+        SurfaceGlass = Color.FromArgb("#D91E1E1E"),
+        PrimaryText = Color.FromArgb("#FFFFFF"),
+        SecondaryText = Color.FromArgb("#D99E9E9E"),
+        MutedText = Color.FromArgb("#D9666666"),
+        Accent = Color.FromArgb("#FF4D00"),
+        AccentLight = Color.FromArgb("#FF6B2C"),
+        AccentGlow = Color.FromArgb("#40FF4D00"),
+        AccentSoft = Color.FromArgb("#1AFF4D00"),
+        Danger = Color.FromArgb("#FF4444"),
+        Success = Color.FromArgb("#4CAF50"),
+        ScannerLine = Color.FromArgb("#FF4D00"),
+        Border = Color.FromArgb("#D92A2A2A"),
+        BorderLight = Color.FromArgb("#D93A3A3A"),
+        TabActiveBackground = Color.FromArgb("#FF4D00"),
+        TabActiveText = Colors.White,
+        TabActiveIcon = Colors.White,
+        TabInactiveText = Color.FromArgb("#D99E9E9E"),
+        TabInactiveIcon = Color.FromArgb("#D9666666"),
+        VisualEffects = GlassVisualEffects.Disabled,
+        PageBackgroundBrush = new SolidColorBrush(Color.FromArgb("#121212")),
+        BackgroundGlowBrush = new RadialGradientBrush
+        {
+            Center = new Point(0.5, 0),
+            Radius = 1.4,
+            GradientStops =
+            [
+                new(Color.FromArgb("#35FF4D00"), 0f),
+                new(Color.FromArgb("#18FF4D00"), 0.35f),
+                new(Color.FromArgb("#00121212"), 1f)
+            ]
+        },
+        BackgroundGlowSecondaryBrush = new SolidColorBrush(Colors.Transparent),
+        AccentGradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(1, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#FF4D00"), 0f),
+                new(Color.FromArgb("#FF6B2C"), 1f)
+            ]
+        },
+        CardGradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#D9242424"), 0f),
+                new(Color.FromArgb("#D91A1A1A"), 1f)
+            ]
+        },
+        OverlayScrimBrush = new SolidColorBrush(Color.FromArgb("#E6000000")),
+        OverlayPanelBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#D9242424"), 0f),
+                new(Color.FromArgb("#D91A1A1A"), 1f)
+            ]
+        },
+        OverlayItemBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#D9282828"), 0f),
+                new(Color.FromArgb("#D9222222"), 1f)
+            ]
+        },
+        ScannerBeamBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#00FF4D00"), 0f),
+                new(Color.FromArgb("#33FF4D00"), 0.55f),
+                new(Color.FromArgb("#80FF4D00"), 0.85f),
+                new(Color.FromArgb("#FF4D00"), 1f)
+            ]
+        }
+    };
+
+    private static AppThemePalette CreateGlassPalette() => new()
+    {
+        AppBackground = Color.FromArgb("#050B18"),
+        AppBackgroundDeep = Color.FromArgb("#030810"),
+        Surface = Color.FromArgb("#990A1628"),
+        SurfaceElevated = Color.FromArgb("#B3142040"),
+        SurfaceGlass = Color.FromArgb("#D9122038"),
+        PrimaryText = Color.FromArgb("#FFFFFF"),
+        SecondaryText = Color.FromArgb("#E8B8C8D8"),
+        MutedText = Color.FromArgb("#A0B0C0D0"),
+        Accent = Color.FromArgb("#00D1FF"),
+        AccentLight = Color.FromArgb("#66E5FF"),
+        AccentGlow = Color.FromArgb("#5000D1FF"),
+        AccentSoft = Color.FromArgb("#3300D1FF"),
+        Danger = Color.FromArgb("#FF5C7A"),
+        Success = Color.FromArgb("#00E5A0"),
+        ScannerLine = Color.FromArgb("#00D1FF"),
+        Border = Color.FromArgb("#33FFFFFF"),
+        BorderLight = Color.FromArgb("#4DFFFFFF"),
+        TabActiveBackground = Color.FromArgb("#B3142040"),
+        TabActiveText = Colors.White,
+        TabActiveIcon = Colors.White,
+        TabInactiveText = Color.FromArgb("#A0B0C0D0"),
+        TabInactiveIcon = Color.FromArgb("#8090A4B4"),
+        TabActiveBorder = Colors.Transparent,
+        VisualEffects = new GlassVisualEffects
+        {
+            IsEnabled = true,
+            BloomColor = Color.FromArgb("#00D1FF"),
+            SubtleBloomRadius = 10,
+            NormalBloomRadius = 20,
+            StrongBloomRadius = 30,
+            SubtleBloomOpacity = 0.32f,
+            NormalBloomOpacity = 0.28f,
+            StrongBloomOpacity = 0.38f,
+            SubtleBlurRadius = 10,
+            NormalBlurRadius = 18,
+            StrongBlurRadius = 24,
+            ElevatedBlurRadius = 26,
+            DropShadowColor = Color.FromArgb("#70050818"),
+            DropShadowRadius = 16,
+            DropShadowOffsetY = 10,
+            DropShadowOpacity = 0.38f
+        },
+        PageBackgroundBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(1, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#050B18"), 0f),
+                new(Color.FromArgb("#081222"), 0.4f),
+                new(Color.FromArgb("#0A1931"), 0.75f),
+                new(Color.FromArgb("#0D2847"), 1f)
+            ]
+        },
+        BackgroundGlowBrush = new RadialGradientBrush
+        {
+            Center = new Point(0.5, 0),
+            Radius = 1.6,
+            GradientStops =
+            [
+                new(Color.FromArgb("#6000D1FF"), 0f),
+                new(Color.FromArgb("#4503AFFF"), 0.28f),
+                new(Color.FromArgb("#28185880"), 0.58f),
+                new(Color.FromArgb("#00050818"), 1f)
+            ]
+        },
+        BackgroundGlowSecondaryBrush = new RadialGradientBrush
+        {
+            Center = new Point(0.82, 0.78),
+            Radius = 1.15,
+            GradientStops =
+            [
+                new(Color.FromArgb("#4500D1FF"), 0f),
+                new(Color.FromArgb("#2800A8E8"), 0.42f),
+                new(Color.FromArgb("#00000000"), 1f)
+            ]
+        },
+        AccentGradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(1, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#00D1FF"), 0f),
+                new(Color.FromArgb("#03AFFF"), 0.55f),
+                new(Color.FromArgb("#1E88E5"), 1f)
+            ]
+        },
+        CardGradientBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#E0142438"), 0f),
+                new(Color.FromArgb("#CC0E1828"), 1f)
+            ]
+        },
+        OverlayScrimBrush = new RadialGradientBrush
+        {
+            Center = new Point(0.5, 0.35),
+            Radius = 1.35,
+            GradientStops =
+            [
+                new(Color.FromArgb("#3500D1FF"), 0f),
+                new(Color.FromArgb("#88050818"), 0.5f),
+                new(Color.FromArgb("#E0050818"), 1f)
+            ]
+        },
+        OverlayPanelBrush = new SolidColorBrush(Color.FromArgb("#E00E1828")),
+        OverlayItemBrush = new SolidColorBrush(Color.FromArgb("#CC141E30")),
+        ScannerBeamBrush = new LinearGradientBrush
+        {
+            StartPoint = new Point(0, 0),
+            EndPoint = new Point(0, 1),
+            GradientStops =
+            [
+                new(Color.FromArgb("#0000D1FF"), 0f),
+                new(Color.FromArgb("#4000D1FF"), 0.55f),
+                new(Color.FromArgb("#9000D1FF"), 0.85f),
+                new(Color.FromArgb("#00D1FF"), 1f)
+            ]
+        }
+    };
+}

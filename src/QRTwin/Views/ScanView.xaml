@@ -5,6 +5,7 @@
              xmlns:controls="clr-namespace:QRTwin.Controls"
              xmlns:zxing="clr-namespace:ZXing.Net.Maui.Controls;assembly=ZXing.Net.MAUI.Controls"
              xmlns:helpers="clr-namespace:QRTwin.Helpers"
+             xmlns:effects="clr-namespace:QRTwin.Effects"
              x:Class="QRTwin.Views.ScanView"
              x:DataType="vm:ScanViewModel"
              HorizontalOptions="Fill"
@@ -16,7 +17,7 @@
     <Border
             Style="{StaticResource GlassCard}"
             Padding="0"
-            Stroke="{StaticResource Accent}"
+            Stroke="{DynamicResource Accent}"
             StrokeThickness="1.5">
       <Grid RowDefinitions="Auto,*">
 
@@ -39,16 +40,16 @@
             <Border WidthRequest="72"
                     HeightRequest="72"
                     StrokeShape="RoundRectangle 20"
-                    BackgroundColor="{StaticResource AccentSoft}">
+                    BackgroundColor="{DynamicResource AccentSoft}">
               <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Scan}"
-                                    IconColor="{StaticResource Accent}"
+                                    IconColor="{DynamicResource Accent}"
                                     WidthRequest="36"
                                     HeightRequest="36"
                                     HorizontalOptions="Center"
                                     VerticalOptions="Center" />
             </Border>
             <Label Text="{Binding ErrorMessage}"
-                   TextColor="{StaticResource SecondaryText}"
+                   TextColor="{DynamicResource SecondaryText}"
                    FontSize="15"
                    HorizontalTextAlignment="Center"
                    LineBreakMode="WordWrap" />
@@ -66,7 +67,7 @@
                   WidthRequest="{OnPlatform WinUI=360, Default=-1}"
                   HeightRequest="{OnPlatform WinUI=360, Default=-1}"
                   Background="Transparent"
-                  Stroke="{StaticResource Accent}"
+                  Stroke="{DynamicResource Accent}"
                   StrokeThickness="2"
                   StrokeShape="RoundRectangle 24">
             <Grid x:Name="ScannerContent">
@@ -109,7 +110,7 @@
                 </Grid>
 
                 <Label Text="Наведите камеру на любой QR-код"
-                       TextColor="{StaticResource MutedText}"
+                       TextColor="{DynamicResource MutedText}"
                        FontSize="12"
                        HorizontalTextAlignment="Center" />
               </VerticalStackLayout>
@@ -118,7 +119,7 @@
                     IsVisible="{Binding ShowScanAnimation}"
                     InputTransparent="True">
                 <BoxView x:Name="ScanLine"
-                         Background="{StaticResource ScannerBeamBrush}"
+                         Background="{DynamicResource ScannerBeamBrush}"
                          HeightRequest="56"
                          HorizontalOptions="Fill"
                          VerticalOptions="Start"
@@ -142,7 +143,7 @@
                         ColumnSpacing="12">
                     <Label Grid.Column="0"
                            Text="{Binding ScanResult}"
-                           TextColor="{StaticResource Accent}"
+                           TextColor="{DynamicResource Accent}"
                            FontSize="15"
                            LineBreakMode="WordWrap"
                            HorizontalTextAlignment="Center">
@@ -153,20 +154,20 @@
                         <DataTrigger TargetType="Label"
                                      Binding="{Binding IsUrl}"
                                      Value="False">
-                          <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
+                          <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
                         </DataTrigger>
                       </Label.Triggers>
                     </Label>
 
                     <Border Grid.Column="1"
                             Style="{StaticResource IconButton}"
-                            BackgroundColor="{StaticResource AccentSoft}"
+                            BackgroundColor="{DynamicResource AccentSoft}"
                             VerticalOptions="Start">
                       <Border.GestureRecognizers>
                         <TapGestureRecognizer Command="{Binding CopyResultCommand}" />
                       </Border.GestureRecognizers>
                       <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Copy}"
-                                            IconColor="{StaticResource Accent}" />
+                                            IconColor="{DynamicResource Accent}" />
                     </Border>
                   </Grid>
 

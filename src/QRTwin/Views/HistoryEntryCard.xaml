@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Border xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+        xmlns:vm="clr-namespace:QRTwin.ViewModels"
+        xmlns:views="clr-namespace:QRTwin.Views"
+        xmlns:controls="clr-namespace:QRTwin.Controls"
+        xmlns:helpers="clr-namespace:QRTwin.Helpers"
+        x:Class="QRTwin.Views.HistoryEntryCard"
+        x:DataType="vm:HistoryEntryItem"
+        Style="{StaticResource GlassOverlayItem}"
+        Padding="16">
+  <Border.GestureRecognizers>
+    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type views:HistoryView}}, Path=BindingContext.SelectEntryCommand}"
+                          CommandParameter="{Binding .}" />
+  </Border.GestureRecognizers>
+  <Grid ColumnDefinitions="*,Auto"
+        RowDefinitions="Auto,Auto,Auto"
+        ColumnSpacing="12"
+        RowSpacing="4">
+    <Border Grid.Row="0"
+            Grid.Column="0"
+            BackgroundColor="{DynamicResource AccentSoft}"
+            StrokeShape="RoundRectangle 8"
+            Padding="8,4"
+            HorizontalOptions="Start">
+      <Label Text="{Binding Entry.EntryType, Converter={StaticResource HistoryEntryTypeToStringConverter}}"
+             TextColor="{DynamicResource Accent}"
+             FontAttributes="Bold"
+             FontSize="12" />
+    </Border>
+
+    <Label Grid.Row="0"
+           Grid.Column="1"
+           Text="{Binding Entry.CreatedAt, Converter={StaticResource DateTimeToLocalStringConverter}}"
+           Style="{StaticResource CaptionLabel}"
+           VerticalOptions="Center" />
+
+    <Label Grid.Row="1"
+           Grid.Column="0"
+           Grid.ColumnSpan="2"
+           Text="{Binding Entry.Content}"
+           TextColor="{DynamicResource PrimaryText}"
+           FontSize="15"
+           LineBreakMode="TailTruncation"
+           MaxLines="3" />
+
+    <Border Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Style="{StaticResource IconButton}"
+            WidthRequest="40"
+            HeightRequest="40"
+            BackgroundColor="#22FF4444"
+            HorizontalOptions="End"
+            VerticalOptions="End"
+            Margin="0,4,2,0">
+      <Border.GestureRecognizers>
+        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type views:HistoryView}}, Path=BindingContext.DeleteEntryCommand}"
+                              CommandParameter="{Binding .}" />
+      </Border.GestureRecognizers>
+      <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Delete}"
+                            IconColor="{DynamicResource Danger}"
+                            WidthRequest="15"
+                            HeightRequest="15" />
+    </Border>
+  </Grid>
+</Border>

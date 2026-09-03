@@ -41,5 +41,7 @@
     <Move Condition="'@(_AndroidArtifact)' != ''"
           SourceFiles="@(_AndroidArtifact)"
           DestinationFiles="$(_PublishDirNormalized)$(_ArtifactBaseName)%(Extension)" />
+
+    <!-- Do not rename Windows .exe: WinApp SDK expects the host name to match AssemblyName (qrtwin.exe). -->
   </Target>
 </Project>

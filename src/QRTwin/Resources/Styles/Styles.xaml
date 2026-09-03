@@ -2,31 +2,61 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:controls="clr-namespace:QRTwin.Controls">
+    xmlns:controls="clr-namespace:QRTwin.Controls"
+    xmlns:effects="clr-namespace:QRTwin.Effects"
+    xmlns:themes="clr-namespace:QRTwin.Themes">
 
     <Style TargetType="ContentPage">
-        <Setter Property="BackgroundColor" Value="{StaticResource AppBackground}" />
+        <Setter Property="Background" Value="{DynamicResource PageBackgroundBrush}" />
     </Style>
 
     <Style x:Key="Card" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CardGradientBrush}" />
-        <Setter Property="Stroke" Value="{StaticResource Border}" />
+        <Setter Property="Background" Value="{DynamicResource CardGradientBrush}" />
+        <Setter Property="Stroke" Value="{DynamicResource Border}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 20" />
         <Setter Property="Padding" Value="20" />
     </Style>
 
     <Style x:Key="GlassCard" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceGlass}" />
-        <Setter Property="Stroke" Value="{StaticResource BorderLight}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
+    </Style>
+
+    <Style x:Key="GlassCardButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 10" />
+        <Setter Property="HeightRequest" Value="44" />
+        <Setter Property="HorizontalOptions" Value="Fill" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
+    </Style>
+
+    <Style x:Key="GlassOverlayCard" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource OverlayPanelBrush}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="Padding" Value="20" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
+    </Style>
+
+    <Style x:Key="GlassPanelCard" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 24" />
         <Setter Property="Padding" Value="20" />
     </Style>
 
-    <Style x:Key="IconButton" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceElevated}" />
-        <Setter Property="Stroke" Value="{StaticResource Border}" />
+    <Style x:Key="GlassHeaderIconButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 14" />
         <Setter Property="Padding" Value="12" />
@@ -36,8 +66,58 @@
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
+    <Style x:Key="OverlayCloseButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="#c4373e" />
+        <Setter Property="Stroke" Value="Transparent" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 12" />
+        <Setter Property="Padding" Value="10" />
+        <Setter Property="WidthRequest" Value="40" />
+        <Setter Property="HeightRequest" Value="40" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="GlassOverlayItem" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceGlass}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 18" />
+    </Style>
+
+    <Style x:Key="GlassChromeBar" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource Surface}" />
+        <Setter Property="Stroke" Value="{DynamicResource BorderLight}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Strong}" />
+    </Style>
+
+    <Style x:Key="IconButton" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceElevated}" />
+        <Setter Property="Stroke" Value="{DynamicResource Border}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Subtle}" />
+    </Style>
+
+    <Style x:Key="AccentIconButton" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource AccentGradientBrush}" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 14" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="effects:GlassEffect.Intensity" Value="{x:Static themes:GlassEffectIntensity.Normal}" />
+    </Style>
+
     <Style x:Key="PrimaryButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource Accent}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource Accent}" />
         <Setter Property="TextColor" Value="#FFFFFF" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="FontSize" Value="15" />
@@ -47,8 +127,8 @@
     </Style>
 
     <Style x:Key="SecondaryButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceElevated}" />
-        <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceElevated}" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="CornerRadius" Value="16" />
         <Setter Property="Padding" Value="20,14" />
@@ -56,16 +136,16 @@
     </Style>
 
     <Style x:Key="InputEntry" TargetType="Entry">
-        <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
-        <Setter Property="PlaceholderColor" Value="{StaticResource MutedText}" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
+        <Setter Property="PlaceholderColor" Value="{DynamicResource MutedText}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="MinimumHeightRequest" Value="44" />
     </Style>
 
     <Style x:Key="InputEditor" TargetType="Editor">
-        <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
-        <Setter Property="PlaceholderColor" Value="{StaticResource MutedText}" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
+        <Setter Property="PlaceholderColor" Value="{DynamicResource MutedText}" />
         <Setter Property="BackgroundColor" Value="Transparent" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="MinimumHeightRequest" Value="44" />
@@ -73,24 +153,24 @@
     </Style>
 
     <Style x:Key="TitleLabel" TargetType="Label">
-        <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
         <Setter Property="FontSize" Value="24" />
         <Setter Property="FontAttributes" Value="Bold" />
     </Style>
 
     <Style x:Key="HeaderLabel" TargetType="Label">
-        <Setter Property="TextColor" Value="{StaticResource PrimaryText}" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryText}" />
         <Setter Property="FontSize" Value="18" />
         <Setter Property="FontAttributes" Value="Bold" />
     </Style>
 
     <Style x:Key="SubtitleLabel" TargetType="Label">
-        <Setter Property="TextColor" Value="{StaticResource SecondaryText}" />
+        <Setter Property="TextColor" Value="{DynamicResource SecondaryText}" />
         <Setter Property="FontSize" Value="14" />
     </Style>
 
     <Style x:Key="CaptionLabel" TargetType="Label">
-        <Setter Property="TextColor" Value="{StaticResource MutedText}" />
+        <Setter Property="TextColor" Value="{DynamicResource MutedText}" />
         <Setter Property="FontSize" Value="12" />
     </Style>
 
@@ -106,6 +186,6 @@
         <Setter Property="HeightRequest" Value="24" />
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="IconColor" Value="{StaticResource PrimaryText}" />
+        <Setter Property="IconColor" Value="{DynamicResource PrimaryText}" />
     </Style>
 </ResourceDictionary>

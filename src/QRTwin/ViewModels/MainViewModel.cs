@@ -1,11 +1,14 @@
 using QRTwin.Models;
+using QRTwin.Services;
 
 namespace QRTwin.ViewModels;
 
 public partial class MainViewModel(
     ScanViewModel scan,
     GenerateViewModel generate,
-    HistoryViewModel history) : ObservableObject
+    HistoryViewModel history,
+    ThemesViewModel themes,
+    IThemeService themeService) : ObservableObject
 {
     public ScanViewModel Scan { get; } = scan;
 
@@ -13,19 +16,26 @@ public partial class MainViewModel(
 
     public HistoryViewModel History { get; } = history;
 
+    public ThemesViewModel Themes { get; } = themes;
+
     [ObservableProperty]
     public partial AppTab SelectedTab { get; set; }
 
     [ObservableProperty]
     public partial bool IsHistoryVisible { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsThemesVisible { get; set; }
+
     public void Initialize()
     {
         Scan.HistorySaved += OnHistorySaved;
         Generate.HistorySaved += OnHistorySaved;
         History.EntrySelected += OnHistoryEntrySelected;
+        themeService.ThemeChanged += OnThemeChanged;
         Scan.IsActive = true;
         SelectedTab = AppTab.Scan;
+        Themes.Refresh();
     }
 
     partial void OnSelectedTabChanged(AppTab value)
@@ -47,12 +57,31 @@ public partial class MainViewModel(
     [RelayCommand]
     private async Task OpenHistoryAsync()
     {
+        await MainThread.InvokeOnMainThreadAsync(() => IsThemesVisible = false);
         await History.LoadAsync().ConfigureAwait(false);
-        IsHistoryVisible = true;
+        await MainThread.InvokeOnMainThreadAsync(() =>
+        {
+            // Toggle guarantees PropertyChanged even if a prior open failed mid-animation.
+            IsHistoryVisible = false;
+            IsHistoryVisible = true;
+        });
     }
 
     [RelayCommand]
     private void CloseHistory() => IsHistoryVisible = false;
+
+    [RelayCommand]
+    private void OpenThemes()
+    {
+        IsHistoryVisible = false;
+        Themes.Refresh();
+        IsThemesVisible = true;
+    }
+
+    [RelayCommand]
+    private void CloseThemes() => IsThemesVisible = false;
+
+    private void OnThemeChanged(object? sender, EventArgs e) => Themes.Refresh();
 
     private async void OnHistorySaved(object? sender, EventArgs e)
     {

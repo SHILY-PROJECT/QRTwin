@@ -46,42 +46,51 @@ function Clear-BuildCache {
 
 function Get-VersionName {
     [xml]$projectXml = Get-Content $Project
-    return $projectXml.Project.PropertyGroup.ApplicationDisplayVersion | Select-Object -First 1
+    # ApplicationDisplayVersion is $(Version) in the csproj; read Version directly.
+    return $projectXml.Project.PropertyGroup.Version | Select-Object -First 1
 }
 
 function Publish-Windows {
     $output = Join-Path $BuildRoot "windows"
+    $binDir = Join-Path $Root "src\QRTwin\bin\$Configuration\net10.0-windows10.0.19041.0\win-x64"
     $version = Get-VersionName
-    Write-Host "Publishing Windows (single-file) to $output ..."
+
+    Write-Host "Building Windows to $output ..."
 
     Clear-BuildCache -Framework "net10.0-windows10.0.19041.0"
 
-    dotnet publish $Project `
+    # dotnet publish with PublishSingleFile omits Platforms\Windows\App.xbf and crashes at startup.
+    dotnet build $Project `
         -f net10.0-windows10.0.19041.0 `
         -c $Configuration `
-        -o $output `
         -p:RuntimeIdentifierOverride=win-x64 `
         -p:WindowsPackageType=None `
         -p:WindowsAppSDKSelfContained=true `
-        -p:SelfContained=true `
-        -p:PublishSingleFile=true `
-        -p:IncludeAllContentForSelfExtract=true `
-        -p:EnableMsixTooling=true
+        -p:SelfContained=true
 
     if ($LASTEXITCODE -ne 0) {
-        throw "Windows publish failed with exit code $LASTEXITCODE"
+        throw "Windows build failed with exit code $LASTEXITCODE"
     }
 
-    $exe = Get-ChildItem -Path $output -Filter "*.exe" |
-        Where-Object { $_.Name -notlike "RestartAgent.exe" } |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1
-
-    if ($exe) {
-        Write-Host "Windows executable: $($exe.FullName)"
+    if (-not (Test-Path $binDir)) {
+        throw "Windows build output not found: $binDir"
     }
 
-    Write-Host "Windows publish complete: $output"
+    if (Test-Path $output) {
+        Remove-Item -Path $output -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Force -Path $output | Out-Null
+    Copy-Item -Path (Join-Path $binDir "*") -Destination $output -Recurse -Force
+
+    $exe = Join-Path $output "qrtwin.exe"
+    if (-not (Test-Path $exe)) {
+        throw "Windows executable not found: $exe"
+    }
+
+    # WinApp SDK / MAUI resolve the app host by AssemblyName; renaming the .exe breaks startup.
+    Write-Host "Windows executable: $exe (version $version)"
+    Write-Host "Windows build complete: $output"
 }
 
 function Build-Android {
