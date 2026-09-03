@@ -13,12 +13,13 @@
 
   <ScrollView x:Name="GenerateScrollView"
               Orientation="Vertical"
-              VerticalScrollBarVisibility="Default"
+              VerticalScrollBarVisibility="Never"
+              HorizontalScrollBarVisibility="Never"
               HorizontalOptions="Fill"
               VerticalOptions="Fill">
     <VerticalStackLayout Padding="0,4,0,16"
                          Spacing="16"
-                         VerticalOptions="Fill">
+                         HorizontalOptions="Fill">
 
       <Label Text="{Binding ErrorMessage}"
              IsVisible="{Binding ErrorMessage, Converter={StaticResource IsStringNotNullOrEmptyConverter}}"
@@ -35,16 +36,17 @@
       <!-- Empty state -->
       <Border x:Name="EmptyStateCard"
               Style="{StaticResource GlassCard}"
+              Stroke="{DynamicResource Accent}"
+              StrokeThickness="1.5"
               IsVisible="{Binding HasQrCode, Converter={StaticResource InvertedBoolConverter}}"
-              VerticalOptions="Center"
-              MinimumHeightRequest="280">
+              HorizontalOptions="Fill">
         <VerticalStackLayout Spacing="16"
                              VerticalOptions="Center"
                              HorizontalOptions="Center"
                              Padding="16">
           <Border WidthRequest="80"
                   HeightRequest="80"
-                  StrokeShape="RoundRectangle 24"
+                  StrokeShape="RoundRectangle 10"
                   BackgroundColor="{DynamicResource AccentSoft}">
             <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
                                   IconColor="{DynamicResource Accent}"
@@ -67,18 +69,17 @@
       <!-- QR result -->
       <Border Style="{StaticResource Card}"
               IsVisible="{Binding HasQrCode}"
-              HorizontalOptions="Center"
+              HorizontalOptions="Fill"
               Stroke="{DynamicResource Accent}"
               StrokeThickness="1.5"
-              x:Name="QrCard"
-              MaximumWidthRequest="400">
-        <VerticalStackLayout Spacing="20" HorizontalOptions="Center">
+              x:Name="QrCard">
+        <VerticalStackLayout Spacing="20" HorizontalOptions="Fill">
           <Label Text="Ваш QR-код"
                  Style="{StaticResource HeaderLabel}"
                  HorizontalTextAlignment="Center" />
 
           <Border BackgroundColor="#FFFFFF"
-                  StrokeShape="RoundRectangle 16"
+                  StrokeShape="RoundRectangle 10"
                   Padding="12"
                   HorizontalOptions="Center">
             <Image Source="{Binding QrCodeImage}"
@@ -94,7 +95,7 @@
                     BackgroundColor="{DynamicResource AccentSoft}"
                     Stroke="{DynamicResource Border}"
                     StrokeThickness="1"
-                    StrokeShape="RoundRectangle 16"
+                    StrokeShape="RoundRectangle 10"
                     Padding="16,14"
                     effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Subtle}">
               <Border.GestureRecognizers>
@@ -115,7 +116,7 @@
 
             <Border Grid.Column="1"
                     Background="{DynamicResource AccentGradientBrush}"
-                    StrokeShape="RoundRectangle 16"
+                    StrokeShape="RoundRectangle 10"
                     Padding="16,14"
                     effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}">
               <Border.GestureRecognizers>

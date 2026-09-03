@@ -28,7 +28,6 @@ public partial class MainPage : ContentPage
     private Color _separatorActiveColor = null!;
     private bool _isUnloaded;
     private bool _authorShimmerRunning;
-    private double? _referenceExpandedEditorHeight;
     private AppTab _displayedTab;
     private bool _isTabAnimating;
     private bool _isPanning;
@@ -36,6 +35,7 @@ public partial class MainPage : ContentPage
     private bool _themesOverlayUiVisible;
     private int _inputBarAnimationGeneration;
     private int _inputButtonAnimationGeneration;
+    private int _editorExpandGeneration;
     private bool _inputButtonsAreActive;
     private bool _swipeIsHorizontal;
     private double _panTotalX;
@@ -165,7 +165,6 @@ public partial class MainPage : ContentPage
         if (_displayedTab is AppTab.Generate && GenerateInputBar.IsVisible)
         {
             UpdateGenerateContentInset(true);
-            _referenceExpandedEditorHeight = null;
         }
     }
 
@@ -195,12 +194,19 @@ public partial class MainPage : ContentPage
 
     private void OnContentHostSizeChanged(object? sender, EventArgs e)
     {
-        _referenceExpandedEditorHeight = null;
         UpdateContentHostClip();
 
         if (!_isTabAnimating && !_isPanning)
         {
             SyncTabPositions();
+        }
+
+        if (_displayedTab is AppTab.Generate
+            && GenerateInputBar.IsVisible
+            && GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8)
+        {
+            // No QR: keep filling free space without focus. With QR: only while editing.
+            _ = ExpandGenerateInputEditorAsync(requireFocus: _viewModel.Generate.HasQrCode);
         }
     }
 
@@ -219,9 +225,20 @@ public partial class MainPage : ContentPage
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
         }
 
-        if (e.IsProperty(nameof(GenerateViewModel.HasQrCode)) && _viewModel.Generate.HasQrCode)
+        if (!e.IsProperty(nameof(GenerateViewModel.HasQrCode)))
+        {
+            return;
+        }
+
+        if (_viewModel.Generate.HasQrCode)
         {
             _ = CollapseGenerateInputEditorAsync();
+            return;
+        }
+
+        if (_displayedTab is AppTab.Generate && GenerateInputBar.IsVisible)
+        {
+            _ = ExpandGenerateInputEditorAsync(requireFocus: false);
         }
     }
 
@@ -371,15 +388,17 @@ public partial class MainPage : ContentPage
         }
 
         UpdateInputEditorSeparatorState(isFocused: true);
-        _ = ExpandGenerateInputEditorAsync();
+        _ = ExpandGenerateInputEditorAsync(requireFocus: true);
     }
 
-    private async Task ExpandGenerateInputEditorAsync()
+    private async Task ExpandGenerateInputEditorAsync(bool requireFocus = true)
     {
-        if (_isUnloaded)
+        if (_isUnloaded || _displayedTab is not AppTab.Generate)
         {
             return;
         }
+
+        var generation = ++_editorExpandGeneration;
 
         if (_viewModel.Generate.HasQrCode
             && GenerateContent.FindByName<ScrollView>("GenerateScrollView") is { } scrollView
@@ -396,15 +415,17 @@ public partial class MainPage : ContentPage
         }
 
         double targetHeight = CollapsedEditorHeight;
-        for (var attempt = 0; attempt < 4; attempt++)
+        for (var attempt = 0; attempt < 8; attempt++)
         {
-            if (_isUnloaded || !GenerateInputEditor.IsFocused)
+            if (_isUnloaded
+                || generation != _editorExpandGeneration
+                || (requireFocus && !GenerateInputEditor.IsFocused))
             {
                 return;
             }
 
-            targetHeight = Math.Max(CollapsedEditorHeight, CalculateExpandedEditorMaxHeight());
-            if (targetHeight > CollapsedEditorHeight + 8)
+            if (TryCalculateExpandedEditorMaxHeight(out targetHeight)
+                && targetHeight > CollapsedEditorHeight + 8)
             {
                 break;
             }
@@ -413,11 +434,19 @@ public partial class MainPage : ContentPage
             {
                 0 => 16,
                 1 => 32,
-                _ => 48
+                2 => 48,
+                _ => 64
             });
         }
 
-        if (_isUnloaded || !GenerateInputEditor.IsFocused)
+        if (_isUnloaded
+            || generation != _editorExpandGeneration
+            || (requireFocus && !GenerateInputEditor.IsFocused))
+        {
+            return;
+        }
+
+        if (targetHeight <= CollapsedEditorHeight + 8)
         {
             return;
         }
@@ -429,12 +458,38 @@ public partial class MainPage : ContentPage
             EditorHeightAnimationName);
 
         UpdateGenerateContentInset(true);
+
+        // Layout settles after the bar grows — correct residual gap on a second pass.
+        await Task.Delay(48);
+        if (_isUnloaded
+            || generation != _editorExpandGeneration
+            || (requireFocus && !GenerateInputEditor.IsFocused))
+        {
+            return;
+        }
+
+        if (TryCalculateExpandedEditorMaxHeight(out var correctedHeight)
+            && Math.Abs(correctedHeight - GenerateInputEditor.HeightRequest) > 4)
+        {
+            await GenerateInputEditor.AnimateHeightRequestAsync(
+                correctedHeight,
+                ViewAnimationExtensions.StandardDuration,
+                ViewAnimationExtensions.StandardEase,
+                EditorHeightAnimationName);
+            UpdateGenerateContentInset(true);
+        }
     }
 
     private async void OnGenerateInputEditorUnfocused(object? sender, FocusEventArgs e)
     {
         UpdateInputEditorSeparatorState(isFocused: false);
-        await CollapseGenerateInputEditorAsync();
+
+        // Without a QR the editor should keep filling the free area even when unfocused.
+        // With a QR, collapse back so the result card stays primary.
+        if (_viewModel.Generate.HasQrCode)
+        {
+            await CollapseGenerateInputEditorAsync();
+        }
     }
 
     private async Task CollapseGenerateInputEditorAsync()
@@ -444,6 +499,7 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        _editorExpandGeneration++;
         UpdateInputEditorSeparatorState(isFocused: false);
 
         if (GenerateInputEditor.IsFocused)
@@ -475,42 +531,56 @@ public partial class MainPage : ContentPage
         GenerateInputEditor.Unfocus();
     }
 
-    private double CalculateExpandedEditorMaxHeight()
+    /// <summary>
+    /// Grows the editor so the input bar top sits just below the empty-state / QR card.
+    /// Uses live layout bounds so repeated expand/collapse cycles stay correct.
+    /// </summary>
+    private bool TryCalculateExpandedEditorMaxHeight(out double maxHeight)
     {
-        if (ContentHost.Height <= 0)
+        maxHeight = CollapsedEditorHeight;
+
+        if (ContentAreaGrid.Height <= 0 || GenerateInputBar.Height <= 0)
         {
-            return CollapsedEditorHeight;
+            return false;
         }
 
-        if (!_viewModel.Generate.HasQrCode && _referenceExpandedEditorHeight is { } cachedHeight)
+        // End-aligned bar must have a real Y once laid out.
+        if (GenerateInputBar.Y <= 0 && ContentAreaGrid.Height > GenerateInputBar.Height + 24)
         {
-            return cachedHeight;
+            return false;
         }
 
-        var freeSpace = _viewModel.Generate.HasQrCode
-            ? GenerateContent.GetFreeSpaceBelowQrCard(
-                ContentHost.Height,
-                ContentHost.Padding,
-                ContentHost.Width)
-            : GenerateContent.GetFreeSpaceBelowEmptyState(
-                ContentHost.Height,
-                ContentHost.Padding);
-
-        freeSpace -= GetGenerateInputBarInset();
-
-        if (freeSpace < 0)
+        double anchorBottom;
+        if (_viewModel.Generate.HasQrCode)
         {
-            return CollapsedEditorHeight;
+            if (!GenerateContent.TryGetQrCardBottomIn(ContentAreaGrid, out anchorBottom))
+            {
+                return false;
+            }
+        }
+        else if (!GenerateContent.TryGetEmptyStateBottomIn(ContentAreaGrid, out anchorBottom))
+        {
+            return false;
         }
 
-        var maxHeight = CollapsedEditorHeight + Math.Max(0, freeSpace - ExpansionAnchorGap);
-
-        if (!_viewModel.Generate.HasQrCode)
+        var barTop = GenerateInputBar.Y;
+        var gapAboveBar = barTop - anchorBottom;
+        if (double.IsNaN(gapAboveBar) || double.IsInfinity(gapAboveBar))
         {
-            _referenceExpandedEditorHeight = maxHeight;
+            return false;
         }
 
-        return maxHeight;
+        var currentEditorHeight = GenerateInputEditor.HeightRequest > 0
+            ? GenerateInputEditor.HeightRequest
+            : CollapsedEditorHeight;
+        if (GenerateInputEditor.Height > 0)
+        {
+            currentEditorHeight = Math.Max(currentEditorHeight, GenerateInputEditor.Height);
+        }
+
+        // Positive gap → grow editor; negative → shrink so the small anchor gap remains.
+        maxHeight = Math.Max(CollapsedEditorHeight, currentEditorHeight + gapAboveBar - ExpansionAnchorGap);
+        return true;
     }
 
     private void OnImageGenTapped(object? sender, TappedEventArgs e)
@@ -612,6 +682,8 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        PreparePanelsForTransition();
+
         if (!fromCurrentPosition)
         {
             SyncTabPositions();
@@ -635,6 +707,7 @@ public partial class MainPage : ContentPage
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
             _isTabAnimating = false;
+            SyncTabPositions();
             return;
         }
 
@@ -647,6 +720,30 @@ public partial class MainPage : ContentPage
         _displayedTab = newTab;
         UpdateGenerateContentInset(_displayedTab is AppTab.Generate);
         _isTabAnimating = false;
+        SyncTabPositions();
+    }
+
+    private void PreparePanelsForTransition()
+    {
+        var width = ContentHost.Width;
+        if (width <= 0)
+        {
+            return;
+        }
+
+        // Mount both panels before translating. On Android the camera SurfaceView can keep
+        // stealing hits if the inactive panel stays in the tree after a swipe.
+        ScanPanel.IsVisible = true;
+        GeneratePanel.IsVisible = true;
+        ScanPanel.InputTransparent = false;
+        GeneratePanel.InputTransparent = false;
+        ScanPanel.Opacity = 1;
+        GeneratePanel.Opacity = 1;
+
+        if (Math.Abs(ScanPanel.TranslationX) < 0.5 && Math.Abs(GeneratePanel.TranslationX) < 0.5)
+        {
+            SyncTabPositions();
+        }
     }
 
     private void SyncTabPositions(double panOffset = 0)
@@ -660,25 +757,60 @@ public partial class MainPage : ContentPage
             GeneratePanel.TranslationX = 0;
             ScanPanel.Opacity = 1;
             GeneratePanel.Opacity = 1;
+            ScanPanel.InputTransparent = _displayedTab is not AppTab.Scan;
+            GeneratePanel.InputTransparent = _displayedTab is not AppTab.Generate;
             return;
         }
 
+        var transitioning = _isPanning || _isTabAnimating || Math.Abs(panOffset) > 0.5;
+
+        if (transitioning)
+        {
+            ScanPanel.IsVisible = true;
+            GeneratePanel.IsVisible = true;
+            ScanPanel.InputTransparent = false;
+            GeneratePanel.InputTransparent = false;
+
+            switch (_displayedTab)
+            {
+                case AppTab.Scan:
+                    ScanPanel.TranslationX = panOffset;
+                    GeneratePanel.TranslationX = width + panOffset;
+                    break;
+                case AppTab.Generate:
+                    ScanPanel.TranslationX = -width + panOffset;
+                    GeneratePanel.TranslationX = panOffset;
+                    break;
+            }
+
+            ScanPanel.Opacity = 1;
+            GeneratePanel.Opacity = 1;
+            return;
+        }
+
+        // Settled: hide the inactive panel so Android camera/native views cannot intercept input.
         switch (_displayedTab)
         {
             case AppTab.Scan:
-                ScanPanel.TranslationX = panOffset;
-                GeneratePanel.TranslationX = width + panOffset;
+                ScanPanel.TranslationX = 0;
+                GeneratePanel.TranslationX = width;
+                ScanPanel.IsVisible = true;
+                GeneratePanel.IsVisible = false;
+                ScanPanel.InputTransparent = false;
+                GeneratePanel.InputTransparent = true;
                 break;
             case AppTab.Generate:
-                ScanPanel.TranslationX = -width + panOffset;
-                GeneratePanel.TranslationX = panOffset;
+                ScanPanel.TranslationX = -width;
+                GeneratePanel.TranslationX = 0;
+                ScanPanel.IsVisible = false;
+                GeneratePanel.IsVisible = true;
+                ScanPanel.InputTransparent = true;
+                GeneratePanel.InputTransparent = false;
                 break;
         }
 
         ScanPanel.Opacity = 1;
         GeneratePanel.Opacity = 1;
-        ScanPanel.IsVisible = true;
-        GeneratePanel.IsVisible = true;
     }
 
     private void OnContentPanUpdated(object? sender, PanUpdatedEventArgs e)
@@ -700,6 +832,7 @@ public partial class MainPage : ContentPage
                 _isPanning = true;
                 _swipeIsHorizontal = false;
                 _panTotalX = 0;
+                PreparePanelsForTransition();
                 GenerateInputEditor.Unfocus();
                 break;
 
@@ -749,6 +882,7 @@ public partial class MainPage : ContentPage
                 {
                     _swipeIsHorizontal = false;
                     _panTotalX = 0;
+                    SyncTabPositions();
                     return;
                 }
 
@@ -795,6 +929,9 @@ public partial class MainPage : ContentPage
             return;
         }
 
+        _isTabAnimating = true;
+        PreparePanelsForTransition();
+
         var targetScanX = _displayedTab is AppTab.Scan ? 0 : -width;
         var targetGenerateX = _displayedTab is AppTab.Scan ? width : 0;
 
@@ -807,6 +944,9 @@ public partial class MainPage : ContentPage
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
         }
+
+        _isTabAnimating = false;
+        SyncTabPositions();
     }
 
     private async Task SetGenerateInputBarVisibleAsync(bool show)
@@ -825,6 +965,13 @@ public partial class MainPage : ContentPage
             {
                 UpdateGenerateContentInset(true);
                 UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
+
+                if (!_viewModel.Generate.HasQrCode
+                    && GenerateInputEditor.HeightRequest <= CollapsedEditorHeight + 8)
+                {
+                    _ = ExpandGenerateInputEditorAsync(requireFocus: false);
+                }
+
                 return;
             }
 
@@ -862,6 +1009,12 @@ public partial class MainPage : ContentPage
             GenerateInputBar.InputTransparent = false;
             UpdateGenerateContentInset(true);
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
+
+            if (!_viewModel.Generate.HasQrCode)
+            {
+                _ = ExpandGenerateInputEditorAsync(requireFocus: false);
+            }
+
             return;
         }
 
@@ -1067,6 +1220,20 @@ public partial class MainPage : ContentPage
 
         ThemesHeaderButton.Style = (Style)resources[isGlass ? "GlassHeaderIconButton" : "IconButton"];
         HistoryHeaderButton.Style = (Style)resources[isGlass ? "GlassHeaderIconButton" : "AccentIconButton"];
+
+        // Glass header chrome uses frosted fills only; drop any leftover Intensity from other styles.
+        if (isGlass)
+        {
+            if (ThemesHeaderButton.IsSet(GlassEffect.IntensityProperty))
+            {
+                ThemesHeaderButton.ClearValue(GlassEffect.IntensityProperty);
+            }
+
+            if (HistoryHeaderButton.IsSet(GlassEffect.IntensityProperty))
+            {
+                HistoryHeaderButton.ClearValue(GlassEffect.IntensityProperty);
+            }
+        }
 
         var accent = (Color)resources["Accent"];
         ThemesHeaderIcon.IconColor = accent;

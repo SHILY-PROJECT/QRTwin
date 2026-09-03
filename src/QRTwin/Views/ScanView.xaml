@@ -39,8 +39,8 @@
                                Padding="24">
             <Border WidthRequest="72"
                     HeightRequest="72"
-                    StrokeShape="RoundRectangle 20"
-                    BackgroundColor="{DynamicResource AccentSoft}">
+                StrokeShape="RoundRectangle 10"
+                BackgroundColor="{DynamicResource AccentSoft}">
               <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Scan}"
                                     IconColor="{DynamicResource Accent}"
                                     WidthRequest="36"
@@ -69,7 +69,7 @@
                   Background="Transparent"
                   Stroke="{DynamicResource Accent}"
                   StrokeThickness="2"
-                  StrokeShape="RoundRectangle 24">
+                  StrokeShape="RoundRectangle 10">
             <Grid x:Name="ScannerContent">
               <zxing:CameraBarcodeReaderView x:Name="BarcodeReader"
                                              BarcodesDetected="OnBarcodesDetected"
@@ -80,7 +80,7 @@
                                              HeightRequest="{OnPlatform Android=-1, Default=1}"
                                              HorizontalOptions="{OnPlatform Android=Fill, Default=Start}"
                                              VerticalOptions="{OnPlatform Android=Fill, Default=Start}"
-                                             InputTransparent="{OnPlatform Android=False, Default=True}" />
+                                             InputTransparent="True" />
 
               <VerticalStackLayout Spacing="12"
                                    VerticalOptions="Center"
@@ -97,7 +97,7 @@
                       HeightRequest="{OnPlatform WinUI=220, Default=200}"
                       HorizontalOptions="Center">
                   <Border BackgroundColor="#FFFFFF"
-                          StrokeShape="RoundRectangle 16"
+                          StrokeShape="RoundRectangle 10"
                           Padding="10"
                           HorizontalOptions="Fill"
                           VerticalOptions="Fill">

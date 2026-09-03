@@ -10,11 +10,14 @@
              HorizontalOptions="Fill"
              VerticalOptions="Fill">
 
+  <!-- ScrollView is edge-to-edge; item padding keeps content inset while scrollbar hugs the Border. -->
   <ScrollView Orientation="Vertical"
               VerticalScrollBarVisibility="Default"
+              HorizontalScrollBarVisibility="Never"
               HorizontalOptions="Fill"
               VerticalOptions="Fill">
     <VerticalStackLayout Spacing="12"
+                         Padding="20,4,20,20"
                          BindableLayout.ItemsSource="{Binding Themes}">
       <BindableLayout.ItemTemplate>
         <DataTemplate x:DataType="vm:ThemeOptionViewModel">
@@ -39,7 +42,7 @@
               <Border Grid.Column="0"
                       WidthRequest="48"
                       HeightRequest="48"
-                      StrokeShape="RoundRectangle 14"
+                      StrokeShape="RoundRectangle 10"
                       Stroke="{DynamicResource Border}"
                       StrokeThickness="1"
                       Background="{Binding PreviewBrush}"

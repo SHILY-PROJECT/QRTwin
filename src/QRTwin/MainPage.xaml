@@ -33,7 +33,7 @@
           ColumnSpacing="12">
       <Border WidthRequest="44"
               HeightRequest="44"
-              StrokeShape="RoundRectangle 14"
+              StrokeShape="RoundRectangle 10"
               Background="{DynamicResource AccentGradientBrush}"
               effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}">
         <controls:SvgIconView IconName="{x:Static helpers:IconPaths.Generate}"
@@ -208,7 +208,7 @@
             Style="{StaticResource GlassChromeBar}"
             Margin="16,0,16,20"
             Padding="4"
-            StrokeShape="RoundRectangle 24"
+            StrokeShape="RoundRectangle 10"
             MaximumWidthRequest="720"
             HorizontalOptions="Fill">
       <Grid ColumnDefinitions="*,*" ColumnSpacing="4">
@@ -274,8 +274,9 @@
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
-                RowSpacing="18">
+                RowSpacing="0">
             <Grid Grid.Row="0"
+                  Padding="20,20,20,12"
                   ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
               <Label Text="История"
@@ -330,8 +331,9 @@
                 VerticalOptions="Fill"
                 HorizontalOptions="Fill">
           <Grid RowDefinitions="Auto,*"
-                RowSpacing="18">
+                RowSpacing="0">
             <Grid Grid.Row="0"
+                  Padding="20,20,20,12"
                   ColumnDefinitions="*,Auto"
                   ColumnSpacing="12">
               <Label Text="Темы"

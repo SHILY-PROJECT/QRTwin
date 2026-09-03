@@ -28,6 +28,12 @@ public static class GlassEffect
             return;
         }
 
+        if (!border.IsSet(IntensityProperty))
+        {
+            ClearEffects(border);
+            return;
+        }
+
         EnsureHooked(border);
         ApplyEffects(border);
     }
@@ -49,7 +55,7 @@ public static class GlassEffect
 
     internal static void ApplyEffects(Border border)
     {
-        if (GetEffects() is not { IsEnabled: true } effects)
+        if (!border.IsSet(IntensityProperty) || GetEffects() is not { IsEnabled: true } effects)
         {
             ClearEffects(border);
             return;
