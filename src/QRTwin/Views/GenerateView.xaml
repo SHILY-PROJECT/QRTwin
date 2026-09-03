@@ -69,10 +69,11 @@
       <!-- QR result -->
       <Border Style="{StaticResource Card}"
               IsVisible="{Binding HasQrCode}"
-              HorizontalOptions="Fill"
+              HorizontalOptions="Center"
               Stroke="{DynamicResource Accent}"
               StrokeThickness="1.5"
-              x:Name="QrCard">
+              x:Name="QrCard"
+              MaximumWidthRequest="400">
         <VerticalStackLayout Spacing="20" HorizontalOptions="Fill">
           <Label Text="Ваш QR-код"
                  Style="{StaticResource HeaderLabel}"
