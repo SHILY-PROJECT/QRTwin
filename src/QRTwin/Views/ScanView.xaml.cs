@@ -8,6 +8,10 @@ namespace QRTwin.Views;
 public partial class ScanView : ContentView
 {
     private const double ScanBeamHeight = 56;
+    private const double MinFrameSize = 200;
+    private const double MaxFrameSize = 520;
+    private const double MinQrSize = 120;
+    private const double MaxQrSize = 280;
 
     private bool _blinkRunning;
     private bool _scanLineRunning;
@@ -24,6 +28,7 @@ public partial class ScanView : ContentView
         Loaded += OnLoaded;
         Unloaded += OnUnloaded;
         BarcodeReader.HandlerChanged += OnBarcodeReaderHandlerChanged;
+        ScannerHost.SizeChanged += OnScannerHostSizeChanged;
     }
 
 #if WINDOWS
@@ -51,6 +56,7 @@ public partial class ScanView : ContentView
 
     private void OnLoaded(object? sender, EventArgs e)
     {
+        UpdateAdaptiveSizes();
         StartSampleQrBlinkAnimation();
         StartScanLineAnimation();
     }
@@ -60,7 +66,43 @@ public partial class ScanView : ContentView
         _blinkRunning = false;
         _scanLineRunning = false;
         SampleQrImage.StopAnimations();
-        ScanLine.StopAnimations();
+        SampleScanLine.StopAnimations();
+        CameraScanLine.StopAnimations();
+    }
+
+    private void OnScannerHostSizeChanged(object? sender, EventArgs e) => UpdateAdaptiveSizes();
+
+    /// <summary>
+    /// Keeps the scanner frame square and the sample QR proportional to available space
+    /// so layout stays stable across DPI, window resize, and device sizes.
+    /// </summary>
+    private void UpdateAdaptiveSizes()
+    {
+        if (ScannerHost.Width <= 0 || ScannerHost.Height <= 0)
+        {
+            return;
+        }
+
+        var frame = Math.Clamp(
+            Math.Min(ScannerHost.Width, ScannerHost.Height),
+            MinFrameSize,
+            MaxFrameSize);
+
+        if (Math.Abs(ScannerFrame.WidthRequest - frame) > 0.5
+            || Math.Abs(ScannerFrame.HeightRequest - frame) > 0.5)
+        {
+            ScannerFrame.WidthRequest = frame;
+            ScannerFrame.HeightRequest = frame;
+        }
+
+        // Title + caption + paddings leave ~55% of the frame for the QR square.
+        var qr = Math.Clamp(frame * 0.55, MinQrSize, MaxQrSize);
+        if (Math.Abs(QrScanArea.WidthRequest - qr) > 0.5
+            || Math.Abs(QrScanArea.HeightRequest - qr) > 0.5)
+        {
+            QrScanArea.WidthRequest = qr;
+            QrScanArea.HeightRequest = qr;
+        }
     }
 
     private async void StartSampleQrBlinkAnimation()
@@ -91,46 +133,56 @@ public partial class ScanView : ContentView
         }
     }
 
-    private double GetScanAreaHeight()
+    private BoxView GetActiveScanLine()
     {
-        if (CameraScanOverlay?.Height is > 0 and var height)
+        if (BindingContext is ScanViewModel { ShowSamplePreview: true })
         {
-            return height;
+            return SampleScanLine;
         }
 
-        if (ScannerContent?.Height is > 0 and var contentHeight)
+        return CameraScanLine;
+    }
+
+    private double GetActiveScanAreaHeight()
+    {
+        if (BindingContext is ScanViewModel { ShowSamplePreview: true } && QrScanArea.Height > 0)
         {
-            return contentHeight;
+            return QrScanArea.Height;
         }
 
-        return 280;
+        if (CameraScanOverlay.Height > 0)
+        {
+            return CameraScanOverlay.Height;
+        }
+
+        if (ScannerContent.Height > 0)
+        {
+            return ScannerContent.Height;
+        }
+
+        return MinFrameSize;
     }
 
     private (double Top, double Bottom) GetScanLinePositions()
     {
-        var areaHeight = GetScanAreaHeight();
-        var top = -ScanBeamHeight;
+        var areaHeight = GetActiveScanAreaHeight();
+        var top = 0d;
         var bottom = Math.Max(top, areaHeight - ScanBeamHeight);
         return (top, bottom);
     }
 
-    private async Task PulseScanLineAsync(uint duration)
+    private async Task PulseScanLineAsync(BoxView scanLine, uint duration)
     {
-        if (ScanLine is null)
-        {
-            return;
-        }
-
         var half = duration / 2;
         try
         {
-            await ScanLine.FadeToAsync(0.72, half, Easing.SinInOut);
+            await scanLine.FadeToAsync(0.72, half, Easing.SinInOut);
             if (!_scanLineRunning)
             {
                 return;
             }
 
-            await ScanLine.FadeToAsync(1, half, Easing.SinInOut);
+            await scanLine.FadeToAsync(1, half, Easing.SinInOut);
         }
         catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
         {
@@ -139,34 +191,41 @@ public partial class ScanView : ContentView
 
     private async void StartScanLineAnimation()
     {
-        if (_scanLineRunning || ScanLine is null)
+        if (_scanLineRunning)
         {
             return;
         }
 
         _scanLineRunning = true;
 
-        while (_scanLineRunning && ScanLine is not null)
+        while (_scanLineRunning)
         {
             try
             {
+                var scanLine = GetActiveScanLine();
+                if (!scanLine.IsVisible && scanLine.Opacity <= 0)
+                {
+                    await Task.Delay(200);
+                    continue;
+                }
+
                 var (top, bottom) = GetScanLinePositions();
-                ScanLine.TranslationY = top;
-                ScanLine.Opacity = 1;
+                scanLine.TranslationY = top;
+                scanLine.Opacity = 1;
                 const uint duration = 1800;
                 await Task.WhenAll(
-                    ScanLine.TranslateToAsync(0, bottom, duration, Easing.SinInOut),
-                    PulseScanLineAsync(duration));
+                    scanLine.TranslateToAsync(0, bottom, duration, Easing.SinInOut),
+                    PulseScanLineAsync(scanLine, duration));
                 if (!_scanLineRunning)
                 {
                     break;
                 }
 
-                ScanLine.TranslationY = bottom;
-                ScanLine.Opacity = 1;
+                scanLine.TranslationY = bottom;
+                scanLine.Opacity = 1;
                 await Task.WhenAll(
-                    ScanLine.TranslateToAsync(0, top, duration, Easing.SinInOut),
-                    PulseScanLineAsync(duration));
+                    scanLine.TranslateToAsync(0, top, duration, Easing.SinInOut),
+                    PulseScanLineAsync(scanLine, duration));
             }
             catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
             {

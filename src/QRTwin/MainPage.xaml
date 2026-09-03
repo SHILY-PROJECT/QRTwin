@@ -48,14 +48,18 @@
         <Label Text="QRTwin"
                FontSize="22"
                FontAttributes="Bold"
-               TextColor="{DynamicResource PrimaryText}" />
+               TextColor="{DynamicResource PrimaryText}"
+               LineBreakMode="TailTruncation" />
         <HorizontalStackLayout Spacing="0" VerticalOptions="Center">
-          <Label Text="Сканируйте и создавайте QR-коды | "
-                 Style="{StaticResource CaptionLabel}" />
+          <Label Text="Сканируйте и создавайте QR-коды |"
+                 Style="{StaticResource CaptionLabel}"
+                 LineBreakMode="TailTruncation"
+                 MaxLines="1"
+                 VerticalOptions="Center" />
           <Label x:Name="AuthorCreditLabel"
                  Text=" by MrSHILY"
                  Style="{StaticResource CaptionLabel}"
-                 Padding="0,0,4,0">
+                 VerticalOptions="Center">
             <Label.GestureRecognizers>
               <TapGestureRecognizer Tapped="OnAuthorCreditTapped" />
             </Label.GestureRecognizers>
@@ -258,17 +262,24 @@
           <Border.GestureRecognizers>
             <TapGestureRecognizer Tapped="OnScanTabTapped" />
           </Border.GestureRecognizers>
-          <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+          <Grid ColumnDefinitions="Auto,*"
+                ColumnSpacing="8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
             <controls:SvgIconView x:Name="ScanTabIcon"
                                   IconName="{x:Static helpers:IconPaths.Scan}"
                                   WidthRequest="20"
-                                  HeightRequest="20" />
-            <Label Text="Сканировать"
+                                  HeightRequest="20"
+                                  VerticalOptions="Center" />
+            <Label Grid.Column="1"
+                   Text="Сканировать"
                    FontSize="14"
                    FontAttributes="Bold"
                    VerticalOptions="Center"
+                   LineBreakMode="TailTruncation"
+                   MaxLines="1"
                    x:Name="ScanTabLabel" />
-          </HorizontalStackLayout>
+          </Grid>
         </Border>
 
         <Border Grid.Column="1"
@@ -277,17 +288,24 @@
           <Border.GestureRecognizers>
             <TapGestureRecognizer Tapped="OnGenerateTabTapped" />
           </Border.GestureRecognizers>
-          <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+          <Grid ColumnDefinitions="Auto,*"
+                ColumnSpacing="8"
+                HorizontalOptions="Center"
+                VerticalOptions="Center">
             <controls:SvgIconView x:Name="GenerateTabIcon"
                                   IconName="{x:Static helpers:IconPaths.Generate}"
                                   WidthRequest="20"
-                                  HeightRequest="20" />
-            <Label Text="Генерировать"
+                                  HeightRequest="20"
+                                  VerticalOptions="Center" />
+            <Label Grid.Column="1"
+                   Text="Генерировать"
                    FontSize="14"
                    FontAttributes="Bold"
                    VerticalOptions="Center"
+                   LineBreakMode="TailTruncation"
+                   MaxLines="1"
                    x:Name="GenerateTabLabel" />
-          </HorizontalStackLayout>
+          </Grid>
         </Border>
       </Grid>
     </Border>

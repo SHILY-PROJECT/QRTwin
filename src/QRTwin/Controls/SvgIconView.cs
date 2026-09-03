@@ -43,11 +43,9 @@ public sealed class SvgIconView : SKCanvasView
         BackgroundColor = Colors.Transparent;
         HorizontalOptions = LayoutOptions.Center;
         VerticalOptions = LayoutOptions.Center;
-#if ANDROID
+        // Always draw in physical pixels so icons stay sharp and correctly
+        // sized at 125%/150%/200% display scaling on Windows and macOS.
         IgnorePixelScaling = false;
-#else
-        IgnorePixelScaling = true;
-#endif
     }
 
     private static void OnIconNameChanged(BindableObject bindable, object oldValue, object newValue)

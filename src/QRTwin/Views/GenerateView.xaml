@@ -82,11 +82,17 @@
           <Border BackgroundColor="#FFFFFF"
                   StrokeShape="RoundRectangle 10"
                   Padding="12"
-                  HorizontalOptions="Center">
+                  HorizontalOptions="Center"
+                  MaximumWidthRequest="320"
+                  MaximumHeightRequest="320">
             <Image Source="{Binding QrCodeImage}"
-                   WidthRequest="{OnPlatform WinUI=280, Default=240}"
-                   HeightRequest="{OnPlatform WinUI=280, Default=240}"
-                   Aspect="AspectFit" />
+                   WidthRequest="240"
+                   HeightRequest="240"
+                   MaximumWidthRequest="280"
+                   MaximumHeightRequest="280"
+                   Aspect="AspectFit"
+                   HorizontalOptions="Fill"
+                   VerticalOptions="Fill" />
           </Border>
 
           <Grid ColumnDefinitions="*,*"
