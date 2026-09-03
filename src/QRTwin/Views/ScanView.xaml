@@ -25,12 +25,12 @@
                Text="Наведите камеру на QR-код"
                Style="{StaticResource SubtitleLabel}"
                HorizontalTextAlignment="Center"
-               Margin="0,16,12,8"
+               Margin="16,16,16,8"
                LineBreakMode="WordWrap" />
 
         <Grid x:Name="ScannerHost"
               Grid.Row="1"
-              Padding="12,0,12,12"
+              Padding="16"
               VerticalOptions="Fill"
               HorizontalOptions="Fill">
 

@@ -8,10 +8,12 @@ namespace QRTwin.Views;
 public partial class ScanView : ContentView
 {
     private const double ScanBeamHeight = 56;
-    private const double MinFrameSize = 200;
+    private const double MinFrameSize = 160;
     private const double MaxFrameSize = 520;
-    private const double MinQrSize = 120;
+    private const double MinQrSize = 100;
     private const double MaxQrSize = 280;
+    /// <summary>Keeps inner stroke from visually touching the outer card stroke.</summary>
+    private const double FrameStrokeGap = 4;
 
     private bool _blinkRunning;
     private bool _scanLineRunning;
@@ -73,8 +75,8 @@ public partial class ScanView : ContentView
     private void OnScannerHostSizeChanged(object? sender, EventArgs e) => UpdateAdaptiveSizes();
 
     /// <summary>
-    /// Keeps the scanner frame square and the sample QR proportional to available space
-    /// so layout stays stable across DPI, window resize, and device sizes.
+    /// Keeps the scanner frame square and inset inside the host so inner/outer
+    /// strokes never collide across DPI, window resize, and device sizes.
     /// </summary>
     private void UpdateAdaptiveSizes()
     {
@@ -83,10 +85,21 @@ public partial class ScanView : ContentView
             return;
         }
 
-        var frame = Math.Clamp(
-            Math.Min(ScannerHost.Width, ScannerHost.Height),
-            MinFrameSize,
-            MaxFrameSize);
+        var pad = ScannerHost.Padding;
+        var availableWidth = ScannerHost.Width - pad.Left - pad.Right - FrameStrokeGap;
+        var availableHeight = ScannerHost.Height - pad.Top - pad.Bottom - FrameStrokeGap;
+        if (availableWidth < 1 || availableHeight < 1)
+        {
+            return;
+        }
+
+        // Fit inside the padded host — never force MinFrameSize above available space
+        // (that was clipping the frame into the outer card stroke).
+        var frame = Math.Min(Math.Min(availableWidth, availableHeight), MaxFrameSize);
+        if (frame < 1)
+        {
+            return;
+        }
 
         if (Math.Abs(ScannerFrame.WidthRequest - frame) > 0.5
             || Math.Abs(ScannerFrame.HeightRequest - frame) > 0.5)
@@ -95,8 +108,8 @@ public partial class ScanView : ContentView
             ScannerFrame.HeightRequest = frame;
         }
 
-        // Title + caption + paddings leave ~55% of the frame for the QR square.
-        var qr = Math.Clamp(frame * 0.55, MinQrSize, MaxQrSize);
+        var qrCeiling = Math.Min(MaxQrSize, frame * 0.7);
+        var qr = Math.Clamp(frame * 0.52, Math.Min(MinQrSize, qrCeiling), qrCeiling);
         if (Math.Abs(QrScanArea.WidthRequest - qr) > 0.5
             || Math.Abs(QrScanArea.HeightRequest - qr) > 0.5)
         {
