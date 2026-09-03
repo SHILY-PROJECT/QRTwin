@@ -78,4 +78,43 @@ public static class ViewAnimationExtensions
         Task.WhenAll(
             element.FadeToAsync(opacity, duration, easing ?? StandardEase),
             element.TranslateToAsync(translationX, element.TranslationY, duration, easing ?? StandardEase));
+
+    public static Color InterpolateColor(Color from, Color to, double progress) =>
+        Color.FromRgba(
+            from.Red + ((to.Red - from.Red) * progress),
+            from.Green + ((to.Green - from.Green) * progress),
+            from.Blue + ((to.Blue - from.Blue) * progress),
+            from.Alpha + ((to.Alpha - from.Alpha) * progress));
+
+    public static Task AnimateIconColorAsync(
+        this Controls.SvgIconView icon,
+        Color from,
+        Color to,
+        uint duration = StandardDuration,
+        Easing? easing = null,
+        string? animationName = null)
+    {
+        animationName ??= $"IconColor_{icon.GetHashCode()}";
+        icon.AbortAnimation(animationName);
+
+        if (from == to)
+        {
+            icon.IconColor = to;
+            return Task.CompletedTask;
+        }
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var animation = new Animation(
+            progress => icon.IconColor = InterpolateColor(from, to, progress),
+            easing: easing ?? StandardEase);
+
+        animation.Commit(
+            icon,
+            animationName,
+            length: duration,
+            easing: easing ?? StandardEase,
+            finished: (_, _) => tcs.TrySetResult());
+
+        return tcs.Task;
+    }
 }

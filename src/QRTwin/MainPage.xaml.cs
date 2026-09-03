@@ -16,6 +16,7 @@ public partial class MainPage : ContentPage
     private const string AuthorShimmerAnimationName = "AuthorShimmer";
     private const string EditorHeightAnimationName = "GenerateInputEditorHeight";
     private const string InputBarAnimationName = "GenerateInputBar";
+    private const string InputButtonGlowAnimationName = "InputButtonGlow";
     private const double DefaultInputBarInset = 128;
     private static readonly Uri AuthorCreditUrl = new("https://github.com/SHILY-PROJECT");
 
@@ -34,6 +35,8 @@ public partial class MainPage : ContentPage
     private bool _historyOverlayUiVisible;
     private bool _themesOverlayUiVisible;
     private int _inputBarAnimationGeneration;
+    private int _inputButtonAnimationGeneration;
+    private bool _inputButtonsAreActive;
     private bool _swipeIsHorizontal;
     private double _panTotalX;
 
@@ -52,7 +55,7 @@ public partial class MainPage : ContentPage
         _displayedTab = viewModel.SelectedTab;
         UpdateTabVisuals(viewModel.SelectedTab);
         SyncTabPositions();
-        UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+        UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
         UpdateInputEditorSeparatorState(isFocused: false);
         ContentHost.SizeChanged += OnContentHostSizeChanged;
         UpdateContentHostClip();
@@ -81,7 +84,7 @@ public partial class MainPage : ContentPage
         {
             RefreshThemeColors();
             UpdateTabVisuals(_viewModel.SelectedTab);
-            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
             UpdateInputEditorSeparatorState(GenerateInputEditor.IsFocused);
 
             if (_historyOverlayUiVisible)
@@ -136,7 +139,7 @@ public partial class MainPage : ContentPage
         GenerateInputBar.TranslationY = 0;
         GenerateInputEditor.HeightRequest = CollapsedEditorHeight;
         UpdateGenerateContentInset(false);
-        UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+        UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
     }
 
     private void OnUnloaded(object? sender, EventArgs e)
@@ -220,37 +223,135 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private void UpdateInputBarButtonStates(bool hasText)
+    private void UpdateInputBarButtonStates(bool hasText, bool animate = true)
     {
-        var activeBrush = (Brush)Application.Current!.Resources["AccentGradientBrush"];
-
-        if (hasText)
+        if (!animate || _isUnloaded)
         {
-            ApplyActiveInputButtonStyle(ImageGenButton, ImageGenIcon, activeBrush);
-            ApplyActiveInputButtonStyle(WandButton, WandIcon, activeBrush);
+            ApplyInputBarButtonStatesImmediate(hasText);
             return;
         }
 
-        ApplyInactiveInputButtonStyle(ImageGenButton, ImageGenIcon);
-        ApplyInactiveInputButtonStyle(WandButton, WandIcon);
+        if (hasText == _inputButtonsAreActive)
+        {
+            return;
+        }
+
+        _ = AnimateInputBarButtonStatesAsync(hasText);
     }
 
-    private void ApplyActiveInputButtonStyle(Border button, SvgIconView icon, Brush activeBrush)
+    private void ApplyInputBarButtonStatesImmediate(bool hasText)
     {
-        button.Background = activeBrush;
-        button.BackgroundColor = Colors.Transparent;
+        _inputButtonAnimationGeneration++;
+        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        ImageGenButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{ImageGenButton.GetHashCode()}");
+        WandButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{WandButton.GetHashCode()}");
+
+        _inputButtonsAreActive = hasText;
+
+        if (hasText)
+        {
+            SetActiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIcon);
+            SetActiveInputButtonFinalState(WandButton, WandButtonGlow, WandIcon);
+            return;
+        }
+
+        SetInactiveInputButtonFinalState(ImageGenButton, ImageGenButtonGlow, ImageGenIcon);
+        SetInactiveInputButtonFinalState(WandButton, WandButtonGlow, WandIcon);
+    }
+
+    private async Task AnimateInputBarButtonStatesAsync(bool hasText)
+    {
+        if (_isUnloaded)
+        {
+            return;
+        }
+
+        var generation = ++_inputButtonAnimationGeneration;
+        var duration = ViewAnimationExtensions.StandardDuration;
+        var fromIcon = ImageGenIcon.IconColor;
+        var toIcon = hasText ? _activeIconColor : _inactiveIconColor;
+        var targetGlow = hasText ? 1.0 : 0.0;
+        var easing = hasText ? ViewAnimationExtensions.EnterEase : ViewAnimationExtensions.ExitEase;
+
+        ImageGenButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        WandButtonGlow.AbortAnimation(InputButtonGlowAnimationName);
+        ImageGenButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{ImageGenButton.GetHashCode()}");
+        WandButton.AbortAnimation($"{InputButtonGlowAnimationName}_Stroke_{WandButton.GetHashCode()}");
+
+        try
+        {
+            await Task.WhenAll(
+                ImageGenButtonGlow.FadeToAsync(targetGlow, duration, easing),
+                WandButtonGlow.FadeToAsync(targetGlow, duration, easing),
+                ImageGenIcon.AnimateIconColorAsync(fromIcon, toIcon, duration, easing),
+                WandIcon.AnimateIconColorAsync(fromIcon, toIcon, duration, easing),
+                AnimateInputButtonStrokeAsync(ImageGenButton, hasText, duration, easing),
+                AnimateInputButtonStrokeAsync(WandButton, hasText, duration, easing));
+        }
+        catch (Exception ex) when (ViewLifecycleExtensions.IsShutdownException(ex))
+        {
+            return;
+        }
+
+        if (_isUnloaded || generation != _inputButtonAnimationGeneration)
+        {
+            return;
+        }
+
+        ApplyInputBarButtonStatesImmediate(hasText);
+    }
+
+    private static Color GetBorderStrokeColor(Border button) =>
+        button.Stroke is SolidColorBrush solid ? solid.Color : Colors.Transparent;
+
+    private Task AnimateInputButtonStrokeAsync(Border button, bool active, uint duration, Easing easing)
+    {
+        var borderLight = (Color)Application.Current!.Resources["BorderLight"];
+        var fromThickness = button.StrokeThickness;
+        var toThickness = active ? 0.0 : 1.0;
+        var fromColor = GetBorderStrokeColor(button);
+        var toColor = active ? Colors.Transparent : borderLight;
+        var animationName = $"{InputButtonGlowAnimationName}_Stroke_{button.GetHashCode()}";
+        button.AbortAnimation(animationName);
+
+        var tcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var animation = new Animation(progress =>
+        {
+            button.Stroke = ViewAnimationExtensions.InterpolateColor(fromColor, toColor, progress);
+            button.StrokeThickness = fromThickness + ((toThickness - fromThickness) * progress);
+        });
+
+        animation.Commit(
+            button,
+            animationName,
+            length: duration,
+            easing: easing,
+            finished: (_, _) => tcs.TrySetResult());
+
+        return tcs.Task;
+    }
+
+    private void SetActiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
+    {
+        button.Background = null;
+        button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
         button.Stroke = Colors.Transparent;
         button.StrokeThickness = 0;
+        glow.Background = (Brush)Application.Current.Resources["AccentGradientBrush"];
+        glow.Opacity = 1;
         GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
+        GlassEffect.SetIntensity(glow, GlassEffectIntensity.Normal);
         icon.IconColor = _activeIconColor;
     }
 
-    private void ApplyInactiveInputButtonStyle(Border button, SvgIconView icon)
+    private void SetInactiveInputButtonFinalState(Border button, Border glow, SvgIconView icon)
     {
         button.Background = null;
         button.BackgroundColor = (Color)Application.Current!.Resources["SurfaceGlass"];
         button.Stroke = (Color)Application.Current.Resources["BorderLight"];
         button.StrokeThickness = 1;
+        glow.Opacity = 0;
         GlassEffect.SetIntensity(button, GlassEffectIntensity.Normal);
         icon.IconColor = _inactiveIconColor;
     }
@@ -721,7 +822,7 @@ public partial class MainPage : ContentPage
             if (GenerateInputBar.IsVisible && GenerateInputBar.Opacity > 0.95 && GenerateInputBar.TranslationY < 1)
             {
                 UpdateGenerateContentInset(true);
-                UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+                UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
                 return;
             }
 
@@ -758,7 +859,7 @@ public partial class MainPage : ContentPage
             GenerateInputBar.IsVisible = true;
             GenerateInputBar.InputTransparent = false;
             UpdateGenerateContentInset(true);
-            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
             return;
         }
 

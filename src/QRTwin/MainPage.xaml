@@ -147,14 +147,24 @@
               <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnImageGenTapped" />
               </Border.GestureRecognizers>
-              <controls:SvgIconView x:Name="ImageGenIcon"
-                                    IconName="{x:Static helpers:IconPaths.Image}"
-                                    IconColor="{DynamicResource MutedText}"
-                                    WidthRequest="24"
-                                    HeightRequest="24"
-                                    HorizontalOptions="Center"
-                                    VerticalOptions="Center"
-                                    InputTransparent="True" />
+              <Grid>
+                <Border x:Name="ImageGenButtonGlow"
+                        Background="{DynamicResource AccentGradientBrush}"
+                        StrokeShape="RoundRectangle 16"
+                        Opacity="0"
+                        InputTransparent="True"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <controls:SvgIconView x:Name="ImageGenIcon"
+                                      IconName="{x:Static helpers:IconPaths.Image}"
+                                      IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+              </Grid>
             </Border>
 
             <Border x:Name="WandButton"
@@ -163,14 +173,24 @@
               <Border.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnWandTapped" />
               </Border.GestureRecognizers>
-              <controls:SvgIconView x:Name="WandIcon"
-                                    IconName="{x:Static helpers:IconPaths.Wand}"
-                                    IconColor="{DynamicResource MutedText}"
-                                    WidthRequest="24"
-                                    HeightRequest="24"
-                                    HorizontalOptions="Center"
-                                    VerticalOptions="Center"
-                                    InputTransparent="True" />
+              <Grid>
+                <Border x:Name="WandButtonGlow"
+                        Background="{DynamicResource AccentGradientBrush}"
+                        StrokeShape="RoundRectangle 16"
+                        Opacity="0"
+                        InputTransparent="True"
+                        HorizontalOptions="Fill"
+                        VerticalOptions="Fill"
+                        effects:GlassEffect.Intensity="{x:Static themes:GlassEffectIntensity.Normal}" />
+                <controls:SvgIconView x:Name="WandIcon"
+                                      IconName="{x:Static helpers:IconPaths.Wand}"
+                                      IconColor="{DynamicResource MutedText}"
+                                      WidthRequest="24"
+                                      HeightRequest="24"
+                                      HorizontalOptions="Center"
+                                      VerticalOptions="Center"
+                                      InputTransparent="True" />
+              </Grid>
             </Border>
           </Grid>
         </VerticalStackLayout>
