@@ -42,8 +42,6 @@
           SourceFiles="@(_AndroidArtifact)"
           DestinationFiles="$(_PublishDirNormalized)$(_ArtifactBaseName)%(Extension)" />
 
-    <Move Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows' And Exists('$(_PublishDirNormalized)$(AssemblyName).exe')"
-          SourceFiles="$(_PublishDirNormalized)$(AssemblyName).exe"
-          DestinationFiles="$(_PublishDirNormalized)$(_ArtifactBaseName).exe" />
+    <!-- Do not rename Windows .exe: WinApp SDK expects the host name to match AssemblyName (qrtwin.exe). -->
   </Target>
 </Project>
