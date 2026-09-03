@@ -317,8 +317,8 @@ public partial class MainPage : ContentPage
         AbortInputButtonFadeAnimations();
 
         // Stroke color snaps; thickness stays fixed — only opacity fades.
-        ApplyInputButtonStroke(ImageGenButton, isContentActive: hasText);
-        ApplyInputButtonStroke(WandButton, isContentActive: hasText);
+        ApplyInputButtonStroke(ImageGenButton);
+        ApplyInputButtonStroke(WandButton);
 
         try
         {
@@ -387,7 +387,7 @@ public partial class MainPage : ContentPage
     {
         button.Background = null;
         button.BackgroundColor = Colors.Transparent;
-        ApplyInputButtonStroke(button, isContentActive: true);
+        ApplyInputButtonStroke(button);
         glow.Opacity = 1;
         litIcon.Opacity = 1;
     }
@@ -396,25 +396,17 @@ public partial class MainPage : ContentPage
     {
         button.Background = null;
         button.BackgroundColor = Colors.Transparent;
-        ApplyInputButtonStroke(button, isContentActive: false);
+        ApplyInputButtonStroke(button);
         glow.Opacity = 0;
         litIcon.Opacity = 0;
     }
 
-    private void ApplyInputButtonStroke(Border button, bool isContentActive)
+    private void ApplyInputButtonStroke(Border button)
     {
-        // Has text → glow only, no outline.
-        // Empty + focused → accent outline, no glow.
-        // Empty + unfocused → invisible chrome, icons only.
-        // Thickness stays 1.5 always so content never reflows.
+        // Icons only / glow — never draw an outline on the wand/image buttons.
+        // Thickness stays 1.5 so content never reflows if stroke is reintroduced later.
         button.StrokeThickness = 1.5;
-        if (isContentActive || !_inputEditorIsFocused)
-        {
-            button.Stroke = Colors.Transparent;
-            return;
-        }
-
-        button.Stroke = (Color)Application.Current!.Resources["Accent"];
+        button.Stroke = Colors.Transparent;
     }
 
     private void UpdateInputEditorSeparatorState(bool isFocused)
@@ -427,18 +419,26 @@ public partial class MainPage : ContentPage
         _inputEditorIsFocused = isFocused;
         UpdateInputEditorSeparatorState(isFocused);
 
-        var accent = (Color)Application.Current!.Resources["Accent"];
-        var borderLight = (Color)Application.Current.Resources["BorderLight"];
-
-        if (isFocused)
+        // BorderShimmer owns Stroke — don't overwrite it with BorderLight (near-white on Glass).
+        if (!BorderShimmer.GetIsEnabled(GenerateInputBar))
         {
-            GenerateInputBar.Stroke = accent;
-            GenerateInputBar.StrokeThickness = 1.5;
+            var accent = (Color)Application.Current!.Resources["Accent"];
+            var borderLight = (Color)Application.Current.Resources["BorderLight"];
+
+            if (isFocused)
+            {
+                GenerateInputBar.Stroke = accent;
+                GenerateInputBar.StrokeThickness = 1.5;
+            }
+            else
+            {
+                GenerateInputBar.Stroke = borderLight;
+                GenerateInputBar.StrokeThickness = 1;
+            }
         }
         else
         {
-            GenerateInputBar.Stroke = borderLight;
-            GenerateInputBar.StrokeThickness = 1;
+            GenerateInputBar.StrokeThickness = isFocused ? 1.5 : 1;
         }
 
         ApplyInputBarButtonStatesImmediate(_inputButtonsAreActive);
@@ -1370,15 +1370,26 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        ApplyGlassPanelShadow(HistoryOverlayPanel);
-        ApplyGlassPanelShadow(ThemesOverlayPanel);
+        if (!BorderShimmer.GetIsEnabled(HistoryOverlayPanel))
+        {
+            ApplyGlassPanelShadow(HistoryOverlayPanel);
+        }
+
+        if (!BorderShimmer.GetIsEnabled(ThemesOverlayPanel))
+        {
+            ApplyGlassPanelShadow(ThemesOverlayPanel);
+        }
     }
 
     private static void ClearGlassPanelChrome(params Border[] borders)
     {
         foreach (var border in borders)
         {
-            border.ClearValue(VisualElement.ShadowProperty);
+            if (!BorderShimmer.GetIsEnabled(border))
+            {
+                border.ClearValue(VisualElement.ShadowProperty);
+            }
+
             if (border.IsSet(GlassEffect.IntensityProperty))
             {
                 border.ClearValue(GlassEffect.IntensityProperty);
@@ -1390,6 +1401,11 @@ public partial class MainPage : ContentPage
 
     private static void ApplyGlassPanelShadow(Border panel)
     {
+        if (BorderShimmer.GetIsEnabled(panel))
+        {
+            return;
+        }
+
         if (Application.Current?.Resources.TryGetValue("GlassVisualEffects", out var value) != true
             || value is not GlassVisualEffects effects)
         {

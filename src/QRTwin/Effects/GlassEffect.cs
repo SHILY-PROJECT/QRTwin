@@ -62,6 +62,12 @@ public static class GlassEffect
         }
 
         var (bloomRadius, bloomOpacity, blurRadius) = effects.GetPreset(GetIntensity(border));
+        GlassBlur.Apply(border, blurRadius);
+
+        if (BorderShimmer.GetIsEnabled(border))
+        {
+            return;
+        }
 
         if (GetIntensity(border) is GlassEffectIntensity.Elevated)
         {
@@ -72,19 +78,16 @@ public static class GlassEffect
                 Offset = new Point(0, effects.DropShadowOffsetY),
                 Opacity = effects.DropShadowOpacity
             };
-        }
-        else
-        {
-            border.Shadow = new Shadow
-            {
-                Brush = effects.BloomColor,
-                Radius = bloomRadius,
-                Offset = new Point(0, 0),
-                Opacity = bloomOpacity
-            };
+            return;
         }
 
-        GlassBlur.Apply(border, blurRadius);
+        border.Shadow = new Shadow
+        {
+            Brush = effects.BloomColor,
+            Radius = bloomRadius,
+            Offset = new Point(0, 0),
+            Opacity = bloomOpacity
+        };
     }
 
     public static void Refresh(Border border)
@@ -109,7 +112,11 @@ public static class GlassEffect
 
     private static void ClearEffects(Border border)
     {
-        border.ClearValue(VisualElement.ShadowProperty);
+        if (!BorderShimmer.GetIsEnabled(border))
+        {
+            border.ClearValue(VisualElement.ShadowProperty);
+        }
+
         GlassBlur.Clear(border);
     }
 
