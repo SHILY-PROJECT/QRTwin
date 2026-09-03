@@ -204,9 +204,10 @@ public partial class MainPage : ContentPage
 
         if (_displayedTab is AppTab.Generate
             && GenerateInputBar.IsVisible
-            && GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8)
+            && GenerateInputEditor.HeightRequest > CollapsedEditorHeight + 8
+            && (GenerateInputEditor.IsFocused || _viewModel.Generate.InputText.IsNotBlank()))
         {
-            // No QR: keep filling free space without focus. With QR: only while editing.
+            // Keep filling free space while editing or while text is still present.
             _ = ExpandGenerateInputEditorAsync(requireFocus: _viewModel.Generate.HasQrCode);
         }
     }
@@ -223,7 +224,16 @@ public partial class MainPage : ContentPage
     {
         if (e.IsProperty(nameof(GenerateViewModel.InputText)))
         {
-            UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank());
+            var hasText = _viewModel.Generate.InputText.IsNotBlank();
+            UpdateInputBarButtonStates(hasText);
+
+            if (!hasText
+                && !GenerateInputEditor.IsFocused
+                && _displayedTab is AppTab.Generate
+                && GenerateInputBar.IsVisible)
+            {
+                _ = CollapseGenerateInputEditorAsync();
+            }
         }
 
         if (!e.IsProperty(nameof(GenerateViewModel.HasQrCode)))
@@ -237,9 +247,19 @@ public partial class MainPage : ContentPage
             return;
         }
 
-        if (_displayedTab is AppTab.Generate && GenerateInputBar.IsVisible)
+        if (_displayedTab is not AppTab.Generate || !GenerateInputBar.IsVisible)
+        {
+            return;
+        }
+
+        // Empty inactive field stays collapsed; expand only when there is text to show.
+        if (_viewModel.Generate.InputText.IsNotBlank())
         {
             _ = ExpandGenerateInputEditorAsync(requireFocus: false);
+        }
+        else if (!GenerateInputEditor.IsFocused)
+        {
+            _ = CollapseGenerateInputEditorAsync();
         }
     }
 
@@ -540,9 +560,8 @@ public partial class MainPage : ContentPage
     {
         UpdateGenerateInputBarActiveChrome(isFocused: false);
 
-        // Without a QR the editor should keep filling the free area even when unfocused.
-        // With a QR, collapse back so the result card stays primary.
-        if (_viewModel.Generate.HasQrCode)
+        // Collapse when inactive and empty, or when a QR result owns the space.
+        if (_viewModel.Generate.HasQrCode || !_viewModel.Generate.InputText.IsNotBlank())
         {
             await CollapseGenerateInputEditorAsync();
         }
@@ -1023,6 +1042,7 @@ public partial class MainPage : ContentPage
                 UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
 
                 if (!_viewModel.Generate.HasQrCode
+                    && _viewModel.Generate.InputText.IsNotBlank()
                     && GenerateInputEditor.HeightRequest <= CollapsedEditorHeight + 8)
                 {
                     _ = ExpandGenerateInputEditorAsync(requireFocus: false);
@@ -1066,7 +1086,7 @@ public partial class MainPage : ContentPage
             UpdateGenerateContentInset(true);
             UpdateInputBarButtonStates(_viewModel.Generate.InputText.IsNotBlank(), animate: false);
 
-            if (!_viewModel.Generate.HasQrCode)
+            if (!_viewModel.Generate.HasQrCode && _viewModel.Generate.InputText.IsNotBlank())
             {
                 _ = ExpandGenerateInputEditorAsync(requireFocus: false);
             }
