@@ -598,11 +598,8 @@ public partial class MainPage : ContentPage
 
     private void OnGenerateInputEditorCompleted(object? sender, EventArgs e)
     {
-        if (_viewModel.Generate.GenerateCommand.CanExecute(null))
-        {
-            _viewModel.Generate.GenerateCommand.Execute(null);
-        }
-
+        // Generation is only via the image button — Completed also fires on some
+        // platforms when tapping outside the editor, which must not generate.
         GenerateInputEditor.Unfocus();
     }
 
